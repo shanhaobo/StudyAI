@@ -16,6 +16,9 @@ config = GPTConfig(
     EnableBias = False,
 )
 gpt = GPTModel(config)
+gpt.PrintNumParameters()
+gpt.TraversePrintParameters()
+gpt.TraversePrintModuleInfo()
 
 def all_possible(n, k):
     # return all possible lists of k elements, each in range of [0,n)

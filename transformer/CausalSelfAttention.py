@@ -14,7 +14,7 @@ class CausalSelfAttention(nn.Module):
         self.HeadDim    = inEmbedDim // inNumHeads
         self.ScaledFctr = 1.0 / math.sqrt(self.HeadDim)
         self.AttenLayer = nn.Linear(self.EmbedDim, self.EmbedDim * 3)
-        self.OutLayer   = nn.Linear(self.EmbedDim, self.EmbedDim)
+        self.AttOutLayer= nn.Linear(self.EmbedDim, self.EmbedDim)
         self.Mask       = torch.tril(torch.ones(1, 1, inPosEmbedDim, inPosEmbedDim)) == 0
 
     def forward(self, inX):
@@ -47,4 +47,4 @@ class CausalSelfAttention(nn.Module):
         # Out = Out.transpose(1, 2).contiguous().view(nBatchNum, nMaxSeqLen, nEmbedDim)
         Out = Out.transpose(1, 2).reshape(nBatchNum, nMaxSeqLen, nEmbedDim)
  
-        return self.OutLayer(Out)
+        return self.AttOutLayer(Out)
