@@ -44,12 +44,10 @@ class GPTModel(nn.Module):
         self.transformer.WordTokenEmbed.weight = self.lm_head.weight
 
         # init all weights
-        print("\nInit Model All Weights:")
         self.apply(self.InitModelWeights)
 
         # apply special scaled init to the residual projections, per GPT-2 paper
         # 对Causal Self Attention的权重进行特殊初始化
-        print("\nInit AttOutLayer.weight:")
         for name, param in self.named_parameters():
             if name.endswith('AttOutLayer.weight'):
                 torch.nn.init.normal_(param, mean=0.0, std=0.02/math.sqrt(2 * config.BlockNum))
@@ -70,18 +68,27 @@ class GPTModel(nn.Module):
         b, t = idx.size()
         assert t <= self.config.BlockNum, f"Cannot forward sequence of length {t}, block size is only {self.config.BlockNum}"
         pos = torch.arange(0, t, dtype=torch.long, device=device).unsqueeze(0) # shape (1, t)
+
+        # transformer进行计算
         x = self.transformer(idx, pos)
+        # 只关心最后一个时间步[:,-1,:],因为这是模型预测的下一个词
+        #[-1,:,:]最后一个矩阵:  代表最后一个样本的所有时间步
+        #[:,-1,:]最后一个向量:  代表每个样本的最后一个时间步
+        #[:,:,-1]最后一个标量:  代表每个样本,所有时间步,的最后一个值
         logits = self.lm_head(x[:, -1, :]) # note: only returning logits at the last time step (-1), output is 2D (b, vocab_size)
         return logits
 
+    #遍历Model,打印信息
     def TraversePrintModuleInfo(self) :
         for name, module in self.named_modules():
             print(f"{name}: {type(module)}")
 
+    #遍历参数,打印信息
     def TraversePrintParameters(self) :
         for name, param in self.named_parameters():
             print(f"{name}: {type(param)}: {param.nelement()}")
 
+    #汇总参数个数
     def PrintNumParameters(self) :
         # report number of parameters
         print("number of parameters: %d" % (sum(p.nelement() for p in self.parameters())))

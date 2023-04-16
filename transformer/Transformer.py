@@ -48,8 +48,11 @@ class Transformer(nn.Module) :
             EnableBias
         ) -> None:
         super().__init__()
+        # Token Embedding
         self.WordTokenEmbed = nn.Embedding(VocabSize, TokenEmbedDim)
+        # Pos Embedding
         self.WordPosEmbed   = nn.Embedding(PosEmbedDim, TokenEmbedDim)
+        # Blocks
         self.Blocks         = nn.ModuleList([
                                 TransformerBlock(
                                     TokenEmbedDim,
@@ -59,16 +62,19 @@ class Transformer(nn.Module) :
                                     EpsNorm
                                 ) for _ in range(BlockNum)
                              ])
+        # 最后LayerNorm防止梯度失效
         self.LayerNorm      = nn.LayerNorm(TokenEmbedDim)
 
+    # Token Embedding + Pos Embedding -> Blocks -> LayerNorm
     def forward(self, inToken, inPos):
         
         #Token : (nBatchNum, nTokenLen) -> (nBatchNum, nTokenLen, nEmbedDim)
         TokenEmbed = self.WordTokenEmbed(inToken)
         #Pos : (1, nTokenLen) -> (1, nTokenLen, nEmbedDim)
         PosEmbed = self.WordPosEmbed(inPos)
-
+        # Total Embedding
         TPEmbed = TokenEmbed + PosEmbed
+        
         for block in self.Blocks:
             TPEmbed = block(TPEmbed)
 
