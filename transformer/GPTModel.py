@@ -41,10 +41,10 @@ class GPTModel(nn.Module):
             config.EnableBias
         )
         self.lm_head = nn.Linear(config.EmbedDim, config.VocabSize, bias=False)
-        self.transformer.WordTokenEmbed.weight = self.lm_head.weight
+        self.transformer._WordTknEmbed.weight = self.lm_head.weight
 
         # init all weights
-        self.apply(self.InitModelWeights)
+        self.apply(self.__InitModelWeights)
 
         # apply special scaled init to the residual projections, per GPT-2 paper
         # 对Causal Self Attention的权重进行特殊初始化
@@ -54,7 +54,7 @@ class GPTModel(nn.Module):
 
     # 权重的初始值对模型训练的收敛速度和最终性能有很大影响
     # 初始化权重
-    def InitModelWeights(self, inModule):
+    def __InitModelWeights(self, inModule):
         if isinstance(inModule, nn.Linear):
             torch.nn.init.normal_(inModule.weight, mean=0.0, std=0.02)
             if inModule.bias is not None:
@@ -63,7 +63,6 @@ class GPTModel(nn.Module):
             torch.nn.init.normal_(inModule.weight, mean=0.0, std=0.02)
 
     def forward(self, idx):
-        print(idx)
         device = idx.device
         b, t = idx.size()
         assert t <= self.config.BlockNum, f"Cannot forward sequence of length {t}, block size is only {self.config.BlockNum}"
