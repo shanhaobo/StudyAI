@@ -77,6 +77,9 @@ class GPTModel(nn.Module):
         logits = self.lm_head(x[:, -1, :]) # note: only returning logits at the last time step (-1), output is 2D (b, vocab_size)
         return logits
 
+    def SumParameters(self) :
+        return sum(p.nelement() for p in self.parameters())
+
     #遍历Model,打印信息
     def TraversePrintModuleInfo(self) :
         for name, module in self.named_modules():
@@ -90,4 +93,4 @@ class GPTModel(nn.Module):
     #汇总参数个数
     def PrintNumParameters(self) :
         # report number of parameters
-        print("number of parameters: %d" % (sum(p.nelement() for p in self.parameters())))
+        print("number of parameters: %d" % self.SumParameters())
