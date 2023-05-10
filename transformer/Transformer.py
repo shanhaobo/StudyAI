@@ -17,6 +17,7 @@ class _BlockMLP(nn.Module):
         inX = self.__OutLayer(inX)
         return inX
 
+# 一次Attention
 class _TransformerBlock(nn.Module):
     def __init__(self, inEmbedDim, inHeadNum, inPosEmbedDim, inEnableBias, inEpsNorm):
         super().__init__()
@@ -75,6 +76,7 @@ class Transformer(nn.Module) :
         # Total Embedding
         TPEmbed     = TokenEmbed + PosEmbed
         
+        # 多次Attention, 每次Attention在前一次之上
         for block in self.__Blocks:
             TPEmbed = block(TPEmbed)
 
