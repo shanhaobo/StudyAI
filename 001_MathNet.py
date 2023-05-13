@@ -3,6 +3,10 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 import random
 
+DatasetLen = 100000
+EpochCnt = 100
+BatchSize = 32
+
 class Calculator:
     def __init__(self):
         self.operation_dict = {
@@ -24,7 +28,7 @@ class Calculator:
     
     def divide(self, a, b):
         if b == 0:
-            return None
+            return float('-inf')  # 返回一个特定的值
         else:
             return a / b
 
@@ -54,33 +58,37 @@ class MathDataset(Dataset):
         self.labels = torch.empty(10, 1) 
         
     def __len__(self):
-        return 10000
+        return DatasetLen
     
     def __getitem__(self, idx):
         tensor = torch.empty(3)
         # 生成范围在(0, 2^32)的随机浮点数并将其分配给张量的前两个元素
-        tensor[0] = torch.FloatTensor(1).uniform_(0, 2**16)
-        tensor[1] = torch.FloatTensor(1).uniform_(0, 2**16)
+        tensor[0] = torch.FloatTensor(1).uniform_(0, 100)
+        tensor[1] = torch.FloatTensor(1).uniform_(0, 100)
 
-        idx = random.randint(0, 4)
+        idx = random.randint(0, 2)
         # 生成范围在(0, 6)的随机整数并将其分配给张量的第三个元素
         tensor[2] = idx
 
-        return tensor, Calculator().calculate(tensor[0], tensor[1], idx)
+        label = Calculator().calculate(tensor[0], tensor[1], idx)
+
+        return tensor, torch.Tensor(label)
     
 ############
 
 def main():
     dataset = MathDataset()
-    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=BatchSize, shuffle=True)
 
     # 创建并训练网络
     net = MathNet(3, 128, 1)
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(net.parameters(), lr=0.1)
 
-    for epoch in range(100):  # 进行100次迭代
+    for epoch in range(EpochCnt):  # 进行100次迭代
         for i, (inputs, labels) in enumerate(dataloader):
+            inputs = inputs.float() # 确保输入数据的数据类型为浮点型
+            labels = labels.view(-1, 1).float() # 调整标签的维度并确保其数据类型为浮点型
             outputs = net(inputs)
             loss = criterion(outputs, labels)
             
@@ -88,7 +96,7 @@ def main():
             loss.backward()
             optimizer.step()
             
-            if i % 100 == 0:
+            if i % BatchSize == 0:
                 print(f'Epoch {epoch}, Iteration {i}, Loss {loss.item()}')
 
 
