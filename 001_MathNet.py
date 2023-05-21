@@ -3,9 +3,9 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 import random
 
-DatasetLen = 100000
-EpochCnt = 100
-BatchSize = 32
+DatasetLen = 1000000
+EpochCnt = 1
+BatchSize = 320
 
 class Calculator:
     def __init__(self):
@@ -96,7 +96,7 @@ def main():
             loss.backward()
             optimizer.step()
             
-            if i % BatchSize == 0:
+            if i % 10 == 0:
                 print(f'Epoch {epoch}, Iteration {i}, Loss {loss.item()}')
 
 
