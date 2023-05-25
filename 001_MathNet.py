@@ -79,7 +79,7 @@ class MathDataset(Dataset):
 def main():
     dataset = MathDataset()
     dataloader = DataLoader(dataset, batch_size=BatchSize, shuffle=True)
-
+    
     # 创建并训练网络
     net = MathNet(3, 128, 1)
     criterion = nn.MSELoss()
