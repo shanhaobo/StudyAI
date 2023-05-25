@@ -21,8 +21,11 @@ class GANModel(object):
             inLearningRate = 1e-5,
             inModelPath = "."
         ) -> None:
-        self.Generator      = inGenerator
-        self.Discriminator  = inDiscriminator
+
+        self.Device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+        self.Generator      = inGenerator.to(self.Device)
+        self.Discriminator  = inDiscriminator.to(self.Device)
 
         self._CreateOptimizer(inOptimizerType, inLearningRate)
         
@@ -30,38 +33,40 @@ class GANModel(object):
         self.LossFN = nn.BCELoss()
 
         self.LatentSize = inLatentSize
-        self.ModelPath = inModelPath
+        self.ModelFolderPath = inModelPath
 
     def Train(self, inNumEpochs : int, inDataLoader:DataLoader, inSaveModelInterval : int = 10) -> None:
         self.Generator.train()
         self.Discriminator.train()
         for i in range(inNumEpochs) :
-            print(f"Training [EpochCount:{i}]")
-            self._BatchTrain(inDataLoader)
-            if i % inSaveModelInterval == 0 and i > 0:
+            self._EpochTrain(inDataLoader, f"Training [EpochCount:{i}]")
+            if i % inSaveModelInterval == 0:
                 self._SaveModel(f"_{i}")
         self._SaveModel()
 
     def _SaveModel(self, inPostFix = "") -> None:
-        torch.save(self.Generator.state_dict(), f"{self.ModelPath}/Generator{inPostFix}.pkl")
-        print(f"Saved:{self.ModelPath}/Generator{inPostFix}.pkl")
-        torch.save(self.Discriminator.state_dict(), f"{self.ModelPath}/Discriminator{inPostFix}.pkl")
-        print(f"Saved:{self.ModelPath}/Discriminator{inPostFix}.pkl")
+        if os.path.exists(self.ModelFolderPath) == False:
+            os.makedirs(self.ModelFolderPath)
+
+        torch.save(self.Generator.state_dict(), f"{self.ModelFolderPath}/Generator{inPostFix}.pkl")
+        print(f"Saved:{self.ModelFolderPath}/Generator{inPostFix}.pkl")
+        torch.save(self.Discriminator.state_dict(), f"{self.ModelFolderPath}/Discriminator{inPostFix}.pkl")
+        print(f"Saved:{self.ModelFolderPath}/Discriminator{inPostFix}.pkl")
 
     def IsExistModels(self, inForTrain : bool = True, inPostFix = "") -> bool:
-        bExistGModel = os.path.isfile(f"{self.ModelPath}/Generator{inPostFix}.pkl")
+        bExistGModel = os.path.isfile(f"{self.ModelFolderPath}/Generator{inPostFix}.pkl")
 
         if inForTrain :
-            bExistDModel = os.path.isfile(f"{self.ModelPath}/Discriminator{inPostFix}.pkl")
+            bExistDModel = os.path.isfile(f"{self.ModelFolderPath}/Discriminator{inPostFix}.pkl")
         else:
             bExistDModel = True
 
         return bExistDModel and bExistGModel
 
     def _LoadModel(self, inForTrain : bool = True, inPostFix = "") -> None :
-        self.Generator.load_state_dict(torch.load(f"{self.ModelPath}/Generator{inPostFix}.pkl"))
+        self.Generator.load_state_dict(torch.load(f"{self.ModelFolderPath}/Generator{inPostFix}.pkl"), map_location=self.Device)
         if inForTrain :
-            self.Discriminator.load_state_dict(torch.load(f"{self.ModelPath}/Discriminator{inPostFix}.pkl")) 
+            self.Discriminator.load_state_dict(torch.load(f"{self.ModelFolderPath}/Discriminator{inPostFix}.pkl"), map_location=self.Device) 
 
     def _CreateOptimizer(self, inOptimizerType : OptimizerType, inLearningRate) -> None:
         if inOptimizerType == OptimizerType.RMSprop :
@@ -71,36 +76,42 @@ class GANModel(object):
             self.OptimizerG = optim.Adam(self.Generator.parameters(), lr=inLearningRate, betas=(0.5, 0.999))
             self.OptimizerD = optim.Adam(self.Discriminator.parameters(), lr=inLearningRate, betas=(0.5, 0.999))
 
-    def _BatchTrain(self, inDataLoader:DataLoader) -> None:
-        nBatchSize = inDataLoader.batch_size
-        BatchLatentSize = (nBatchSize, ) + self.LatentSize
-        for i, BatchData in enumerate(inDataLoader):
+    def _CalcLossForReal(self, inBatchData):
+        DiscriminatorResult = self.Discriminator(inBatchData)
+        RealLabels = torch.ones(DiscriminatorResult.size()).to(self.Device)
+        return self.LossFN(DiscriminatorResult, RealLabels)
+    
+    def _CalcLossForFake(self, inBatchData):
+        DiscriminatorResult = self.Discriminator(inBatchData)
+        FakeLabels = torch.zeros(DiscriminatorResult.size()).to(self.Device)
+        return self.LossFN(DiscriminatorResult, FakeLabels)
+    
+    def _BackPropagate(self, inOptimizer, inLoss):
+        inOptimizer.zero_grad()
+        inLoss.backward()
+        inOptimizer.step()
+    
+    def _EpochTrain(self, inDataLoader:DataLoader, inCurrEpochInfo) -> None:
+        for i, RealBatchData in enumerate(inDataLoader):
+            nBatchSize = RealBatchData.size(0)
+            BatchLatentSize = (nBatchSize, ) + self.LatentSize
+            
             # Optimize Discriminator
-            Outputs = self.Discriminator(BatchData)
-            RealLabels = torch.ones(Outputs.size())
-            DLossReal = self.LossFN(Outputs, RealLabels)
+            RealBatchData = RealBatchData.to(self.Device)
+            DLossReal = self._CalcLossForReal(RealBatchData)
 
-            FakeBatchData = self.Generator(torch.randn(BatchLatentSize))
-            Outputs = self.Discriminator(FakeBatchData)
-            FakeLabels = torch.zeros(Outputs.size())
-            DLossFake = self.LossFN(Outputs, FakeLabels)
+            FakeBatchData = self.Generator(torch.randn(BatchLatentSize).to(self.Device))
+            DLossFake = self._CalcLossForFake(FakeBatchData)
 
             DLoss = (DLossReal + DLossFake) / 2
-
-            self.OptimizerD.zero_grad()
-            DLoss.backward()
-            self.OptimizerD.step()
-
+            self._BackPropagate(self.OptimizerD, DLoss)
+            
             # Optimize Generator
-            Outputs = self.Discriminator(FakeBatchData.detach())
-            RealLabels = torch.ones(Outputs.size())
-            GLoss = self.LossFN(Outputs, RealLabels)
+            FakeBatchData = self.Generator(torch.randn(BatchLatentSize).to(self.Device))
+            GLoss = self._CalcLossForReal(FakeBatchData)
+            self._BackPropagate(self.OptimizerG, GLoss)
 
-            self.OptimizerG.zero_grad()
-            GLoss.backward()
-            self.OptimizerG.step()
-
-            print(f"\tTraining [BatchCount:{i}] [Discriminator Loss:{DLoss.item()}] [Generator Loss:{GLoss.item()}]")
+            print(f"[{inCurrEpochInfo}][BatchCount:{i}] [Discriminator Loss:{DLoss.item()}] [Generator Loss:{GLoss.item()}]")
 
     def Gen(self, inPostFix = "") -> None:
         self._LoadModel(inForTrain=True, inPostFix=inPostFix)

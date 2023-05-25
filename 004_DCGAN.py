@@ -93,10 +93,10 @@ class MNISTDataset(torch.utils.data.Dataset):
         return self.images[index]
 
 if __name__ == "__main__" :
-    GAN =GANModel(Generator(128), Discriminator(128), (128, 1, 1))
+    GAN = GANModel(Generator(128), Discriminator(128), (128, 1, 1), inModelPath="./models/GAN")
     if GAN.IsExistModels() :
         GAN.Gen()
     else :
         dataset = MNISTDataset()
         dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
-        GAN.Train(100, dataloader)
+        GAN.Train(100, dataloader, inSaveModelInterval=1)
