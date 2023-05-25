@@ -98,5 +98,5 @@ if __name__ == "__main__" :
         GAN.Gen()
     else :
         dataset = MNISTDataset()
-        dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
-        GAN.Train(100, dataloader, inSaveModelInterval=1)
+        dataloader = DataLoader(dataset, batch_size=512, shuffle=True)
+        GAN.Train(10, dataloader, inSaveModelInterval=1)

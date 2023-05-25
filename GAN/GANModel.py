@@ -40,7 +40,7 @@ class GANModel(object):
         self.Discriminator.train()
         for i in range(inNumEpochs) :
             self._EpochTrain(inDataLoader, f"Training [EpochCount:{i}]")
-            if i % inSaveModelInterval == 0:
+            if i % inSaveModelInterval == 0 and i > 0:
                 self._SaveModel(f"_{i}")
         self._SaveModel()
 
