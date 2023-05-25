@@ -64,9 +64,9 @@ class GANModel(object):
         return bExistDModel and bExistGModel
 
     def _LoadModel(self, inForTrain : bool = True, inPostFix = "") -> None :
-        self.Generator.load_state_dict(torch.load(f"{self.ModelFolderPath}/Generator{inPostFix}.pkl"), map_location=self.Device)
+        self.Generator.load_state_dict(torch.load(f"{self.ModelFolderPath}/Generator{inPostFix}.pkl"))
         if inForTrain :
-            self.Discriminator.load_state_dict(torch.load(f"{self.ModelFolderPath}/Discriminator{inPostFix}.pkl"), map_location=self.Device) 
+            self.Discriminator.load_state_dict(torch.load(f"{self.ModelFolderPath}/Discriminator{inPostFix}.pkl")) 
 
     def _CreateOptimizer(self, inOptimizerType : OptimizerType, inLearningRate) -> None:
         if inOptimizerType == OptimizerType.RMSprop :
@@ -92,7 +92,7 @@ class GANModel(object):
         inOptimizer.step()
     
     def _EpochTrain(self, inDataLoader:DataLoader, inCurrEpochInfo) -> None:
-        for i, RealBatchData in enumerate(inDataLoader):
+        for i, (RealBatchData, _) in enumerate(inDataLoader):
             nBatchSize = RealBatchData.size(0)
             BatchLatentSize = (nBatchSize, ) + self.LatentSize
             
@@ -113,7 +113,7 @@ class GANModel(object):
 
             print(f"[{inCurrEpochInfo}][BatchCount:{i}] [Discriminator Loss:{DLoss.item()}] [Generator Loss:{GLoss.item()}]")
 
-    def Gen(self, inPostFix = "") -> None:
-        self._LoadModel(inForTrain=True, inPostFix=inPostFix)
+    def Gen(self, inPostFix = ""):
+        self._LoadModel(inForTrain=False, inPostFix=inPostFix)
         self.Generator.eval()
-        return self.Generator(torch.randn((1, ) + self.LatentSize))
+        return self.Generator(torch.randn((1, ) + self.LatentSize).to(self.Device))
