@@ -32,12 +32,13 @@ class GANModel(object):
         self.LatentSize = inLatentSize
         self.ModelPath = inModelPath
 
-    def Train(self, inNumEpochs : int, inDataLoader:DataLoader) -> None:
+    def Train(self, inNumEpochs : int, inDataLoader:DataLoader, inSaveModelInterval : int = 10) -> None:
         self.Generator.train()
         self.Discriminator.train()
         for i in range(inNumEpochs) :
+            print(f"Training [EpochCount:{i}]")
             self._BatchTrain(inDataLoader)
-            if i % 100 == 0 and i > 0:
+            if i % inSaveModelInterval == 0 and i > 0:
                 self._SaveModel(f"_{i}")
         self._SaveModel()
 
@@ -98,6 +99,8 @@ class GANModel(object):
             self.OptimizerG.zero_grad()
             GLoss.backward()
             self.OptimizerG.step()
+
+            print(f"\tTraining [BatchCount:{i}] [Discriminator Loss:{DLoss.item()}] [Generator Loss:{GLoss.item()}]")
 
     def Gen(self, inPostFix = "") -> None:
         self._LoadModel(inForTrain=True, inPostFix=inPostFix)
