@@ -1,4 +1,4 @@
-from Base import GANTrainer
+from Trainer import GANTrainer
 from . import (
     GANModel,
 )
