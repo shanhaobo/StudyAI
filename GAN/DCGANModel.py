@@ -9,7 +9,7 @@ from Trainer.GANTrainer import GANTrainer
 
 import os
 
-from GANModel import GANModel
+from .GANModel import GANModel
 
 class DCGANModel(GANModel):
     
@@ -17,7 +17,7 @@ class DCGANModel(GANModel):
     class InnerGenerator(nn.Module):
         # initializers
         def __init__(self, inDim=128, inChannel = 3):
-            super(self).__init__()
+            super().__init__()
             self.deconv1 = nn.ConvTranspose2d(inDim, inDim*8, 4, 1, 0)
             self.deconv1_bn = nn.BatchNorm2d(inDim*8)
             self.deconv2 = nn.ConvTranspose2d(inDim*8, inDim*4, 4, 2, 1)
@@ -47,7 +47,7 @@ class DCGANModel(GANModel):
     class InnerDiscriminator(nn.Module):
         # initializers
         def __init__(self, inDim=128, inChannel = 3):
-            super(self).__init__()
+            super().__init__()
             self.conv1 = nn.Conv2d(inChannel, inDim, 4, 2, 1)
             self.conv2 = nn.Conv2d(inDim, inDim*2, 4, 2, 1)
             self.conv2_bn = nn.BatchNorm2d(inDim*2)
