@@ -1,10 +1,7 @@
 import torch
-import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from functools import partial
-
-import os
+from datetime import datetime
 
 from Trainer.GANTrainer import GANTrainer
 from Utils.Archiver import GANArchiver
@@ -12,8 +9,8 @@ from Utils.Archiver import GANArchiver
 class GANModel(object):
     def __init__(
             self,
-            inGenerator : nn.Module,
-            inDiscriminator : nn.Module,
+            inGenerator : torch.nn.Module,
+            inDiscriminator : torch.nn.Module,
             inGeneratorSize,
             inLearningRate = 1e-5,
             inModelFolderPath = "."
@@ -50,16 +47,21 @@ class GANModel(object):
         return self.Archiver.IsExistModel(inForTrain, inPostFix)
     
     def EndBatchTrain(self, *inArgs, **inKWArgs) -> None:
+        now  = datetime.now()
         print(
-            "Epoch:{:0 > 4d} | Batch:{:0 > 6d} | DLoss:{:.8f} | GLoss:{:.8f}".
-            format(self.Trainer.CurrEpochIndex + 1, self.Trainer.CurrBatchIndex + 1, self.Trainer.CurrBatchDiscriminatorLoss, self.Trainer.CurrBatchGeneratorLoss)
+            "{} | Epoch:{:0>4d} | Batch:{:0>6d} | DLoss:{:.8f} | GLoss:{:.8f}".
+            format(
+                now.strftime("%Y%m%d:%H%M%S:%f"),
+                self.Trainer.CurrEpochIndex + 1, self.Trainer.CurrBatchIndex + 1, self.Trainer.CurrBatchDiscriminatorLoss, self.Trainer.CurrBatchGeneratorLoss
+            )
         )
         pass
 
     def EndEpochTrain(self, *inArgs, **inKWArgs) -> None:
-        if self.Trainer.CurrEpochIndex % 2 and self.Trainer.CurrEpochIndex > 0 :
+        interval = inKWArgs["SaveModelInterval"]
+        if self.Trainer.CurrEpochIndex % interval == 0 and self.Trainer.CurrEpochIndex > 0 :
             print("Epoch:{} Save Models".format(self.Trainer.CurrEpochIndex + 1))
-            self.Archiver.Save("{:0 > 4d}".format(self.Trainer.CurrEpochIndex + 1))
+            self.Archiver.Save("{:0>4d}".format(self.Trainer.CurrEpochIndex + 1))
         pass
 
     def EndTrain(self, *inArgs, **inKWArgs)->None:
