@@ -55,7 +55,6 @@ class DCGANTrainer(GANTrainer):
 
     def _EndEpochTrain(self, inEpochIndex, **inArgs) -> None:
         print(inArgs)
-
         if inEpochIndex % 2 == 0 and inEpochIndex > 0 :
             self._SaveModel(f"_{inEpochIndex}")
         pass

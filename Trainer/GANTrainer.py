@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from functools import partial
+
 from .MultiNNTrainer import MultiNNTrainer
 
 class GANTrainer(MultiNNTrainer):
@@ -14,10 +16,11 @@ class GANTrainer(MultiNNTrainer):
         ) -> None:
         super().__init__(inLearningRate)
         
-        self.Generator          = inGenerator.to(self.Device)
-        self.Discriminator      = inDiscriminator.to(self.Device)
+        self.Generator                  = inGenerator.to(self.Device)
+        self.Discriminator              = inDiscriminator.to(self.Device)
 
-        self.GeneratorInputSize = inGeneratorInputSize
+        self.GeneratorInputSize         = inGeneratorInputSize
+
         pass
 
     def _CreateOptimizer(self) -> None:
@@ -39,11 +42,8 @@ class GANTrainer(MultiNNTrainer):
         FakeLabels = torch.zeros(DiscriminatorResult.size()).to(self.Device)
         return self.LossFN(DiscriminatorResult, FakeLabels)
 
-    def _BeginBatchTrain(self, inBatchIndex, **inArgs) -> None:
-        pass
 
-    def _BatchTrain(self, inBatchIndex, inBatchData, **inArgs) :
-        self._BeginBatchTrain(inBatchIndex, **inArgs)
+    def _BatchTrain(self, inBatchData, inBatchLabel, *inArgs, **inKWArgs) :
 
         nBatchSize = inBatchData.size(0)
         BatchGeneratorInputSize = (nBatchSize, ) + self.GeneratorInputSize
@@ -63,19 +63,7 @@ class GANTrainer(MultiNNTrainer):
         GLoss = self._CalcLossForReal(FakeBatchData)
         self._BackPropagate(self.OptimizerG, GLoss)
 
-        self._EndBatchTrain(inBatchIndex, CurrDLoss = DLoss.item(), CurrGLoss = GLoss.item(), **inArgs)
-    
-    def _EndBatchTrain(self, inBatchIndex, **inArgs) -> None:
-        pass
+        self.CurrBatchDiscriminatorLoss = DLoss.item()
+        self.CurrBatchGeneratorLoss     = GLoss.item()
 
-    def _BeginEpochTrain(self, inEpochIndex, **inArgs) -> None:
-        pass
-
-    def _EndEpochTrain(self, inEpochIndex, **inArgs) -> None:
-        pass
-
-    def _BeginTrain(self, **inArgs) -> None:
-        pass
-
-    def _EndTrain(self, **inArgs) -> None:
         pass

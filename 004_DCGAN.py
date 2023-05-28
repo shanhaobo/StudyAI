@@ -29,18 +29,17 @@ class Generator(nn.Module):
 
     # forward method
     def forward(self, input):
-        print(f"Generator:input({input.size()})")
-        # x = F.relu(self.deconv1(input))
+        #print(f"Generator:input({input.size()})")
         x = F.relu(self.deconv1_bn(self.deconv1(input)))
-        print(f"Generator:deconv1({x.size()})")
+        #print(f"Generator:deconv1({x.size()})")
         x = F.relu(self.deconv2_bn(self.deconv2(x)))
-        print(f"Generator:deconv2({x.size()})")
+        #print(f"Generator:deconv2({x.size()})")
         x = F.relu(self.deconv3_bn(self.deconv3(x)))
-        print(f"Generator:deconv3({x.size()})")
+        #print(f"Generator:deconv3({x.size()})")
         x = F.relu(self.deconv4_bn(self.deconv4(x)))
-        print(f"Generator:deconv4({x.size()})")
+        #print(f"Generator:deconv4({x.size()})")
         x = torch.tanh(self.deconv5(x))
-        print(f"Generator:deconv5({x.size()})")
+        #print(f"Generator:deconv5({x.size()})")
 
         return x
 
@@ -59,17 +58,17 @@ class Discriminator(nn.Module):
 
     # forward method
     def forward(self, input):
-        print(f"Discriminator:input({input.size()})")
+        #print(f"Discriminator:input({input.size()})")
         x = F.leaky_relu(self.conv1(input), 0.2)
-        print(f"Discriminator:conv1({x.size()})")
+        #print(f"Discriminator:conv1({x.size()})")
         x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
-        print(f"Discriminator:conv2({x.size()})")
+        #print(f"Discriminator:conv2({x.size()})")
         x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
-        print(f"Discriminator:conv3({x.size()})")
+        #print(f"Discriminator:conv3({x.size()})")
         x = F.leaky_relu(self.conv4_bn(self.conv4(x)), 0.2)
-        print(f"Discriminator:conv4({x.size()})")
+        #print(f"Discriminator:conv4({x.size()})")
         x = torch.sigmoid(self.conv5(x))
-        print(f"Discriminator:conv5({x.size()})")
+        #print(f"Discriminator:conv5({x.size()})")
 
         return x
 
@@ -96,7 +95,7 @@ class MNISTDataset(torch.utils.data.Dataset):
         return self.images[index]
 
 if __name__ == "__main__" :
-    GAN = GANModel(Generator(128), Discriminator(128), (128, 1, 1), inModelPath="./models/CFGAN")
+    GAN = GANModel(Generator(128), Discriminator(128), (128, 1, 1), inModelFolderPath="./models/CFGAN")
     if GAN.IsExistModels() :
         GenImage = GAN.Gen()
         print(GenImage.size())
@@ -108,6 +107,6 @@ if __name__ == "__main__" :
             transforms.Normalize((0.5,), (0.5,))
         ])
         #dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
-        dataset = datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
+        dataset = datasets.ImageFolder(root='D:/__DevAI__/Datasets/cartoon_faces', transform=transform)
         dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
         GAN.Train(10, dataloader, inSaveModelInterval=1)

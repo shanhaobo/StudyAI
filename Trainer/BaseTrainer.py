@@ -6,11 +6,24 @@ from torch.optim.optimizer import Optimizer
 
 from torch.utils.data import DataLoader
 
+from Utils.Delegate import Delegate
+
 class BaseTrainer(abc.ABC):
     def __init__(self, inLearningRate) -> None:
-        self.Device         = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.LearningRate   = inLearningRate
-        pass
+        self.Device             = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.LearningRate       = inLearningRate
+
+        self.BeginTrain         = Delegate()
+        self.EndTrain           = Delegate()
+
+        self.BeginEpochTrain    = Delegate()
+        self.EndEpochTrain      = Delegate()
+
+        self.BeginBatchTrain    = Delegate()
+        self.EndBatchTrain      = Delegate()
+
+        self.CurrEpochIndex     = 0
+        self.CurrBatchIndex     = 0
 
     @staticmethod
     def _BackPropagate(inOptimizer : Optimizer, inLoss : Tensor) -> None:
@@ -27,44 +40,39 @@ class BaseTrainer(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _BeginBatchTrain(self, inBatchIndex, **inArgs) -> None:
-        pass
-
-    @abc.abstractmethod
-    def _BatchTrain(self, inBatchData) :
+    def _BatchTrain(self, inBatchData, inBatchLabel, *inArgs, **inKWArgs) :
         pass
     
-    @abc.abstractmethod
-    def _EndBatchTrain(self, inBatchIndex, **inArgs) -> None:
-        pass
+    def __DontOverride__EpochTrain(self, inDataLoader:DataLoader, *inArgs, **inKWArgs) -> None:
+        # Begin Epoch Train 
+        # call BeginEpochTrain
+        self.BeginEpochTrain(*inArgs, **inKWArgs)
+
+        # For Each Batch Train
+        for self.CurrBatchIndex, (CurrBatchData, CurrBatchLabel) in enumerate(inDataLoader):
+            self.BeginBatchTrain(*inArgs, **inKWArgs)
+            self._BatchTrain(CurrBatchData, CurrBatchLabel, *inArgs, **inKWArgs)
+            self.EndBatchTrain(*inArgs, **inKWArgs)
+        
+        # End Epoch Train
+        # call EndEpochTrain
+        self.EndEpochTrain(*inArgs, **inKWArgs)
 
 
-    @abc.abstractmethod
-    def _BeginEpochTrain(self, inEpochIndex, **inArgs) -> None:
-        pass
-
-    def _TrainEpoch(self, inEpochIndex, inDataLoader:DataLoader, **inArgs) -> None:
-        self._BeginEpochTrain(inEpochIndex, **inArgs)
-        for BatchIndex, (RealBatchData, _) in enumerate(inDataLoader):
-            self._BatchTrain(BatchIndex, RealBatchData, **inArgs)
-        self._EndEpochTrain(inEpochIndex, **inArgs)
-
-    @abc.abstractmethod
-    def _EndEpochTrain(self, inEpochIndex, **inArgs) -> None:
-        pass
-
-    @abc.abstractmethod
-    def _BeginTrain(self, **inArgs) -> None:
-        pass
-
-    def Train(self, inNumEpochs : int, inDataLoader:DataLoader, **inArgs) -> None:
+    def __DontOverride__Train(self, inNumEpochs : int, inDataLoader:DataLoader, *inArgs, **inKWArgs) -> None:
+        # Begin Train
+        # Create Optimizer & Loss Function
         self._CreateOptimizer()
         self._CreateLossFN()
-        self._BeginTrain(**inArgs)
-        for EpochIndex in range(inNumEpochs) :
-            self._TrainEpoch(EpochIndex, inDataLoader, **inArgs)
-        self._EndTrain(**inArgs)
+        self.BeginTrain(*inArgs, **inKWArgs)
 
-    @abc.abstractmethod
-    def _EndTrain(self, **inArgs) -> None:
-        pass
+        # For Each Epoch Train
+        for self.CurrEpochIndex in range(inNumEpochs) :
+            self.__DontOverride__EpochTrain(inDataLoader, *inArgs, **inKWArgs)
+        
+        # End Train
+        self.EndTrain(*inArgs, **inKWArgs)
+
+
+    def Train(self, inNumEpochs : int, inDataLoader:DataLoader, *inArgs, **inKWArgs) -> None:
+        self.__DontOverride__Train(inNumEpochs, inDataLoader, *inArgs, **inKWArgs)
