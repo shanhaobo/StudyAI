@@ -9,6 +9,7 @@ from GAN.DCGANModel import DCGANModel
 
 from datetime import datetime
 
+'''
 # 定义数据集
 class MNISTDataset(torch.utils.data.Dataset):
     def __init__(self):
@@ -30,6 +31,7 @@ class MNISTDataset(torch.utils.data.Dataset):
     
     def __getitem__(self, index):
         return self.images[index]
+'''
 
 if __name__ == "__main__" :
     now = datetime.now()
@@ -46,6 +48,7 @@ if __name__ == "__main__" :
             transforms.Normalize((0.5,), (0.5,))
         ])
         #dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
-        dataset = datasets.ImageFolder(root='D:/__DevAI__/Datasets/cartoon_faces', transform=transform)
+        #dataset = datasets.ImageFolder(root='D:/__DevAI__/Datasets/cartoon_faces', transform=transform)
+        dataset = datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
         dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
         GAN.Train(10, dataloader, inSaveModelInterval=1)

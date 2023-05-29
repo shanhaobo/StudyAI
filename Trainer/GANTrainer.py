@@ -29,7 +29,7 @@ class GANTrainer(MultiNNTrainer):
         pass
 
     def _CreateLossFN(self) -> None:
-        self.LossFN     = nn.BCELoss()
+        self.LossFN     = nn.BCELoss().to(self.Device)
         pass
 
     def _CalcLossForReal(self, inBatchData):
@@ -43,24 +43,24 @@ class GANTrainer(MultiNNTrainer):
         return self.LossFN(DiscriminatorResult, FakeLabels)
 
 
-    def _BatchTrain(self, inBatchData, inBatchLabel, *inArgs, **inKWArgs) :
+    def _BatchTrain(self, inBatchDatum, inBatchLabel, *inArgs, **inKWArgs) :
 
-        nBatchSize = inBatchData.size(0)
+        nBatchSize = inBatchDatum.size(0)
         BatchGeneratorInputSize = (nBatchSize, ) + self.GeneratorInputSize
         
         # Optimize Discriminator
-        RealBatchData = inBatchData.to(self.Device)
-        DLossReal = self._CalcLossForReal(RealBatchData)
+        RealDatum = inBatchDatum.to(self.Device)
+        DLossReal = self._CalcLossForReal(RealDatum)
 
-        FakeBatchData = self.Generator(torch.randn(BatchGeneratorInputSize).to(self.Device))
-        DLossFake = self._CalcLossForFake(FakeBatchData)
+        GenFakeDatum = self.Generator(torch.randn(BatchGeneratorInputSize).to(self.Device))
+        # detach() do not effect Generator
+        DLossFake = self._CalcLossForFake(GenFakeDatum.detach())
 
         DLoss = (DLossReal + DLossFake) * 0.5
         self._BackPropagate(self.OptimizerD, DLoss)
         
         # Optimize Generator
-        FakeBatchData = self.Generator(torch.randn(BatchGeneratorInputSize).to(self.Device))
-        GLoss = self._CalcLossForReal(FakeBatchData)
+        GLoss = self._CalcLossForReal(GenFakeDatum) 
         self._BackPropagate(self.OptimizerG, GLoss)
 
         self.CurrBatchDiscriminatorLoss = DLoss.item()

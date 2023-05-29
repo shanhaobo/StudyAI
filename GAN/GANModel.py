@@ -13,7 +13,7 @@ class GANModel(object):
             inDiscriminator : torch.nn.Module,
             inGeneratorSize,
             inLearningRate = 1e-5,
-            inModelFolderPath = "."
+            inModelRootFolderPath = "."
         ) -> None:
         
         self.Trainer = GANTrainer(
@@ -26,7 +26,7 @@ class GANModel(object):
         self.Archiver = GANArchiver(
             inGenerator,
             inDiscriminator,
-            inModelFolderPath
+            inModelRootFolderPath
         )
 
         self.Trainer.EndBatchTrain.add(self.EndBatchTrain)
@@ -39,7 +39,7 @@ class GANModel(object):
         self.Trainer.Train(inNumEpochs, inDataLoader, SaveModelInterval=inSaveModelInterval)
 
     def Gen(self, inPostFix = ""):
-        self.Archiver.Load(inForTrain=False, inPostfix=inPostFix)
+        self.Archiver.Load(inForTrain=False, inSuffix=inPostFix)
         self.Generator.eval()
         return self.Generator(torch.randn((1, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
 
@@ -52,7 +52,10 @@ class GANModel(object):
             "{} | Epoch:{:0>4d} | Batch:{:0>6d} | DLoss:{:.8f} | GLoss:{:.8f}".
             format(
                 now.strftime("%Y%m%d:%H%M%S:%f"),
-                self.Trainer.CurrEpochIndex + 1, self.Trainer.CurrBatchIndex + 1, self.Trainer.CurrBatchDiscriminatorLoss, self.Trainer.CurrBatchGeneratorLoss
+                self.Trainer.CurrEpochIndex + 1,
+                self.Trainer.CurrBatchIndex + 1,
+                self.Trainer.CurrBatchDiscriminatorLoss,
+                self.Trainer.CurrBatchGeneratorLoss
             )
         )
         pass
@@ -61,7 +64,7 @@ class GANModel(object):
         interval = inKWArgs["SaveModelInterval"]
         if self.Trainer.CurrEpochIndex % interval == 0 and self.Trainer.CurrEpochIndex > 0 :
             print("Epoch:{} Save Models".format(self.Trainer.CurrEpochIndex + 1))
-            self.Archiver.Save("{:0>4d}".format(self.Trainer.CurrEpochIndex + 1))
+            self.Archiver.Save("_{:0>4d}".format(self.Trainer.CurrEpochIndex + 1))
         pass
 
     def EndTrain(self, *inArgs, **inKWArgs)->None:
