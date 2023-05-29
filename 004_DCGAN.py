@@ -34,13 +34,13 @@ class MNISTDataset(torch.utils.data.Dataset):
 '''
 
 if __name__ == "__main__" :
-    now = datetime.now()
-    timestamp = now.strftime("%Y%m%d%H%M")
-    GAN = DCGANModel(128, 3, (128, 1, 1), inModelFolderPath="./models/CFGAN_"+timestamp)
+    GAN = DCGANModel(128, 3, (128, 1, 1), inModeRootlFolderPath="./models/CFGAN")
     if GAN.IsExistModels() :
         GenImage = GAN.Gen()
         print(GenImage.size())
-        save_image(GenImage, "images/11.png", nrow=5, normalize=True)
+        now = datetime.now()
+        timestamp = now.strftime("%Y%m%d%H%M%S")
+        save_image(GenImage, "images/{}.png".format(timestamp), nrow=5, normalize=True)
     else :
         #dataset = MNISTDataset()
         transform = transforms.Compose([

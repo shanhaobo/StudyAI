@@ -73,11 +73,11 @@ class DCGANModel(GANModel):
 
             return x
 
-    def __init__(self, inDim, inChannel, inGeneratorSize, inLearningRate=0.00001, inModelFolderPath=".") -> None:
+    def __init__(self, inDim, inChannel, inGeneratorSize, inLearningRate=0.00001, inModeRootlFolderPath=".") -> None:
         super().__init__(
             DCGANModel.InnerGenerator(inDim, inChannel),
             DCGANModel.InnerDiscriminator(inDim, inChannel),
             inGeneratorSize,
             inLearningRate,
-            inModelFolderPath
+            inModeRootlFolderPath
         )

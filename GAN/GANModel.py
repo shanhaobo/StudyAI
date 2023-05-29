@@ -33,15 +33,13 @@ class GANModel(object):
         self.Trainer.EndEpochTrain.add(self.EndEpochTrain)
         self.Trainer.EndTrain.add(self.EndTrain)
 
-        self.Generator = self.Trainer.Generator
-
     def Train(self, inNumEpochs : int, inDataLoader:DataLoader, inSaveModelInterval : int = 10) -> None:
         self.Trainer.Train(inNumEpochs, inDataLoader, SaveModelInterval=inSaveModelInterval)
 
     def Gen(self, inPostFix = ""):
         self.Archiver.Load(inForTrain=False, inSuffix=inPostFix)
-        self.Generator.eval()
-        return self.Generator(torch.randn((1, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
+        self.Trainer.Generator.eval()
+        return self.Trainer.Generator(torch.randn((1, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
 
     def IsExistModels(self, inForTrain : bool = True, inPostFix = "") -> bool:
         return self.Archiver.IsExistModel(inForTrain, inPostFix)
