@@ -10,7 +10,8 @@ from Utils.Delegate import Delegate
 
 class BaseTrainer(abc.ABC):
     def __init__(self, inLearningRate) -> None:
-        self.Device             = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.Device             = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(torch.cuda.get_device_name(self.Device.index))
         self.LearningRate       = inLearningRate
 
         self.BeginTrain         = Delegate()
@@ -59,20 +60,26 @@ class BaseTrainer(abc.ABC):
         self.EndEpochTrain(*inArgs, **inKWArgs)
 
 
-    def __DontOverride__Train(self, inNumEpochs : int, inDataLoader:DataLoader, *inArgs, **inKWArgs) -> None:
+    def __DontOverride__Train(self, inDataLoader:DataLoader, inNumEpochs : int = 0, inStartEpochIndex : int = 0, *inArgs, **inKWArgs) -> None:
         # Begin Train
         # Create Optimizer & Loss Function
         self._CreateOptimizer()
         self._CreateLossFN()
         self.BeginTrain(*inArgs, **inKWArgs)
 
-        # For Each Epoch Train
-        for self.CurrEpochIndex in range(inNumEpochs) :
-            self.__DontOverride__EpochTrain(inDataLoader, *inArgs, **inKWArgs)
+        if inNumEpochs <= 0 :
+            self.CurrEpochIndex = inStartEpochIndex
+            while True:
+                self.__DontOverride__EpochTrain(inDataLoader, *inArgs, **inKWArgs)
+                self.CurrEpochIndex += 1
+        else:
+            # For Each Epoch Train
+            for self.CurrEpochIndex in range(inStartEpochIndex, inNumEpochs) :
+                self.__DontOverride__EpochTrain(inDataLoader, *inArgs, **inKWArgs)
         
         # End Train
         self.EndTrain(*inArgs, **inKWArgs)
 
 
-    def Train(self, inNumEpochs : int, inDataLoader:DataLoader, *inArgs, **inKWArgs) -> None:
-        self.__DontOverride__Train(inNumEpochs, inDataLoader, *inArgs, **inKWArgs)
+    def Train(self, inDataLoader : DataLoader, inNumEpochs : int = 0, inStartEpochIndex : int = 0, *inArgs, **inKWArgs) -> None:
+        self.__DontOverride__Train(inDataLoader, inNumEpochs, inStartEpochIndex, *inArgs, **inKWArgs)

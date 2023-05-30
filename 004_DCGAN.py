@@ -9,6 +9,8 @@ from Models.GANs.DCGANModel import DCGANModel
 
 from datetime import datetime
 
+from Utils.Executor import Executor
+
 '''
 # 定义数据集
 class MNISTDataset(torch.utils.data.Dataset):
@@ -35,8 +37,12 @@ class MNISTDataset(torch.utils.data.Dataset):
 
 if __name__ == "__main__" :
     GAN = DCGANModel(128, 3, (128, 1, 1), inModeRootlFolderPath="./trained_models/CFGAN")
+
+    #Exec = Executor(GAN)
+    #Exec.Run()
+
     if GAN.IsExistModels() :
-        GenImage = GAN.Gen()
+        GenImage = GAN.Eval()
         print(GenImage.size())
         now = datetime.now()
         timestamp = now.strftime("%Y%m%d%H%M%S")
@@ -51,4 +57,4 @@ if __name__ == "__main__" :
         dataset = datasets.ImageFolder(root='D:/__DevAI__/Datasets/cartoon_faces', transform=transform)
         #dataset = datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
         dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
-        GAN.Train(10, dataloader, inSaveModelInterval=1)
+        GAN.Train(dataloader, SaveModelInterval=1)

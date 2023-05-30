@@ -18,28 +18,34 @@ class GANModel(BaseModel):
             inModelRootFolderPath = "."
         ) -> None:
         
-        self.Trainer = GANTrainer(
+        NewTrainer = GANTrainer(
             inGenerator,
             inDiscriminator,
             inGeneratorSize,
             inLearningRate
         )
 
-        self.Archiver = GANArchiver(
+        NewArchiver = GANArchiver(
             inGenerator,
             inDiscriminator,
             inModelRootFolderPath
         )
 
+        super().__init__(NewTrainer, NewArchiver)
+
         self.Trainer.EndBatchTrain.add(self.EndBatchTrain)
         self.Trainer.EndEpochTrain.add(self.EndEpochTrain)
         self.Trainer.EndTrain.add(self.EndTrain)
+        self.Trainer.BeginTrain.add(self.BeginTrain)
 
-    def Train(self, inNumEpochs : int, inDataLoader:DataLoader, inSaveModelInterval : int = 10) -> None:
-        self.Trainer.Train(inNumEpochs, inDataLoader, SaveModelInterval=inSaveModelInterval)
+    def Train(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
+        super().Train(inDataLoader, inNumEpochs, *inArgs, **inKWArgs)
 
-    def Gen(self, inSuffix = ""):
-        self.Archiver.Load(inForTrain=False, inSuffix=inSuffix)
+    def IncTrain(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
+        super().IncTrain(inDataLoader, inNumEpochs, *inArgs, **inKWArgs)
+
+    def Eval(self, inSuffix = ""):
+        super().Eval(inSuffix)
         self.Trainer.Generator.eval()
         return self.Trainer.Generator(torch.randn((1, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
 
@@ -47,11 +53,11 @@ class GANModel(BaseModel):
         return self.Archiver.IsExistModel(inForTrain, inPostFix)
     
     def EndBatchTrain(self, *inArgs, **inKWArgs) -> None:
-        now  = datetime.now()
+        NowStr  = datetime.now().strftime("%Y%m%d:%H%M%S:%f")
         print(
             "{} | Epoch:{:0>4d} | Batch:{:0>6d} | DLoss:{:.8f} | GLoss:{:.8f}".
             format(
-                now.strftime("%Y%m%d:%H%M%S:%f"),
+                NowStr,
                 self.Trainer.CurrEpochIndex + 1,
                 self.Trainer.CurrBatchIndex + 1,
                 self.Trainer.CurrBatchDiscriminatorLoss,
@@ -69,3 +75,7 @@ class GANModel(BaseModel):
 
     def EndTrain(self, *inArgs, **inKWArgs)->None:
         self.Archiver.Save("")
+        print("End Train")
+
+    def BeginTrain(self, *inArgs, **inKWArgs)->None:
+        print("Begin Training...")

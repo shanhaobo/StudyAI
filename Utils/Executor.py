@@ -15,8 +15,10 @@ class Executor :
     def Run(self) :
         for i in sys.argv :
             if (i == "train") :
-                self.Train()
+                self.Train(True)
+            elif (i == "trainnew") :
+                self.Train(False)
             elif (i == "eval") :
                 self.Eval()
-            
-        pass
+            else :
+                self.Train(False)

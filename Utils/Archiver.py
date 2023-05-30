@@ -15,7 +15,7 @@ class BaseArchiver(object):
             NowStr = datetime.now().strftime("%Y%m%d%H%M")
             self.ModelArchiveFolderPath = os.path.join(self.ModelArchiveFolderPath, NowStr)
 
-        os.makedirs(self.ModelArchiveFolderPath)
+        os.makedirs(self.ModelArchiveFolderPath, exist_ok=True)
 
     def Save(self, inSuffix = "") -> None:
         pass
