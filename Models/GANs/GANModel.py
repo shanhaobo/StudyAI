@@ -3,10 +3,12 @@ from torch.utils.data import DataLoader
 
 from datetime import datetime
 
+from Models.BaseModel import BaseModel
+
 from Trainer.GANTrainer import GANTrainer
 from Utils.Archiver import GANArchiver
 
-class GANModel(object):
+class GANModel(BaseModel):
     def __init__(
             self,
             inGenerator : torch.nn.Module,
@@ -36,8 +38,8 @@ class GANModel(object):
     def Train(self, inNumEpochs : int, inDataLoader:DataLoader, inSaveModelInterval : int = 10) -> None:
         self.Trainer.Train(inNumEpochs, inDataLoader, SaveModelInterval=inSaveModelInterval)
 
-    def Gen(self, inPostFix = ""):
-        self.Archiver.Load(inForTrain=False, inSuffix=inPostFix)
+    def Gen(self, inSuffix = ""):
+        self.Archiver.Load(inForTrain=False, inSuffix=inSuffix)
         self.Trainer.Generator.eval()
         return self.Trainer.Generator(torch.randn((1, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
 

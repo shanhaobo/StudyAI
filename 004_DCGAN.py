@@ -5,7 +5,7 @@ import torchvision.datasets as datasets
 from torchvision.transforms import transforms
 from torchvision.utils import save_image
 
-from GANs.DCGANModel import DCGANModel
+from Models.GANs.DCGANModel import DCGANModel
 
 from datetime import datetime
 
@@ -34,7 +34,7 @@ class MNISTDataset(torch.utils.data.Dataset):
 '''
 
 if __name__ == "__main__" :
-    GAN = DCGANModel(128, 3, (128, 1, 1), inModeRootlFolderPath="./models/CFGAN")
+    GAN = DCGANModel(128, 3, (128, 1, 1), inModeRootlFolderPath="./trained_models/CFGAN")
     if GAN.IsExistModels() :
         GenImage = GAN.Gen()
         print(GenImage.size())
@@ -48,7 +48,7 @@ if __name__ == "__main__" :
             transforms.Normalize((0.5,), (0.5,))
         ])
         #dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
-        #dataset = datasets.ImageFolder(root='D:/__DevAI__/Datasets/cartoon_faces', transform=transform)
-        dataset = datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
+        dataset = datasets.ImageFolder(root='D:/__DevAI__/Datasets/cartoon_faces', transform=transform)
+        #dataset = datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
         dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
         GAN.Train(10, dataloader, inSaveModelInterval=1)
