@@ -66,4 +66,4 @@ class GANModel(object):
         pass
 
     def EndTrain(self, *inArgs, **inKWArgs)->None:
-        self.Archiver.Save(f"{self.Trainer.CurrEpochIndex + 1}")
+        self.Archiver.Save("")

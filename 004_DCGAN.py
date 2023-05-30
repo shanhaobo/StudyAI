@@ -5,7 +5,7 @@ import torchvision.datasets as datasets
 from torchvision.transforms import transforms
 from torchvision.utils import save_image
 
-from GAN.DCGANModel import DCGANModel
+from GANs.DCGANModel import DCGANModel
 
 from datetime import datetime
 
