@@ -26,7 +26,7 @@ class BaseArchiver(object):
     def LoadLastest(self, inForTrain : bool = True) -> bool:
         pass
     
-    def IsExistModel(self, inForTrain : bool = True, inSuffix = "") -> bool:
+    def IsExistModel(self, inForTrain : bool = True, *inArgs, **inKWArgs) -> bool:
         pass
 
     def GetModelFullPath(self, inModelName : str, inSuffix : str = "") -> str:
@@ -130,13 +130,11 @@ class GANArchiver(MultiNNArchiver):
         self.NNModelDict["Generator"] = self.Generator
         self.NNModelDict["Discriminator"] = self.Discriminator
 
-    def IsExistModel(self, inForTrain : bool = True, inSuffix = "") -> bool:
-        bExistGModel = os.path.isfile(f"{self.ModelRootFolderPath}/Generator{inSuffix}.pkl")
-        if inForTrain :
-            bExistDModel = os.path.isfile(f"{self.ModelRootFolderPath}/Discriminator{inSuffix}.pkl")
-        else:
-            bExistDModel = True
-        return bExistDModel and bExistGModel
+    def IsExistModel(self, inForTrain : bool = True, *inArgs, **inKWArgs) -> bool:
+        if ((self.FindLatestModelFile("Generator") != None) and (inForTrain == False)) :
+            return True
+        
+        return self.FindLatestModelFile("Discriminator") != None
 
     def Load(self, inForTrain : bool = True, inSuffix = "") -> None :
         self.Generator.load_state_dict(torch.load(f"{self.ModelRootFolderPath}/Generator{inSuffix}.pkl"))

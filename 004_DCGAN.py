@@ -37,12 +37,10 @@ class MNISTDataset(torch.utils.data.Dataset):
 
 if __name__ == "__main__" :
     GAN = DCGANModel(128, 3, (128, 1, 1), inModeRootlFolderPath="./trained_models/CFGAN")
+    Exec = Executor(GAN)
 
-    #Exec = Executor(GAN)
-    #Exec.Run()
-
-    if GAN.IsExistModels() :
-        GenImage = GAN.Eval()
+    if Exec.IsExistModel() :
+        GenImage = Exec.Eval()
         print(GenImage.size())
         now = datetime.now()
         timestamp = now.strftime("%Y%m%d%H%M%S")
@@ -54,7 +52,7 @@ if __name__ == "__main__" :
             transforms.Normalize((0.5,), (0.5,))
         ])
         #dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
-        dataset = datasets.ImageFolder(root='D:/__DevAI__/Datasets/cartoon_faces', transform=transform)
-        #dataset = datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
+        #dataset = datasets.ImageFolder(root='D:/__DevAI__/Datasets/cartoon_faces', transform=transform)
+        dataset = datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
         dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
-        GAN.Train(dataloader, SaveModelInterval=1)
+        Exec.Train(dataloader, SaveModelInterval=1)

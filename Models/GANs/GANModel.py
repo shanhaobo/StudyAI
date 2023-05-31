@@ -44,13 +44,14 @@ class GANModel(BaseModel):
     def IncTrain(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
         super().IncTrain(inDataLoader, inNumEpochs, *inArgs, **inKWArgs)
 
-    def Eval(self, inSuffix = ""):
-        super().Eval(inSuffix)
+    def Eval(self, *inArgs, **inKWArgs):
+        if (super().Eval(*inArgs, **inKWArgs) == False) :
+            return None
         self.Trainer.Generator.eval()
         return self.Trainer.Generator(torch.randn((1, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
 
-    def IsExistModels(self, inForTrain : bool = True, inPostFix = "") -> bool:
-        return self.Archiver.IsExistModel(inForTrain, inPostFix)
+    def IsExistModels(self, inForTrain : bool = True, *inArgs, **inKWArgs) -> bool:
+        return self.Archiver.IsExistModel(inForTrain, *inArgs, **inKWArgs)
     
     def EndBatchTrain(self, *inArgs, **inKWArgs) -> None:
         NowStr  = datetime.now().strftime("%Y%m%d:%H%M%S:%f")
