@@ -50,9 +50,6 @@ class GANModel(BaseModel):
         self.Trainer.Generator.eval()
         return self.Trainer.Generator(torch.randn((1, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
 
-    def IsExistModels(self, inForTrain : bool = True, *inArgs, **inKWArgs) -> bool:
-        return self.Archiver.IsExistModel(inForTrain, *inArgs, **inKWArgs)
-    
     def EndBatchTrain(self, *inArgs, **inKWArgs) -> None:
         NowStr  = datetime.now().strftime("%Y%m%d:%H%M%S:%f")
         print(
