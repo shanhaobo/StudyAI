@@ -38,6 +38,8 @@ class GANModel(BaseModel):
         self.Trainer.EndTrain.add(self.EndTrain)
         self.Trainer.BeginTrain.add(self.BeginTrain)
 
+        self.SaveEpochIndex = -1
+
     def Train(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
         super().Train(inDataLoader, inNumEpochs, *inArgs, **inKWArgs)
 
@@ -68,11 +70,13 @@ class GANModel(BaseModel):
         interval = inKWArgs["SaveModelInterval"]
         if self.Trainer.CurrEpochIndex % interval == 0 and self.Trainer.CurrEpochIndex > 0 :
             print("Epoch:{} Save Models".format(self.Trainer.CurrEpochIndex + 1))
-            self.Archiver.Save("_{:0>4d}".format(self.Trainer.CurrEpochIndex + 1))
+            self.Archiver.Save(self.Trainer.CurrEpochIndex + 1)
+            self.SaveEpochIndex = self.Trainer.CurrEpochIndex
         pass
 
     def EndTrain(self, *inArgs, **inKWArgs)->None:
-        self.Archiver.Save("")
+        if (self.SaveEpochIndex < self.Trainer.CurrEpochIndex) : 
+            self.Archiver.Save(self.Trainer.CurrEpochIndex + 1)
         print("End Train")
 
     def BeginTrain(self, *inArgs, **inKWArgs)->None:

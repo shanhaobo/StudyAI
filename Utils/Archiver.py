@@ -2,7 +2,7 @@ import torch
 import os
 import glob
 from datetime import datetime
-
+import ModelFileOp as FindFileWithMaxNum
 
 class BaseArchiver(object):
     def __init__(self, inModelPrefix : str, inModelRootFolderPath : str = ".", inNeedTimestamp : bool = True) -> None:
@@ -17,7 +17,7 @@ class BaseArchiver(object):
 
         os.makedirs(self.ModelArchiveFolderPath, exist_ok=True)
 
-    def Save(self, inSuffix = "") -> None:
+    def Save(self, inEpochIndex : int, inSuffix = "") -> None:
         pass
     
     def Load(self, inForTrain : bool = True, inSuffix = "") -> None :
@@ -29,36 +29,10 @@ class BaseArchiver(object):
     def IsExistModel(self, inForTrain : bool = True, *inArgs, **inKWArgs) -> bool:
         pass
 
-    def GetModelFullPath(self, inModelName : str, inSuffix : str = "") -> str:
-        return os.path.join(self.ModelArchiveFolderPath, "{}_{}.pkl".format(inModelName, inSuffix))
+    def GetModelFullPath(self, inModelName : str, inEpochIndex : int,  inSuffix : str = "") -> str:
+        return os.path.join(self.ModelArchiveFolderPath, "{}_{}_{}.pkl".format(inModelName, inEpochIndex, inSuffix))
     
     def FindLatestModelFile(self, inModelName : str):
-        # 获取所有子文件夹
-        SubFolders = [d for d in os.listdir(self.ModelArchiveRootFolderPath) if os.path.isdir(os.path.join(self.ModelArchiveFolderPath, d))]
-
-        # 按照时间戳排序子文件夹（从最新到最旧）
-        SubFolders.sort(reverse=True)
-
-        if not SubFolders:
-            return None
-
-        # 取最新的子文件夹
-        LatestSubFolder = SubFolders[0]
-        LatestSubFolderPath = os.path.join(self.ModelArchiveRootFolderPath, LatestSubFolder)
-
-        # 使用 glob 以及文件名前缀来获取子文件夹下所有的 .pkl 文件
-        ModelFiles = glob.glob(os.path.join(LatestSubFolderPath, f'{inModelName}*.pkl'))
-
-        if not ModelFiles:
-            return None
-
-        # 从文件名中获取数字部分，并转换为int，然后排序
-        ModelFiles.sort(key=lambda f: int(f.split('_')[-1].split('.')[0]), reverse=True)
-
-        # 返回数字最大（也就是最新）的文件
-        return ModelFiles[0]
-
-    def FindLatestModelFiles(self, inModelNames):
         # 获取所有子文件夹
         SubFolders = [d for d in os.listdir(self.ModelArchiveRootFolderPath) if os.path.isdir(os.path.join(self.ModelArchiveRootFolderPath, d))]
 
@@ -66,53 +40,52 @@ class BaseArchiver(object):
         SubFolders.sort(reverse=True)
 
         if not SubFolders:
-            return None
+            return None, None
 
-        # 取最新的子文件夹
-        LatestSubFolder = SubFolders[0]
-        LatestSubFolderPath = os.path.join(self.ModelArchiveRootFolderPath, LatestSubFolder)
+        for SF in SubFolders:
+            # 取最新的子文件夹
+            LatestSubFolder = SF
+            LatestSubFolderPath = os.path.join(self.ModelArchiveRootFolderPath, LatestSubFolder)
 
-        LatestModelFiles = {}
-
-        for ModelName in inModelNames:
             # 使用 glob 以及文件名前缀来获取子文件夹下所有的 .pkl 文件
-            ModelFiles = glob.glob(os.path.join(LatestSubFolderPath, f'{ModelName}*.pkl'))
+            ModelFiles = glob.glob(os.path.join(LatestSubFolderPath, f"{inModelName}*.pkl"))
 
             if not ModelFiles:
-                LatestModelFiles[ModelName] = None
-            else:
-                # 从文件名中获取数字部分，并转换为int，然后排序
-                ModelFiles.sort(key=lambda f: int(f.split('_')[-1].split('.')[0]), reverse=True)
+                continue
 
-                # 记录数字最大（也就是最新）的文件
-                LatestModelFiles[ModelName] = ModelFiles[0]
-
-        return LatestModelFiles
+            # 返回数字最大（也就是最新）的文件
+            return FindFileWithMaxNum(ModelFiles, inModelName, "*", "pkl")
+        
+        return None, None
 
 class MultiNNArchiver(BaseArchiver):
     def __init__(self, inModelPrefix : str, inModelRootFolderPath : str = ".", inNeedTimestamp : bool = True) -> None:
         super().__init__(inModelPrefix, inModelRootFolderPath, inNeedTimestamp)
         self.NNModelDict = {}
 
-    def Save(self, inSuffix = "") -> None:
+    def Save(self, inEpochIndex : int, inSuffix = "") -> None:
         for Name, Model in self.NNModelDict.items():
-            ModelFullPath = self.GetModelFullPath(Name, inSuffix)
+            ModelFullPath = self.GetModelFullPath(Name, inEpochIndex, inSuffix)
             torch.save(Model.state_dict(), ModelFullPath)
             print("Save Model:" + ModelFullPath)
 
-    def LoadLastest(self, inForTrain : bool = True) -> bool:
+    def LoadLastest(self, inForTrain : bool = True):
+        MaxEpochIndex = -1
         for Name, _ in self.NNModelDict.items():
-            if self.LoadLastestByModelName(Name) == False:
-                return False
-        return True
+            bSuccess, EpochIndex = self.LoadLastestByModelName(Name)
+            if bSuccess == False :
+                return False, -1
+            if EpochIndex > MaxEpochIndex :
+                MaxEpochIndex = EpochIndex
+        return True, MaxEpochIndex
 
-    def LoadLastestByModelName(self, inModelName : str) -> bool:
-        ModelFullPath = self.FindLatestModelFile(inModelName)
+    def LoadLastestByModelName(self, inModelName : str):
+        ModelFullPath, EpochIndex = self.FindLatestModelFile(inModelName)
         if ModelFullPath == None :
-            return False
+            return False, -1
         self.NNModelDict[inModelName].load_state_dict(torch.load(ModelFullPath))
         print("Load Model:" + ModelFullPath)
-        return True
+        return True, EpochIndex
 
 class GANArchiver(MultiNNArchiver):
     def __init__(
@@ -142,10 +115,12 @@ class GANArchiver(MultiNNArchiver):
             self.Discriminator.load_state_dict(torch.load(f"{self.ModelRootFolderPath}/Discriminator{inSuffix}.pkl")) 
 
     def LoadLastest(self, inForTrain : bool = False) -> bool:
-        if self.LoadLastestByModelName("Generator") == False :
-            return False
+        bSuccess, EpochIndex = self.LoadLastestByModelName("Generator")
+        if bSuccess == False :
+            return False, -1
         
-        if inForTrain and self.LoadLastestByModelName("Discriminator") == False :
-            return False
+        if inForTrain :
+            bSuccess, EpochIndex =  self.LoadLastestByModelName("Discriminator")
+            return False, -1
 
-        return True
+        return True, EpochIndex
