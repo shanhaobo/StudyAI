@@ -25,3 +25,5 @@ class BaseModel(object):
     def IsExistModels(self, inForTrain : bool = True, *inArgs, **inKWArgs) -> bool:
         return self.Archiver.IsExistModel(inForTrain, *inArgs, **inKWArgs)
     
+    def Eval(self, *inArgs, **inKWArgs):
+        self.LoadLastest(False)

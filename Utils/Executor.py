@@ -28,3 +28,9 @@ class Executor :
     def IsExistModel(self) :
         return self.Model.IsExistModels(True)
     
+    def ReadyTrain(self) :
+        for i in sys.argv :
+            if (i == "IncTrain") :
+                return True
+            if (i == "Train") :
+                return True
