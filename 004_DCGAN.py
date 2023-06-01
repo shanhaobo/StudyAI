@@ -39,7 +39,7 @@ if __name__ == "__main__" :
     GAN = DCGANModel(128, 3, (128, 1, 1), inModeRootlFolderPath="./trained_models/CFGAN")
     Exec = Executor(GAN)
 
-    if Exec.IsExistModel() :
+    if Exec.IsExistModel() and Exec.ReadyTrain() == False:
         GenImage = Exec.Eval()
         print(GenImage.size())
         now = datetime.now()

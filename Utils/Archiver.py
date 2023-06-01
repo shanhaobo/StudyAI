@@ -48,7 +48,7 @@ class BaseArchiver(object):
             LatestSubFolderPath = os.path.join(self.ModelArchiveRootFolderPath, LatestSubFolder)
 
             # 使用 glob 以及文件名前缀来获取子文件夹下所有的 .pkl 文件
-            ModelFiles = glob.glob(os.path.join(LatestSubFolderPath, f"{inModelName}*.pkl"))
+            ModelFiles = os.listdir(LatestSubFolderPath)
 
             if not ModelFiles:
                 continue

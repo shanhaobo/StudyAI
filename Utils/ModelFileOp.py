@@ -13,9 +13,9 @@ def FindFileWithMaxNum(inFileList, inPrefix, inSuffix, inExtension=None):
 
     if inExtension:
         inExtension = re.escape(inExtension)
-        Pattern = f'^{PartialPrefix}(\d+){PartialSuffix}\.{inExtension}$'
+        Pattern = f'^{PartialPrefix}.*?(\d+){PartialSuffix}\.{inExtension}$'
     else:
-        Pattern = f'^{PartialPrefix}(\d+){PartialSuffix}\..*$'
+        Pattern = f'^{PartialPrefix}.*?(\d+){PartialSuffix}\..*$'
 
     for file in inFileList:
         match = re.match(Pattern, file)
@@ -28,7 +28,8 @@ def FindFileWithMaxNum(inFileList, inPrefix, inSuffix, inExtension=None):
     return max_file, max_num
 
 def FindFileWithMaxNumByFolderPath(inFolderPath, inPrefix, inSuffix, inExtension=None):
-    return FindFileWithMaxNum(os.listdir(inFolderPath), inPrefix, inSuffix, inExtension)
+    FlieName, MaxNum = FindFileWithMaxNum(os.listdir(inFolderPath), inPrefix, inSuffix, inExtension)
+    return os.path.join(inFolderPath, FlieName), MaxNum
 
 if __name__ == "__main__" :
     folder_path = "trained_models\CFGAN_202305291532"  # 替换为你的文件夹路径
