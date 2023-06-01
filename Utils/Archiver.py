@@ -54,7 +54,8 @@ class BaseArchiver(object):
                 continue
 
             # 返回数字最大（也就是最新）的文件
-            return FindFileWithMaxNum(ModelFiles, inModelName, "*", "pkl")
+            FlieName, MaxNum =  FindFileWithMaxNum(ModelFiles, inModelName, "*", "pkl")
+            return os.path.join(LatestSubFolderPath, FlieName), MaxNum
         
         return None, None
 
@@ -121,6 +122,7 @@ class GANArchiver(MultiNNArchiver):
         
         if inForTrain :
             bSuccess, EpochIndex =  self.LoadLastestByModelName("Discriminator")
-            return False, -1
+            if bSuccess == False :
+                return False, -1
 
         return True, EpochIndex
