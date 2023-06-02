@@ -15,7 +15,7 @@ class BaseArchiver(object):
 
         os.makedirs(self.ModelArchiveFolderPath, exist_ok=True)
 
-    def Save(self, inEpochIndex : int, inSuffix = "") -> None:
+    def Save(self, inEpochIndex : int, inSuffix : str, inExtension : str) -> None:
         pass
     
     def Load(self, inForTrain : bool = True, inSuffix = "") -> None :
@@ -30,13 +30,13 @@ class BaseArchiver(object):
     def IsExistModel(self, inForTrain : bool = True, *inArgs, **inKWArgs) -> bool:
         pass
 
-    def GetModelFullPath(self, inModelName : str, inEpochIndex : int,  inSuffix : str = "", inExtension = "pkl") -> str:
+    def MakeNeuralNetworkArchiveFullPath(self, inNeuralNetworkName : str, inEpochIndex : int, inSuffix : str, inExtension : str) -> str:
         return os.path.join(
             self.ModelArchiveFolderPath,
-            "{}_{:0>6d}_{}.{}}".format(inModelName, inEpochIndex, inSuffix, inExtension)
+            "{}_{:0>6d}_{}.{}}".format(inNeuralNetworkName, inEpochIndex, inSuffix, inExtension)
         )
     
-    def GetLatestModelFolder(self) :
+    def GetLatestModelFolder(self) -> str :
         # 获取所有子文件夹
         SubFolders = [f for f in os.listdir(self.ModelArchiveRootFolderPath) if os.path.isdir(os.path.join(self.ModelArchiveRootFolderPath, f))]
 
@@ -48,8 +48,7 @@ class BaseArchiver(object):
 
         for SF in SubFolders:
             # 取最新的子文件夹
-            LatestSubFolder = SF
-            LatestSubFolderPath = os.path.join(self.ModelArchiveRootFolderPath, LatestSubFolder)
+            LatestSubFolderPath = os.path.join(self.ModelArchiveRootFolderPath, SF)
 
             # 使用 glob 以及文件名前缀来获取子文件夹下所有的 .pkl 文件
             ModelFiles = os.listdir(LatestSubFolderPath)
@@ -57,36 +56,13 @@ class BaseArchiver(object):
             if not ModelFiles:
                 continue
 
-            return ModelFiles
+            return LatestSubFolderPath
         
         return None
 
-
-
     def FindLatestModelFile(self, inModelName : str):
+        LatestFolderPath = self.GetLatestModelFolder()
 
-        # 获取所有子文件夹
-        SubFolders = [f for f in os.listdir(self.ModelArchiveRootFolderPath) if os.path.isdir(os.path.join(self.ModelArchiveRootFolderPath, f))]
-
-        # 按照时间戳排序子文件夹（从最新到最旧）
-        SubFolders.sort(reverse=True)
-
-        if not SubFolders:
-            return None, None
-
-        for SF in SubFolders:
-            # 取最新的子文件夹
-            LatestSubFolder = SF
-            LatestSubFolderPath = os.path.join(self.ModelArchiveRootFolderPath, LatestSubFolder)
-
-            # 使用 glob 以及文件名前缀来获取子文件夹下所有的 .pkl 文件
-            ModelFiles = os.listdir(LatestSubFolderPath)
-
-            if not ModelFiles:
-                continue
-
-            # 返回数字最大（也就是最新）的文件
-            FlieName, MaxNum =  FindFileWithMaxNum(ModelFiles, inModelName, "*", "pkl")
-            return os.path.join(LatestSubFolderPath, FlieName), MaxNum
-        
-        return None, None
+         # 返回数字最大（也就是最新）的文件
+        FlieName, MaxNum =  FindFileWithMaxNum(os.listdir(LatestFolderPath), inModelName, "*", "pkl")
+        return os.path.join(LatestFolderPath, FlieName), MaxNum
