@@ -2,8 +2,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from functools import partial
-
 from .MultiNNTrainer import MultiNNTrainer
 
 class GANTrainer(MultiNNTrainer):
@@ -44,15 +42,14 @@ class GANTrainer(MultiNNTrainer):
 
 
     def _BatchTrain(self, inBatchDatum, inBatchLabel, *inArgs, **inKWArgs) :
-
+        # get BatchSize
         nBatchSize = inBatchDatum.size(0)
-        BatchGeneratorInputSize = (nBatchSize, ) + self.GeneratorInputSize
         
         # Optimize Discriminator
         RealDatum = inBatchDatum.to(self.Device)
         DLossReal = self._CalcLossForReal(RealDatum)
 
-        GenFakeDatum = self.Generator(torch.randn(BatchGeneratorInputSize).to(self.Device))
+        GenFakeDatum = self.Generator(torch.randn((nBatchSize,) + self.GeneratorInputSize, device=self.Device))
         # detach() do not effect Generator
         DLossFake = self._CalcLossForFake(GenFakeDatum.detach())
 

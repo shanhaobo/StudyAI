@@ -6,7 +6,7 @@ from datetime import datetime
 from Models.BaseModel import BaseModel
 
 from Trainer.GANTrainer import GANTrainer
-from Utils.Archiver import GANArchiver
+from Archiver.MultiNNArchiver import GANArchiver
 
 class GANModel(BaseModel):
     def __init__(
@@ -53,7 +53,7 @@ class GANModel(BaseModel):
         return self.Trainer.Generator(torch.randn((1, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
 
     def EndBatchTrain(self, *inArgs, **inKWArgs) -> None:
-        NowStr  = datetime.now().strftime("%Y%m%d:%H%M%S:%f")
+        NowStr  = datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]")
         print(
             "{} | Epoch:{:0>4d} | Batch:{:0>6d} | DLoss:{:.8f} | GLoss:{:.8f}".
             format(

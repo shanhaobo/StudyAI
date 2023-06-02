@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
 
 from Trainer.BaseTrainer import BaseTrainer
-from Utils.Archiver import BaseArchiver
+from Archiver.BaseArchiver import BaseArchiver
 
 class BaseModel(object):
     def __init__(self, inTrainer : BaseTrainer, inArchiver : BaseArchiver):
