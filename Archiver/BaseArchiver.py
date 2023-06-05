@@ -18,10 +18,10 @@ class BaseArchiver(object):
     def Save(self, inEpochIndex : int, inSuffix : str, inExtension : str) -> None:
         pass
     
-    def Load(self, inForTrain : bool = True, inSuffix = "") -> None :
+    def Load(self, inForTrain : bool, inEpochIndex : int, inSuffix : str, inExtension : str) -> None :
         pass
 
-    def LoadLastest(self, inForTrain : bool = True) -> bool:
+    def LoadLastest(self, inForTrain : bool, inSuffix : str, inExtension : str) -> int:
         pass
 
     def LoadLastestByModelName(self, inModelName : str):
