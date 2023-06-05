@@ -5,6 +5,7 @@ class BaseFileManager() :
     def __init__(self, inRootDir:str, inExtension:str) -> None:
         self.RootDir = inRootDir
         self.Extension = inExtension if inExtension.startswith(".") else ("." + inExtension)
+        os.makedirs(inRootDir, exist_ok=True)
 
     def MakeLeafDirName(self, **inKWArgs) -> str:
         pass
