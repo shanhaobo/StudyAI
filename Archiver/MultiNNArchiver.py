@@ -7,9 +7,9 @@ class MultiNNArchiver(BaseArchiver):
         super().__init__(inModelPrefix, inModelRootFolderPath)
         self.NNModelDict = {}
 
-    def Save(self, inEpochIndex : int, inSuffix, inExtension) -> None:
+    def Save(self, inEpochIndex : int) -> None:
         for Name, Model in self.NNModelDict.items():
-            ModelFullPath = self.MakeNeuralNetworkArchiveFullPath(Name, inEpochIndex, inSuffix, inExtension)
+            ModelFullPath = self.MakeNeuralNetworkArchiveFullPath(Name, inEpochIndex)
             torch.save(Model.state_dict(), ModelFullPath)
             print("Save Model:" + ModelFullPath)
 
