@@ -6,6 +6,7 @@ from datetime import datetime
 from Models.BaseModel import BaseModel
 
 from Trainer.GANTrainer import GANTrainer
+from Trainer.WGANTrainer import WGANTrainer
 from Archiver.GANArchiver import GANArchiver
 
 class GANModel(BaseModel):
@@ -18,7 +19,7 @@ class GANModel(BaseModel):
             inModelRootFolderPath = "."
         ) -> None:
         
-        NewTrainer = GANTrainer(
+        NewTrainer = WGANTrainer(
             inGenerator,
             inDiscriminator,
             inGeneratorSize,

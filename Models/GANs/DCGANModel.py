@@ -1,13 +1,7 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader
 
 import torch.nn.functional as F
-
-from Trainer.GANTrainer import GANTrainer
-
-import os
 
 from .GANModel import GANModel
 
