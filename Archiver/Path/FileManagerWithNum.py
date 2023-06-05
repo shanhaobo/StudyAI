@@ -28,8 +28,8 @@ class FileManagerWithNum(BaseFileManager) :
         
         return "{}_{:0>6d}".format(FileName, Num)
     
-    def GetAllLeafDirNames(self) :
-        AllLeafDirNames = [d for d in os.listdir(self.RootDir) if (m := re.match(r'(\d+)_(\d+)', d))]
+    def GetAllLeafDirNames(self, inPath = None) :
+        AllLeafDirNames = [d for d in os.listdir(inPath if inPath else self.RootPath ) if (m := re.match(r'(\d+)_(\d+)', d))]
         AllLeafDirNames.sort(key=lambda x: int(x))
         return AllLeafDirNames
     

@@ -33,23 +33,32 @@ class BaseArchiver(object):
         return self.FileNameManager.MakeFileFullPath(FileName = inNeuralNetworkName, Num = inEpochIndex)
     
     def GetLatestModelFolder(self) -> str :
-        # 获取所有子文件夹
-        SubFolders = self.FileNameManager.GetAllLeafDirNames()
-
+        SubFolders = self.FileNameManager.GetAllSubDirNames()
+        
         if not SubFolders:
             return None
 
-        for SF in SubFolders:
+        SubFolders.sort(key=lambda x: int(x))
+
+        LatestSubFolderPath = os.path.join(self.ModelArchiveRootFolderPath, SubFolders[0])
+
+        # 获取所有子文件夹
+        LeafFolders = self.FileNameManager.GetAllLeafDirNames(LatestSubFolderPath)
+
+        if not LeafFolders:
+            return None
+
+        for SF in LeafFolders:
             # 取最新的子文件夹
-            LatestSubFolderPath = os.path.join(self.ModelArchiveRootFolderPath, SF)
+            LatestLeafFolderPath = os.path.join(self.ModelArchiveRootFolderPath, SF)
 
             # 使用 glob 以及文件名前缀来获取子文件夹下所有的 .pkl 文件
-            ModelFiles = os.listdir(LatestSubFolderPath)
+            ModelFiles = os.listdir(LatestLeafFolderPath)
 
             if not ModelFiles:
                 continue
 
-            return LatestSubFolderPath
+            return LatestLeafFolderPath
         
         return None
 

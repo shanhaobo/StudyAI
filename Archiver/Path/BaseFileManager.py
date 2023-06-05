@@ -2,10 +2,10 @@ import os
 
 #root directory->....->Leaf directory(terminal directory)
 class BaseFileManager() :
-    def __init__(self, inRootDir:str, inExtension:str) -> None:
-        self.RootDir = inRootDir
+    def __init__(self, inRootPath:str, inExtension:str) -> None:
+        self.RootPath = inRootPath
         self.Extension = inExtension if inExtension.startswith(".") else ("." + inExtension)
-        os.makedirs(inRootDir, exist_ok=True)
+        os.makedirs(inRootPath, exist_ok=True)
 
     def MakeLeafDirName(self, **inKWArgs) -> str:
         pass
@@ -18,7 +18,7 @@ class BaseFileManager() :
         if not LeafDirName:
             return None
 
-        LeafDirFullPath = os.path.join(self.RootDir, LeafDirName)
+        LeafDirFullPath = os.path.join(self.RootPath, LeafDirName)
         os.makedirs(LeafDirFullPath, exist_ok=True)
 
         FileName = self.MakeFileName(**inKWArgs)
@@ -30,5 +30,18 @@ class BaseFileManager() :
         
         return os.path.join(LeafDirFullPath, FileName)
 
-    def GetAllLeafDirNames(self) :
-        pass
+    def GetAllSubDirNames(self, inPath = None) :
+        if not inPath :
+            inPath = self.RootPath
+
+        return [d for d in os.listdir(inPath) if (os.path.isdir(os.path.join(inPath, d)))]
+    
+    def GetAllSubDirPaths(self, inPath = None) :
+        if not inPath :
+            inPath = self.RootPath
+
+        return [p for d in os.listdir(inPath) if (os.path.isdir(p := os.path.join(inPath, d)))]
+
+    
+    
+
