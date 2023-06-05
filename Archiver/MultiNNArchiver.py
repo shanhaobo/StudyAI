@@ -3,8 +3,8 @@ import torch
 from .BaseArchiver import BaseArchiver
 
 class MultiNNArchiver(BaseArchiver):
-    def __init__(self, inModelPrefix : str, inModelRootFolderPath : str = ".", inNeedTimestamp : bool = True) -> None:
-        super().__init__(inModelPrefix, inModelRootFolderPath, inNeedTimestamp)
+    def __init__(self, inModelPrefix : str, inModelRootFolderPath : str = ".") -> None:
+        super().__init__(inModelPrefix, inModelRootFolderPath)
         self.NNModelDict = {}
 
     def Save(self, inEpochIndex : int, inSuffix, inExtension) -> None:

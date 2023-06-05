@@ -6,7 +6,7 @@ from datetime import datetime
 from Models.BaseModel import BaseModel
 
 from Trainer.GANTrainer import GANTrainer
-from Archiver.MultiNNArchiver import GANArchiver
+from Archiver.GANArchiver import GANArchiver
 
 class GANModel(BaseModel):
     def __init__(

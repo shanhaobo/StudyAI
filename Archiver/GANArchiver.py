@@ -8,10 +8,9 @@ class GANArchiver(MultiNNArchiver):
             inGenerator : torch.nn.Module,
             inDiscriminator : torch.nn.Module,
             inModelPrefix : str = "GAN",
-            inModelRootFolderPath : str = ".",
-            inTimestamp : bool = True
+            inModelRootFolderPath : str = "."
         ) -> None:
-        super().__init__(inModelPrefix, inModelRootFolderPath, inTimestamp)
+        super().__init__(inModelPrefix, inModelRootFolderPath)
         self.Generator = inGenerator
         self.Discriminator = inDiscriminator
 
@@ -19,10 +18,12 @@ class GANArchiver(MultiNNArchiver):
         self.NNModelDict["Discriminator"] = self.Discriminator
 
     def IsExistModel(self, inForTrain : bool = True, *inArgs, **inKWArgs) -> bool:
-        if ((self.FindLatestModelFile("Generator") != None) and (inForTrain == False)) :
+        Path, _ = self.FindLatestModelFile("Generator") 
+        if ((Path != None) and (inForTrain == False)) :
             return True
         
-        return self.FindLatestModelFile("Discriminator") != None
+        Path, _ = self.FindLatestModelFile("Discriminator")
+        return Path != None
 
     def Load(self, inForTrain : bool = True, inSuffix = "") -> None :
         self.Generator.load_state_dict(torch.load(f"{self.ModelRootFolderPath}/Generator{inSuffix}.pkl"))

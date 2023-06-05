@@ -34,12 +34,12 @@ class FileRangeManager:
             os.makedirs(path, exist_ok=True)
         return self._create_file_path(path,file_prefix,num)
 
-    def get_max_num_file(self):
+    def get_max_num_file(self, file_prefix):
         max_num = -1
         max_file_path = None
         for root, dirs, files in os.walk(self.root):
             for file in files:
-                if (match := re.match(self.file_prefix + r'(\d+).' + self.extension, file)):
+                if (match := re.match(file_prefix + r'(\d+).' + self.extension, file)):
                     num = int(match.group(1))
                     if num > max_num:
                         max_num = num
