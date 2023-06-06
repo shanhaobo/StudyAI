@@ -46,7 +46,7 @@ class BaseArchiver(object):
 
         for SF in LeafFolders:
             # 取最新的子文件夹
-            LatestLeafFolderPath = os.path.join(self.ModelArchiveRootFolderPath, SF)
+            LatestLeafFolderPath = os.path.join(LatestSubFolderPath, SF)
 
             # 使用 glob 以及文件名前缀来获取子文件夹下所有的 .pkl 文件
             ModelFiles = os.listdir(LatestLeafFolderPath)
