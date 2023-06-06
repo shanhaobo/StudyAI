@@ -44,6 +44,7 @@ if __name__ == "__main__" :
         print(GenImage.size())
         now = datetime.now()
         timestamp = now.strftime("%Y%m%d%H%M%S")
+        transform = transforms.Normalize((-0.5,), (2.0,))
         save_image(GenImage, "images/{}.png".format(timestamp), nrow=5, normalize=True)
     else :
         #dataset = MNISTDataset()
