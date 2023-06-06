@@ -28,7 +28,7 @@ class WGANTrainer(GANTrainer) :
         RealDatum = inBatchDatum.to(self.Device)
         GenFakeDatum = self.Generator(torch.randn((nBatchSize,) + self.GeneratorInputSize, device=self.Device))
         GenFakeDatum = F.interpolate(GenFakeDatum, size=(RealDatum.shape[2], RealDatum.shape[3]), mode='bilinear', align_corners=False)
-        print("DatumSize:{} {}".format(RealDatum.size(),GenFakeDatum.size()))
+        #print("DatumSize:{} {}".format(RealDatum.size(),GenFakeDatum.size()))
 
         RealScores = self.Discriminator(RealDatum)
         FakeScores = self.Discriminator(GenFakeDatum.detach())
