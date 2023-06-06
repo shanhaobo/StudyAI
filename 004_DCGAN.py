@@ -44,12 +44,16 @@ if __name__ == "__main__" :
         print(GenImage.size())
         now = datetime.now()
         timestamp = now.strftime("%Y%m%d%H%M%S")
-        transform = transforms.Normalize((-0.5,), (2.0,))
-        save_image(GenImage, "images/{}.png".format(timestamp), nrow=5, normalize=True)
+        transform = transforms.Compose([
+            transforms.Normalize((-0.5,), (2.0,)),
+            transforms.Lambda(lambda t : (t + 1) * 0.5)
+        ])
+        save_image(transform(GenImage), "images/{}.png".format(timestamp), nrow=5, normalize=True)
     else :
         #dataset = MNISTDataset()
         transform = transforms.Compose([
             transforms.ToTensor(),
+            transforms.Lambda(lambda t : (t * 2) - 1),
             transforms.Normalize((0.5,), (0.5,))
         ])
         #dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
