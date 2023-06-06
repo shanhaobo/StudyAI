@@ -11,7 +11,7 @@ class BaseArchiver(object):
         self.ModelArchiveRootFolderPath = os.path.join(self.ModelRootFolderPath, self.ModelPrefix)
         self.ModelArchiveFolderPath     = self.ModelArchiveRootFolderPath
 
-        self.FileNameManager = FileManagerWithNum(self.ModelArchiveRootFolderPath, ".pkl", 100)
+        self.FileNameManager = FileManagerWithNum(self.ModelArchiveRootFolderPath, ".pkl", 100, True)
 
     def Save(self, inEpochIndex : int, inSuffix : str) -> None:
         pass
@@ -33,20 +33,16 @@ class BaseArchiver(object):
         return self.FileNameManager.MakeFileFullPath(FileName = inNeuralNetworkName, Num = inEpochIndex)
     
     def GetLatestModelFolder(self) -> str :
-        SubFolders = self.FileNameManager.GetAllSubDirNames()
-        
-        if not SubFolders:
+        LatestSubFolderPath = self.FileNameManager.GetLatestTimestampDirPath()
+        if not LatestSubFolderPath:
             return None
-
-        SubFolders.sort(key=lambda x: int(x))
-
-        LatestSubFolderPath = os.path.join(self.ModelArchiveRootFolderPath, SubFolders[0])
 
         # 获取所有子文件夹
         LeafFolders = self.FileNameManager.GetAllLeafDirNames(LatestSubFolderPath)
-
         if not LeafFolders:
             return None
+
+        LeafFolders.sort(key=lambda x: int(x), reverse=True)
 
         for SF in LeafFolders:
             # 取最新的子文件夹

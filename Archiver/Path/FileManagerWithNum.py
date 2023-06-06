@@ -3,8 +3,8 @@ import os
 import re
 
 class FileManagerWithNum(BaseFileManager) :
-    def __init__(self, inRootDir: str, inExtension:str, inRange) -> None:
-        super().__init__(inRootDir, inExtension)
+    def __init__(self, inRootDir: str, inExtension:str, inRange, inNeedTimestampDir:bool = False) -> None:
+        super().__init__(inRootDir, inExtension, inNeedTimestampDir)
         self.Range = inRange
 
     def MakeLeafDirName(self, **inKWArgs) -> str:
@@ -29,7 +29,14 @@ class FileManagerWithNum(BaseFileManager) :
         return "{}_{:0>6d}".format(FileName, Num)
     
     def GetAllLeafDirNames(self, inPath = None) :
-        AllLeafDirNames = [d for d in os.listdir(inPath if inPath else self.RootPath ) if (m := re.match(r'(\d+)_(\d+)', d))]
-        AllLeafDirNames.sort(key=lambda x: int(x))
+        AllSubDirNames = [d for d in os.listdir(self.RawRootPath) if (os.path.isdir(os.path.join(self.RawRootPath, d)))]
+        AllLeafDirNames = []
+        for string in AllSubDirNames:
+           if (re.match(r'(\d+)_(\d+)', string)) :
+                AllLeafDirNames.append(string)
+
+        if len(AllLeafDirNames) == 0 :
+            return None
+        
         return AllLeafDirNames
     
