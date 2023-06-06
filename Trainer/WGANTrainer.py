@@ -48,5 +48,3 @@ class WGANTrainer(GANTrainer) :
 
         pass
 
-    #d_loss = -(torch.mean(real_scores) - torch.mean(fake_scores)) + gradient_penalty
-
