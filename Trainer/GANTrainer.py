@@ -31,33 +31,36 @@ class GANTrainer(MultiNNTrainer):
         pass
 
     def _CalcLossForReal(self, inBatchData):
-        DiscriminatorResult = self.Discriminator(inBatchData)
-        RealLabels = torch.ones(DiscriminatorResult.size()).to(self.Device)
-        return self.LossFN(DiscriminatorResult, RealLabels)
+        DiscriminatorScores = self.Discriminator(inBatchData)
+        RealLabels = torch.ones(DiscriminatorScores.size()).to(self.Device)
+        return self.LossFN(DiscriminatorScores, RealLabels)
     
     def _CalcLossForFake(self, inBatchData):
-        DiscriminatorResult = self.Discriminator(inBatchData)
-        FakeLabels = torch.zeros(DiscriminatorResult.size()).to(self.Device)
-        return self.LossFN(DiscriminatorResult, FakeLabels)
+        DiscriminatorScores = self.Discriminator(inBatchData)
+        FakeLabels = torch.zeros(DiscriminatorScores.size()).to(self.Device)
+        return self.LossFN(DiscriminatorScores, FakeLabels)
 
 
     def _BatchTrain(self, inBatchDatum, inBatchLabel, *inArgs, **inKWArgs) :
         # get BatchSize
         nBatchSize = inBatchDatum.size(0)
         
-        # Optimize Discriminator
-        RealDatum = inBatchDatum.to(self.Device)
-        DLossReal = self._CalcLossForReal(RealDatum)
+        # Prepare Real and Fake Data
+        RealData = inBatchDatum.to(self.Device)
+        FakeData = self.Generator(torch.randn((nBatchSize,) + self.GeneratorInputSize, device=self.Device))
 
-        GenFakeDatum = self.Generator(torch.randn((nBatchSize,) + self.GeneratorInputSize, device=self.Device))
+        # Calc Score or Loss
+        DLossReal = self._CalcLossForReal(RealData)
         # detach() do not effect Generator
-        DLossFake = self._CalcLossForFake(GenFakeDatum.detach())
+        DLossFake = self._CalcLossForFake(FakeData.detach())
 
         DLoss = (DLossReal + DLossFake) * 0.5
+
+        # Optimize Discriminator
         self._BackPropagate(self.OptimizerD, DLoss)
         
         # Optimize Generator
-        GLoss = self._CalcLossForReal(GenFakeDatum) 
+        GLoss = self._CalcLossForReal(FakeData) 
         self._BackPropagate(self.OptimizerG, GLoss)
 
         self.CurrBatchDiscriminatorLoss = DLoss.item()
