@@ -16,7 +16,6 @@ class DDPMTrainer(BaseTrainer) :
         pass
 
     def _CreateLossFN(self) -> None:
-        self.LossFN     = torch.nn.BCELoss().to(self.Device)
         pass
 
     def _BatchTrain(self, inBatchDatum, inBatchLabel, *inArgs, **inKWArgs) :
