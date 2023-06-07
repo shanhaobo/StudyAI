@@ -1,6 +1,6 @@
 import torch
 from torch.nn import functional as F
-from transformer.GPTModel import GPTModel, GPTConfig
+from Models.transformer.GPTModel import GPTModel, GPTConfig
 
 torch.manual_seed(1337)
 

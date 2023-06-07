@@ -4,5 +4,5 @@ from . import (
     GANTrainer,
     WGANTrainer,
     CodecTrainer,
-    PPDMTrainer,
+    DDPMTrainer,
 )
