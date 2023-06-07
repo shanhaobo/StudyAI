@@ -127,11 +127,9 @@ class IMultiHeadAttention(nn.Module):
 
 class MultiHeadAttention(IMultiHeadAttention):
     def __init__(self, inEmbedDim, inNumHeads, inPosEmbedDim):
-
         super(MultiHeadAttention, self).__init__(inEmbedDim, inNumHeads, inPosEmbedDim)
         
     def forward(self, inX):
-        
         return super(MultiHeadAttention, self)._CalcAtt(inX)
 
 class CausalSelfAttention(IMultiHeadAttention):
@@ -162,5 +160,4 @@ class CausalSelfAttention(IMultiHeadAttention):
         return Att.masked_fill(self.__CausalMask, float('-inf'))
 
     def forward(self, inX):
-        
         return super(CausalSelfAttention, self)._CalcAttWithFunctor(inX, self.__Mask)
