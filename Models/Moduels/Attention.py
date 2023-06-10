@@ -61,7 +61,7 @@ class IMultiHeadAttention(nn.Module):
 
         return Q, K, V
 
-    def _CalcAtt(self, inX):
+    def CalcAtt(self, inX):
         """
         nBatchNum, nMaxSeqLen, nEmbedDim = inX.size()
         """
@@ -135,7 +135,7 @@ class MultiHeadAttention(IMultiHeadAttention):
         super(MultiHeadAttention, self).__init__(inNumHeads, inHeadEmbedDim)
         
     def forward(self, inX):
-        return super(MultiHeadAttention, self)._CalcAtt(inX)
+        return super(MultiHeadAttention, self).CalcAtt(inX)
 
 class CausalSelfAttention(IMultiHeadAttention):
     def __init__(self, inNumHeads, inHeadEmbedDim, inPosEmbedDim):
