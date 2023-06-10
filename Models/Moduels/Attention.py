@@ -7,13 +7,12 @@ from torch.nn import functional as F
 from einops import rearrange
 
 class IMultiHeadAttention(nn.Module):
-    def __init__(self, inEmbedDim, inNumHeads, inPosEmbedDim):
+    def __init__(self, inNumHeads, inHeadEmbedDim):
         super(IMultiHeadAttention, self).__init__()
-        assert inEmbedDim % inNumHeads == 0
 
         self._NumHeads       = inNumHeads
-        self._EmbedDim       = inEmbedDim
-        self._HeadDim        = inEmbedDim // inNumHeads
+        self._EmbedDim       = inNumHeads * inHeadEmbedDim
+        self._HeadDim        = inHeadEmbedDim
         self._ScaledFctr     = 1.0 / math.sqrt(self._HeadDim)
         self._AttLayer       = nn.Linear(self._EmbedDim, self._EmbedDim * 3)
         self._AttOutLayer    = nn.Linear(self._EmbedDim, self._EmbedDim)
@@ -132,15 +131,15 @@ class IMultiHeadAttention(nn.Module):
         return self._AttOutLayer(Out)
 
 class MultiHeadAttention(IMultiHeadAttention):
-    def __init__(self, inEmbedDim, inNumHeads, inPosEmbedDim):
-        super(MultiHeadAttention, self).__init__(inEmbedDim, inNumHeads, inPosEmbedDim)
+    def __init__(self, inNumHeads, inHeadEmbedDim):
+        super(MultiHeadAttention, self).__init__(inNumHeads, inHeadEmbedDim)
         
     def forward(self, inX):
         return super(MultiHeadAttention, self)._CalcAtt(inX)
 
 class CausalSelfAttention(IMultiHeadAttention):
-    def __init__(self, inEmbedDim, inNumHeads, inPosEmbedDim):
-        super(CausalSelfAttention, self).__init__(inEmbedDim, inNumHeads, inPosEmbedDim)
+    def __init__(self, inNumHeads, inHeadEmbedDim, inPosEmbedDim):
+        super(CausalSelfAttention, self).__init__(inNumHeads, inHeadEmbedDim)
         '''
         #print(self.__CausalMask)
         tensor([[[

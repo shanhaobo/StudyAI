@@ -24,7 +24,7 @@ class _TransformerBlock(nn.Module):
         #LayerNorm 防止梯度爆炸与消失,从而加速训练过程并提高模型性能
         self.__AttLayerNorm = nn.LayerNorm(inEmbedDim, inEpsNorm)
         #自注意力机制允许模型根据输入序列中各个单词之间的关系来计算每个单词的表示
-        self.__AttLayer     = CausalSelfAttention(inEmbedDim, inHeadNum, inPosEmbedDim)
+        self.__AttLayer     = CausalSelfAttention(inHeadNum, inEmbedDim // inHeadNum, inPosEmbedDim)
         self.__MLPLayerNorm = nn.LayerNorm(inEmbedDim, inEpsNorm)
         self.__MLPLayer     = _BlockMLP(inEmbedDim, inEnableBias)
 
