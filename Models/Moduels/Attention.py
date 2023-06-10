@@ -25,6 +25,7 @@ class IMultiHeadAttention(nn.Module):
         #      (B, S, E)->(B, S, 3 * E)->(B, S, E)->(B, S, H, HE)->(B, H, S, HE)
         # input ->   __Attlayer  ->  chunk   ->  view     ->  transpose
         QKV = self._AttLayer(inX)
+        # print("QKV:{}".format(QKV))
         """
         Q, K, V = QKV.chunk(3, dim=2)
         print(Q.shape)
@@ -42,6 +43,7 @@ class IMultiHeadAttention(nn.Module):
         Q = Q.squeeze(1)
         K = K.squeeze(1)
         V = V.squeeze(1)
+        # print("Q:{} K:{} V:{}".format(Q, K, V))
         #"""
         """
         # 在transpose之前view, view要求contiguous()
@@ -72,9 +74,14 @@ class IMultiHeadAttention(nn.Module):
         #Att = torch.matmul(Q, K.transpose(-1, -2)) * self._ScaledFctr
         Att = torch.einsum("b h i s, b h j s -> b h i j", Q, K)  * self._ScaledFctr
         
+        #print("Att:{} ".format(Att))
         Att = F.softmax(Att, dim=-1)
 
+        #print("Att softmax:{} ".format(Att))
+
         Out = torch.matmul(Att, V)
+        
+        #print("Out:{}".format(Out))
         """
         # 这里有两种写法,一种contiguous然后view, 另一种直接reshape(因为,它有额外操作,还是第一种更快)
         #Out = Out.transpose(1, 2).reshape(nBatchNum, nMaxSeqLen, nEmbedDim)
@@ -83,6 +90,8 @@ class IMultiHeadAttention(nn.Module):
 
         Out = rearrange(Out, 'b h s d -> b s (h d)')
  
+        #print("Out Post:{}".format(Out))
+
         return self._AttOutLayer(Out)
 
     def _CalcAttWithFunctor(self, inX, AttFunc):
