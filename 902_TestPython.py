@@ -1,33 +1,43 @@
-from functools import partial
+import torch
+from torch import nn
+from einops import rearrange
+from torch import einsum
 
-import random
 
-from tqdm import tqdm, notebook
-from time import sleep
+class Attention(nn.Module):
+    def __init__(self, dim, heads=4, dim_head=32):
+        super().__init__()
+        self.scale = dim_head**-0.5
+        self.heads = heads
+        hidden_dim = dim_head * heads
+        self.to_qkv = nn.Conv2d(dim, hidden_dim * 3, 1, bias=False)
+        self.to_out = nn.Conv2d(hidden_dim, dim, 1)
 
-def add(x, y):
-    return x + y
+    def forward(self, x):
+        b, c, h, w = x.shape
+        print(x.size())
+        attv = self.to_qkv(x)
+        print(attv.size())
+        qkv = attv.chunk(3, dim=1)
+        print(qkv[0].size())
+        q, k, v = map(
+            lambda t: rearrange(t, "b (h c) x y -> b h c (x y)", h=self.heads), qkv
+        )
+        q = q * self.scale
 
-a1 = 1
-b1 = 10
+        sim = einsum("b h d i, b h d j -> b h i j", q, k)
+        sim = sim - sim.amax(dim=-1, keepdim=True).detach()
+        attn = sim.softmax(dim=-1)
 
-a2 = 20
-b2 = 30
+        out = einsum("b h i j, b h d j -> b h i d", attn, v)
+        out = rearrange(out, "b h (x y) d -> b (h d) x y", x=h, y=w)
+        return self.to_out(out)
 
-def randab():
-    return random.randint(a2, b2)
 
-rand_add = partial(add, random.randint(a1, b1), randab())
-rand_add_2 = partial(add, a2, b2)
+att = Attention(3)
 
-print(rand_add())
-print(rand_add_2())
+x = torch.randn((1, 3, 100, 100))
 
-a2 = 600
-b2 = 900
+y = att(x)
+print(y.size())
 
-print(rand_add())
-print(rand_add_2())
-
-for i in tqdm.notebook.trange(1000, desc="Loop"):
-    sleep(0.01)

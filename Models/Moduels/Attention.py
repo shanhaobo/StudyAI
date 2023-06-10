@@ -36,10 +36,13 @@ class IMultiHeadAttention(nn.Module):
         print(Q.shape)
         """
         #"""
-        Q, K, V = rearrange(QKV, "b s (c h d) -> c b h s d", h=self._NumHeads, c = 3).chunk(3, dim=0)
-        Q = Q.squeeze(0)
-        K = K.squeeze(0)
-        V = V.squeeze(0)
+        # k = 3 because q k v
+        # (k h d) means EmbedDim = self._EmbedDim * 3
+        # s means sequence
+        Q, K, V = rearrange(QKV, "b s (k h d) -> b k h s d", h=self._NumHeads, k = 3).chunk(3, dim=1)
+        Q = Q.squeeze(1)
+        K = K.squeeze(1)
+        V = V.squeeze(1)
         #"""
         """
         # 在transpose之前view, view要求contiguous()
@@ -67,7 +70,8 @@ class IMultiHeadAttention(nn.Module):
         Q, K, V = self._ToQKV(inX)
 
         # Scaled dot product attention
-        Att = torch.matmul(Q, K.transpose(-1, -2)) * self._ScaledFctr
+        #Att = torch.matmul(Q, K.transpose(-1, -2)) * self._ScaledFctr
+        Att = torch.einsum("b h i s, b h j s -> b h i j", Q, K)  * self._ScaledFctr
         
         Att = F.softmax(Att, dim=-1)
 
@@ -90,11 +94,13 @@ class IMultiHeadAttention(nn.Module):
         Q, K, V = self._ToQKV(inX)
 
         # Scaled dot product attention
-        Att = torch.matmul(Q, K.transpose(-1, -2)) * self._ScaledFctr
+        #Att = torch.matmul(Q, K.transpose(-1, -2)) * self._ScaledFctr
+        Att = torch.einsum("b h i s, b h j s -> b h i j", Q, K)  * self._ScaledFctr
         
         Att = AttFunc(Att)
-
+        
         Att = F.softmax(Att, dim=-1)
+
         """
         print(Att):
         tensor([[
@@ -118,7 +124,7 @@ class IMultiHeadAttention(nn.Module):
         # Out = Out.transpose(1, 2).reshape(nBatchNum, nMaxSeqLen, nEmbedDim)
         Out = Out.transpose(1, 2).contiguous().view(nBatchNum, nMaxSeqLen, nEmbedDim)
         """
- 
+
         Out = rearrange(Out, 'b h s d -> b s (h d)')
         
         '''print(Out.size()) torch.Size([1, 3, 16])'''
