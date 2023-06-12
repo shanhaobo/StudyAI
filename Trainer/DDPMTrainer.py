@@ -5,10 +5,18 @@ from .BaseTrainer import BaseTrainer
 class DDPMTrainer(BaseTrainer) :
     def __init__(self, 
             inDDPM : torch.nn.Module,
-            inLearningRate
+            inLearningRate,
+            inTimesteps = 1000
         ) -> None:
         super().__init__(inLearningRate)
         self.DiffusionModel = inDDPM
+
+        self.Timesteps = inTimesteps
+
+        pass
+
+    def Initialize(self):
+        
         pass
 
     def _CreateOptimizer(self) -> None:
