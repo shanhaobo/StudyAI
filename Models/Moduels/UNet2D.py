@@ -52,14 +52,14 @@ class UpSample(nn.Module):
 
         self.Output = DoubleConv(inInputChannels, inOutputChannels)
 
-    def forward(self, x1, x2):  # x2是左侧的输出，x1是上一大层来的输出
-        x1 = self.Up(x1)
+    def forward(self, inData, inSkipConn):  # x2是左侧的输出，x1是上一大层来的输出
+        inData = self.Up(inData)
 
-        diffY = x2.size()[2] - x1.size()[2]
-        diffX = x2.size()[3] - x1.size()[3]
+        diffY = inSkipConn.size()[2] - inData.size()[2]
+        diffX = inSkipConn.size()[3] - inData.size()[3]
 
-        x1 = F.pad(x1, (diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2))
-        x = torch.cat([x2, x1], dim=1) # 将两个tensor拼接在一起 dim=1：在通道数（C）上进行拼接
+        inData = F.pad(inData, (diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2))
+        x = torch.cat([inSkipConn, inData], dim=1) # 将两个tensor拼接在一起 dim=1：在通道数（C）上进行拼接
         return self.Output(x)
 
 # 定义最终的输出
@@ -72,12 +72,12 @@ class OutputConv(nn.Module):
         return self.Blocks(inData)
 
 class UNet2D(nn.Module):
-    def __init__(self, inChannels, inNumClass): # in_channels 图片的通道数，1为灰度图，3为彩色图
+    def __init__(self, inNumChannels, inNumClasses): # in_channels 图片的通道数，1为灰度图，3为彩色图
         super(UNet2D, self).__init__()
-        self.n_channels = inChannels
-        self.n_classes = inNumClass
+        self.NumChannels = inNumChannels
+        self.NumClasses = inNumClasses
 
-        self.InConv = InputConv(inChannels, 64)
+        self.InConv = InputConv(inNumChannels, 64)
         self.Down1 = DownSample(64, 128)
         self.Down2 = DownSample(128, 256)
         self.Down3 = DownSample(256, 512)
@@ -86,7 +86,7 @@ class UNet2D(nn.Module):
         self.Up2 = UpSample(512, 128)
         self.Up3 = UpSample(256, 64)
         self.Up4 = UpSample(128, 64)
-        self.OutConv = OutputConv(64, inNumClass)
+        self.OutConv = OutputConv(64, inNumClasses)
 
     def forward(self, inData):
 

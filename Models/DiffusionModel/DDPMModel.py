@@ -22,6 +22,8 @@ from .Utils import BetaSchedule
 
 from ..Moduels.UNet2D import UNet2D
 
+from ..Zoo.EMA import EMA
+
 class DMModel(nn.Module):
     def __init__(self, inTimesteps : int = 1000) -> None:
         super().__init__()
@@ -40,17 +42,18 @@ class DMModel(nn.Module):
 
         RegisterBufferF32 = lambda name, val: self.register_buffer(name, val.to(torch.float32))
 
-        RegisterBufferF32("Betas", Betas)
+        RegisterBufferF32("Betas",                      Betas)
 
-        RegisterBufferF32("Alphas", Alphas)
-        RegisterBufferF32("AlphasCumprod", AlphasCumprod)
-        RegisterBufferF32("AlphasCumprodPrev", AlphasCumprodPrev)
+        RegisterBufferF32("Alphas",                     Alphas)
+        RegisterBufferF32("AlphasCumprod",              AlphasCumprod)
+        RegisterBufferF32("AlphasCumprodPrev",          AlphasCumprodPrev)
 
-        RegisterBufferF32("SqrtRecipAlphas", SqrtRecipAlphas)
-        RegisterBufferF32("SqrtAlphasCumprod", SqrtAlphasCumprod)
-        RegisterBufferF32("SqrtOneMinusAlphasCumprod", SqrtOneMinusAlphasCumprod)
+        RegisterBufferF32("SqrtRecipAlphas",            SqrtRecipAlphas)
 
-        RegisterBufferF32("PosteriorVariance", PosteriorVariance)
+        RegisterBufferF32("SqrtAlphasCumprod",          SqrtAlphasCumprod)
+        RegisterBufferF32("SqrtOneMinusAlphasCumprod",  SqrtOneMinusAlphasCumprod)
+
+        RegisterBufferF32("PosteriorVariance",          PosteriorVariance)
 
     @staticmethod
     def Extract(inData, inIndex, inShape):
@@ -58,6 +61,13 @@ class DMModel(nn.Module):
         Out = inData.gather(-1, inIndex.cpu())
 
         return Out.reshape(nBatchSize, *((1,) * (len(inShape) - 1))).to(inIndex.device)
+    
+    def Q_Sample(self, inXStart, inT, inNoise):
+        XStartShape                 = inXStart.shape
+
+        SqrtAlphasCumprod_T         = self.Extract(self.SqrtAlphasCumprod, inT, XStartShape)
+        SqrtOneMinusAlphasCumprod_T = self.Extract(self.SqrtOneMinusAlphasCumprod, inT, XStartShape)
+        return SqrtAlphasCumprod_T * inXStart + SqrtOneMinusAlphasCumprod_T * inNoise
 
 class DDPMModel(BaseModel) :
     def __init__(self, inTrainer: BaseTrainer, inArchiver: BaseArchiver, inTimesteps : int = 1000):
@@ -65,3 +75,6 @@ class DDPMModel(BaseModel) :
 
         self.ModelFrame = UNet2D(3, 10)
         self.DMModel    = DMModel(inTimesteps)
+
+        self.EMA        = EMA(self.ModelFrame, 0.999)
+
