@@ -29,5 +29,7 @@ class DDPMTrainer(BaseTrainer) :
     def _BatchTrain(self, inBatchDatum, inBatchLabel, *inArgs, **inKWArgs) :
         # get BatchSize
         nBatchSize = inBatchDatum.size(0)
+
+        
         
         pass

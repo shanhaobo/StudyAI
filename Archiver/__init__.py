@@ -1,5 +1,6 @@
 from . import (
     BaseArchiver,
     MultiNNArchiver,
-    GANArchiver
+    GANArchiver,
+    DDPMArchiver
 )
