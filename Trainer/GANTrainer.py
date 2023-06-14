@@ -41,12 +41,12 @@ class GANTrainer(MultiNNTrainer):
         return self.LossFN(DiscriminatorScores, FakeLabels)
 
 
-    def _BatchTrain(self, inBatchDatum, inBatchLabel, *inArgs, **inKWArgs) :
+    def _BatchTrain(self, inBatchData, inBatchLabel, *inArgs, **inKWArgs) :
         # get BatchSize
-        nBatchSize = inBatchDatum.size(0)
+        nBatchSize = inBatchData.size(0)
         
         # Prepare Real and Fake Data
-        RealData = inBatchDatum.to(self.Device)
+        RealData = inBatchData.to(self.Device)
         FakeData = self.Generator(torch.randn((nBatchSize,) + self.GeneratorInputSize, device=self.Device))
 
         # Calc Score or Loss

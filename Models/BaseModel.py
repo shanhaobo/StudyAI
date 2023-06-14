@@ -7,6 +7,7 @@ class BaseModel(object):
     def __init__(self, inTrainer : BaseTrainer, inArchiver : BaseArchiver):
         self.Trainer    = inTrainer
         self.Archiver   = inArchiver
+        self.Device     = inTrainer.Device
 
     def Train(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
         self.Trainer.Train(inDataLoader, inNumEpochs, 0, *inArgs, **inKWArgs)

@@ -10,6 +10,8 @@ from PIL import Image
 
 from Models.DiffusionModel.DDPMModel import DDPMModel
 
+from Utils.Executor import Executor
+
 torch.set_printoptions(precision=10, sci_mode=False)
 
 
@@ -22,12 +24,25 @@ transform = transforms.Compose([
            transforms.ToTensor(), # 转成张量
            transforms.Lambda(lambda t: (t * 2) - 1) # 归一化到[-1,1]
 ])
-image_size = 28
+image_size = 128
 channels = 1
 batch_size = 128
 dataset = torchvision.datasets.FashionMNIST(
    root="./data", train=True, transform=transform, download=True)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+if __name__ == "__main__" :
+    DDPM = DDPMModel(inImageSize=128, inChannel= 1, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./trained_models/DDPM")
+    Exec = Executor(DDPM)
+
+    if Exec.IsExistModel() and Exec.ReadyTrain() == False:
+        pass
+    else:
+        dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
+        Exec.Train(dataloader, SaveModelInterval=1)
+
+
+"""
 
 reverse_transform = transforms.Compose([
      transforms.Lambda(lambda t: (t + 1) / 2),
@@ -81,3 +96,5 @@ t = torch.tensor([2])
 genimg = get_noisy_image(x_start, t)
 
 save_image(transform(genimg), "images/{}.png".format(datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
+
+"""

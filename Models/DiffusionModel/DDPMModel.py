@@ -23,15 +23,26 @@ from .Utils import BetaSchedule
 
 from ..Moduels.UNet2D import UNet2D
 
-from ..Zoo.EMA import EMA
+from .DiffusionModelUtils import Unet
 
-class DMModel(nn.Module):
-    def __init__(self, inTimesteps : int = 1000) -> None:
-        super().__init__()
+class DMModel(Unet):
+    def __init__(self,
+            dim,
+            init_dim=None,
+            out_dim=None,
+            dim_mults=(1, 2, 4, 8),
+            channels=3,
+            with_time_emb=True,
+            resnet_block_groups=8,
+            use_convnext=True,
+            convnext_mult=2,
+            inTimesteps : int = 1000,
+        ) -> None:
+        super().__init__(dim, init_dim, out_dim, dim_mults, channels, with_time_emb, resnet_block_groups, use_convnext, convnext_mult)
 
         self.Timesteps             = inTimesteps
         
-        Betas                      = BetaSchedule.Linear(inTimesteps)
+        Betas                      = BetaSchedule.Linear(self.Timesteps)
         
         Alphas                     = 1 - Betas
         AlphasCumprod              = torch.cumprod(Alphas, axis = 0)
@@ -61,66 +72,66 @@ class DMModel(nn.Module):
     @staticmethod
     def Extract(inData, inIndex, inShape):
         nBatchSize = inIndex.shape[0]
-        Out = inData.gather(-1, inIndex.cpu())
+        Out = inData.gather(-1, inIndex)
 
         return Out.reshape(nBatchSize, *((1,) * (len(inShape) - 1))).to(inIndex.device)
     
     #这个函数用于生成噪声样本
     def Q_Sample(self, inXStart, inT, inNoise):
         XStartShape                 = inXStart.shape
-
         SqrtAlphasCumprod_T         = self.Extract(self.SqrtAlphasCumprod, inT, XStartShape)
         SqrtOneMinusAlphasCumprod_T = self.Extract(self.SqrtOneMinusAlphasCumprod, inT, XStartShape)
+        #print("QSampleDevice:XStart:{}, Noise:{}, SQACT:{}, SQOMACT:{}".format(inXStart.device, inNoise.device, SqrtAlphasCumprod_T.device, SqrtOneMinusAlphasCumprod_T.device))
         return SqrtAlphasCumprod_T * inXStart + SqrtOneMinusAlphasCumprod_T * inNoise
 
     #这个函数用于生成噪声样本
-    def P_Losses(self, denoise_model, x_start, t, noise=None, loss_type="l1"):
-        if noise is None:
-            noise = torch.randn_like(x_start)
+    def P_Losses(self, inDenoiseModel, inXstart, inT, inNoise=None, inLossType="l1"):
+        if inNoise is None:
+            inNoise = torch.randn_like(inXstart)
 
-        x_noisy = self.Q_Sample(inXStart=x_start, inT=t, inNoise=noise)
-        predicted_noise = denoise_model(x_noisy, t)
+        XNoisy = self.Q_Sample(inXStart=inXstart, inT=inT, inNoise=inNoise)
+        PredictedNoise = inDenoiseModel(XNoisy, inT)
 
-        if loss_type == 'l1':
-            loss = F.l1_loss(noise, predicted_noise)
-        elif loss_type == 'l2':
-            loss = F.mse_loss(noise, predicted_noise)
-        elif loss_type == "huber":
-            loss = F.smooth_l1_loss(noise, predicted_noise)
+        if inLossType == 'l1':
+            LossResult = F.l1_loss(inNoise, PredictedNoise)
+        elif inLossType == 'l2':
+            LossResult = F.mse_loss(inNoise, PredictedNoise)
+        elif inLossType == "huber":
+            LossResult = F.smooth_l1_loss(inNoise, PredictedNoise)
         else:
             raise NotImplementedError()
 
-        return loss
+        return LossResult
 
     #这些函数用于在给定的时间点和下一时间点之间进行采样。
-    def P_Sample(self, model, x, t, t_index):
-        betas_t = self.Extract(self.betas, t, x.shape)
-        sqrt_one_minus_alphas_cumprod_t = self.Extract(
+    def P_Sample(self, inModel, x, t, t_index):
+        BetasT = self.Extract(self.Betas, t, x.shape)
+        SqrtOneMinusAlphasCumprodT = self.Extract(
             self.SqrtOneMinusAlphasCumprod, t, x.shape
         )
-        sqrt_recip_alphas_t = self.Extract(self.SqrtRecipAlphas, t, x.shape)
+        SqrtRecipAlphasT = self.Extract(self.SqrtRecipAlphas, t, x.shape)
         
         # Equation 11 in the paper
         # Use our model (noise predictor) to predict the mean
-        model_mean = sqrt_recip_alphas_t * (
-            x - betas_t * model(x, t) / sqrt_one_minus_alphas_cumprod_t
+        ModelMean = SqrtRecipAlphasT * (
+            x - BetasT * inModel(x, t) / SqrtOneMinusAlphasCumprodT
         )
 
         if t_index == 0:
-            return model_mean
+            return ModelMean
         else:
             posterior_variance_t = self.Extract(self.PosteriorVariance, t, x.shape)
             noise = torch.randn_like(x)
             # Algorithm 2 line 4:
-            return model_mean + torch.sqrt(posterior_variance_t) * noise 
+            return ModelMean + torch.sqrt(posterior_variance_t) * noise 
     
     @torch.no_grad()
-    def P_Sample_Loop(self, model, shape):
+    def P_Sample_Loop(self, model, inShape):
         device = next(model.parameters()).device
 
-        b = shape[0]
+        b = inShape[0]
         # start from pure noise (for each example in the batch)
-        img = torch.randn(shape, device=device)
+        img = torch.randn(inShape, device=device)
         imgs = []
 
         for i in reversed(range(0, self.Timesteps)):
@@ -130,20 +141,62 @@ class DMModel(nn.Module):
 
     # 函数入口
     @torch.no_grad()
-    def Sample(self, model, image_size, batch_size=16, channels=3):
-        return self.P_Sample_Loop(model, shape=(batch_size, channels, image_size, image_size))
-
+    def Sample(self, inModel, inImageSize, inBatchSize=16, inChannels=3):
+        return self.P_Sample_Loop(inModel, inShape=(inBatchSize, inChannels, inImageSize, inImageSize))
 
 class DDPMModel(BaseModel) :
-    def __init__(self, inLearningRate=0.00001, inTimesteps : int = 1000, inModeRootlFolderPath="."):
+    def __init__(self, inImageSize, inChannel, inLearningRate=0.00001, inTimesteps : int = 1000, inModeRootlFolderPath="."):
 
-        self.DMModel    = DMModel(inTimesteps)
+        self.DMModel    = DMModel(dim=inImageSize, channels=inChannel, dim_mults=(1,2,4,),  inTimesteps=inTimesteps)
 
         NewTrainer      = DDPMTrainer(self.DMModel, inLearningRate, inTimesteps=inTimesteps)
-        NewArchiver     = DDPMArchiver("DDPM", inModeRootlFolderPath)
+        NewArchiver     = DDPMArchiver(self.DMModel, "DDPM", inModeRootlFolderPath)
         super().__init__(NewTrainer, NewArchiver)
 
-        self.ModelFrame = UNet2D(3, 10)
-        self.DMModel    = DMModel(inTimesteps)
+        self.Trainer.EndBatchTrain.add(self.EndBatchTrain)
+        self.Trainer.EndEpochTrain.add(self.EndEpochTrain)
+        self.Trainer.EndTrain.add(self.EndTrain)
+        self.Trainer.BeginTrain.add(self.BeginTrain)
 
-        self.EMA        = EMA(self.ModelFrame, 0.999)
+        self.SaveEpochIndex = -1
+
+    def Train(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
+        super().Train(inDataLoader, inNumEpochs, *inArgs, **inKWArgs)
+
+    def IncTrain(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
+        super().IncTrain(inDataLoader, inNumEpochs, *inArgs, **inKWArgs)
+
+    def Eval(self, *inArgs, **inKWArgs):
+        if (super().Eval(*inArgs, **inKWArgs) == False) :
+            return None
+        #self.Trainer.Generator.eval()
+        #return self.Trainer.Generator(torch.randn((1, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
+
+    def EndBatchTrain(self, *inArgs, **inKWArgs) -> None:
+        NowStr  = datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]")
+        print(
+            "{} | Epoch:{:0>4d} | Batch:{:0>6d} | Loss:{:.8f}".
+            format(
+                NowStr,
+                self.Trainer.CurrEpochIndex + 1,
+                self.Trainer.CurrBatchIndex + 1,
+                self.Trainer.CurrBatchDDPMLoss,
+            )
+        )
+        pass
+
+    def EndEpochTrain(self, *inArgs, **inKWArgs) -> None:
+        interval = inKWArgs["SaveModelInterval"]
+        if self.Trainer.CurrEpochIndex % interval == 0 and self.Trainer.CurrEpochIndex > 0 :
+            print("Epoch:{} Save Models".format(self.Trainer.CurrEpochIndex + 1))
+            self.Archiver.Save(self.Trainer.CurrEpochIndex + 1)
+            self.SaveEpochIndex = self.Trainer.CurrEpochIndex
+        pass
+
+    def EndTrain(self, *inArgs, **inKWArgs)->None:
+        if (self.SaveEpochIndex < self.Trainer.CurrEpochIndex) : 
+            self.Archiver.Save(self.Trainer.CurrEpochIndex + 1)
+        print("End Train")
+
+    def BeginTrain(self, *inArgs, **inKWArgs)->None:
+        print("Begin Training...")
