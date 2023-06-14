@@ -1,6 +1,9 @@
 import torch
 import torchvision
 
+from datetime import datetime
+
+from torchvision.utils import save_image
 import numpy as np
 
 from PIL import Image
@@ -34,7 +37,7 @@ reverse_transform = transforms.Compose([
      transforms.ToPILImage(),
 ])
 
-model = DDPMModel(None, None, 10)
+model = DDPMModel(0.00001, 10, ".")
 print("================")
 
 def Extract(a, t, x_shape):
@@ -46,8 +49,8 @@ def Extract(a, t, x_shape):
 t = torch.randint(2, 10, (4,)).long()
 print(t)
 x_start = torch.randn((3, 4, 5))
-print(model.SqrtAlphasCumprod)
-e = Extract(model.SqrtAlphasCumprod, t, x_start.shape)
+print(model.DMModel.SqrtAlphasCumprod)
+e = Extract(model.DMModel.SqrtAlphasCumprod, t, x_start.shape)
 print(e.shape)
 print(e)
 
@@ -66,13 +69,15 @@ x_start = transform(image).unsqueeze(0)
 x_start.shape
 def get_noisy_image(x_start, t):
   # add noise
-  x_noisy = model.DMModel.Q_Sample(x_start, t=t)
+  x_noisy = model.DMModel.Q_Sample(x_start, inT=t, inNoise=torch.randn_like(x_start))
 
   # turn back into PIL image
   noisy_image = reverse_transform(x_noisy.squeeze())
 
   return noisy_image
 
-t = torch.tensor([40])
+t = torch.tensor([2])
 
-get_noisy_image(x_start, t)
+genimg = get_noisy_image(x_start, t)
+
+save_image(transform(genimg), "images/{}.png".format(datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)

@@ -42,13 +42,12 @@ if __name__ == "__main__" :
     if Exec.IsExistModel() and Exec.ReadyTrain() == False:
         GenImage = Exec.Eval()
         print(GenImage.size())
-        now = datetime.now()
-        timestamp = now.strftime("%Y%m%d%H%M%S")
+        
         transform = transforms.Compose([
             transforms.Normalize((-0.5,), (2.0,)),
             transforms.Lambda(lambda t : (t + 1) * 0.5)
         ])
-        save_image(transform(GenImage), "images/{}.png".format(timestamp), nrow=5, normalize=True)
+        save_image(transform(GenImage), "images/{}.png".format(datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else :
         #dataset = MNISTDataset()
         transform = transforms.Compose([

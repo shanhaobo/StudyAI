@@ -43,20 +43,20 @@ class BetaSchedule() :
         pass
 
     @staticmethod
-    def Linear(timesteps, beta_start = 0.0001, beta_end = 0.02):
-        return torch.linspace(beta_start, beta_end, timesteps)
+    def Linear(timesteps:int, beta_start = 0.0001, beta_end = 0.02):
+        return torch.linspace(beta_start, beta_end, steps=timesteps)
 
     @staticmethod
-    def Quadratic(timesteps, beta_start = 0.0001, beta_end = 0.02):
+    def Quadratic(timesteps:int, beta_start = 0.0001, beta_end = 0.02):
         return torch.linspace(beta_start**0.5, beta_end**0.5, timesteps) ** 2
 
     @staticmethod
-    def Sigmoid(timesteps, beta_start = 0.0001, beta_end = 0.02):
+    def Sigmoid(timesteps:int, beta_start = 0.0001, beta_end = 0.02):
         betas = torch.linspace(-6, 6, timesteps)
         return torch.sigmoid(betas) * (beta_end - beta_start) + beta_start
 
     @staticmethod
-    def Cosine(timesteps, s=0.008):
+    def Cosine(timesteps:int, s=0.008):
         """
         cosine schedule as proposed in https://arxiv.org/abs/2102.09672
         """
