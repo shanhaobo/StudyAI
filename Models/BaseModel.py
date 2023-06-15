@@ -20,8 +20,8 @@ class BaseModel(object):
 
     def IncTrain(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
         EpochIndex = self.Archiver.LoadLastest(True)
-        if (EpochIndex <= 0) : 
-            return None
+        if (EpochIndex < 0) : 
+            EpochIndex = 0
         self.Trainer.Train(inDataLoader, inNumEpochs, EpochIndex, *inArgs, **inKWArgs)
 
     def LoadLastest(self, *inArgs, **inKWArgs):

@@ -11,6 +11,8 @@ class Executor :
         for i in sys.argv :
             if (i == "IncTrain") :
                 bIncTrain = True
+            elif (i == "NewTrain") :
+                bIncTrain = False
         
         if bIncTrain :
             self.Model.IncTrain(inDataLoader, 0, *inArgs, **inKWArgs)
@@ -33,5 +35,7 @@ class Executor :
             if (i == "IncTrain") :
                 return True
             if (i == "Train") :
+                return True
+            if (i == "NewTrain") :
                 return True
         return False
