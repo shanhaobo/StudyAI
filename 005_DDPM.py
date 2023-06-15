@@ -19,9 +19,9 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 #from torchvision.transforms import Compose, ToTensor, Lambda, ToPILImage, CenterCrop, Resize
 
-image_size = 128
+image_size = 64
 channels = 1
-batch_size = 128
+batch_size = 32
 if __name__ == "__main__" :
     DDPM = DDPMModel(inImageSize=image_size, inChannel= channels, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./trained_models/DDPM")
     Exec = Executor(DDPM)
@@ -29,7 +29,7 @@ if __name__ == "__main__" :
     if Exec.IsExistModel() and Exec.ReadyTrain() == False:
         GenImage = Exec.Eval(
             inImageSize=image_size,
-            inBatchSize=batch_size,
+            inBatchSize=1,
             inChannels=channels
         )
         print(GenImage.size())
