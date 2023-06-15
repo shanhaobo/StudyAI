@@ -135,7 +135,7 @@ class DMModel(Unet):
 
         for i in reversed(range(0, self.Timesteps)):
             img = self.P_Sample(model, img, torch.full((b,), i, device=device, dtype=torch.long), i)
-            print("Sample Count : {}/{}".format(self.Timesteps - 1, self.Timesteps))
+            print("Sample Count : {}/{}".format(self.Timesteps - i, self.Timesteps))
         return img
 
     # 函数入口

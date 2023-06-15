@@ -4,9 +4,7 @@ import torchvision
 from datetime import datetime
 
 from torchvision.utils import save_image
-import numpy as np
-
-from PIL import Image
+import os
 
 from Models.DiffusionModel.DDPMModel import DDPMModel
 
@@ -19,9 +17,9 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 #from torchvision.transforms import Compose, ToTensor, Lambda, ToPILImage, CenterCrop, Resize
 
-image_size = 64
+image_size = 128
 channels = 1
-batch_size = 32
+batch_size = 64
 if __name__ == "__main__" :
     DDPM = DDPMModel(inImageSize=image_size, inChannel= channels, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./trained_models/DDPM")
     Exec = Executor(DDPM)
@@ -38,8 +36,9 @@ if __name__ == "__main__" :
             transforms.Normalize((-0.5,), (2.0,)),
             transforms.Lambda(lambda t : (t + 1) * 0.5)
         ])
-
-        save_image(reverse_transform(GenImage), "images/{}.png".format(datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
+        Path = "images/DDPM"
+        os.makedirs("images/DDPM", exist_ok=True)
+        save_image(reverse_transform(GenImage), "images/DDPM/{}.png".format(datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else:
         transform = transforms.Compose([
             transforms.Resize(image_size),
