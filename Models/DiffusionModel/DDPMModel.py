@@ -157,4 +157,9 @@ class DDPMModel(BaseModel) :
         if (super().Eval(*inArgs, **inKWArgs) == False) :
             return None
         self.DMModel.eval()
-        #return self.Trainer.Generator(torch.randn((1, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
+        return self.DMModel.Sample(
+            self.DMModel,
+            inImageSize=inKWArgs["inImageSize"],
+            inBatchSize=inKWArgs["inBatchSize"],
+            inChannels=inKWArgs["inChannels"]
+        )

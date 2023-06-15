@@ -19,31 +19,45 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 #from torchvision.transforms import Compose, ToTensor, Lambda, ToPILImage, CenterCrop, Resize
 
-transform = transforms.Compose([
-           transforms.RandomHorizontalFlip(), # 随机水平翻转图片
-           transforms.ToTensor(), # 转成张量
-           transforms.Lambda(lambda t: (t * 2) - 1) # 归一化到[-1,1]
-])
 image_size = 128
 channels = 1
 batch_size = 128
-dataset = torchvision.datasets.FashionMNIST(
-   root="./data", train=True, transform=transform, download=True)
-dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-
 if __name__ == "__main__" :
-    DDPM = DDPMModel(inImageSize=128, inChannel= 1, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./trained_models/DDPM")
+    DDPM = DDPMModel(inImageSize=image_size, inChannel= channels, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./trained_models/DDPM")
     Exec = Executor(DDPM)
 
     if Exec.IsExistModel() and Exec.ReadyTrain() == False:
-        pass
+        GenImage = Exec.Eval(
+            inImageSize=image_size,
+            inBatchSize=batch_size,
+            inChannels=channels
+        )
+        print(GenImage.size())
+        
+        reverse_transform = transforms.Compose([
+            transforms.Lambda(lambda t: (t + 1) / 2),
+            transforms.Lambda(lambda t: t.permute(1, 2, 0)), # CHW to HWC
+            transforms.Lambda(lambda t: t * 255.),
+            transforms.Lambda(lambda t: t.numpy().astype(np.uint8)),
+            transforms.ToPILImage(),
+        ])
+        
+        save_image(reverse_transform(GenImage), "images/{}.png".format(datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else:
-        dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
+        transform = transforms.Compose([
+            transforms.Resize(image_size),
+            transforms.CenterCrop(image_size),
+            transforms.ToTensor(), # turn into Numpy array of shape HWC, divide by 255
+            transforms.Lambda(lambda t: (t * 2) - 1),
+            
+        ])
+        dataset = torchvision.datasets.FashionMNIST(
+            root="./data", train=True, transform=transform, download=True
+        )
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         Exec.Train(dataloader, SaveModelInterval=1)
 
-
 """
-
 reverse_transform = transforms.Compose([
      transforms.Lambda(lambda t: (t + 1) / 2),
      transforms.Lambda(lambda t: t.permute(1, 2, 0)), # CHW to HWC
