@@ -45,7 +45,7 @@ class BaseModel(object):
     ############################################
 
     def __BMEndBatchTrain(self, *inArgs, **inKWArgs) -> None:
-        print("End Batch Train")
+        pass
 
     def __BMEndEpochTrain(self, *inArgs, **inKWArgs) -> None:
         interval = inKWArgs["SaveModelInterval"]

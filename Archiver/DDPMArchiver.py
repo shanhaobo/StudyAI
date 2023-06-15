@@ -12,7 +12,4 @@ class DDPMArchiver(BaseArchiver):
         super().__init__(inModelPrefix, inModelRootFolderPath)
         self.DDPM = inDDPM
 
-    def _Save(self, inEpochIndex : int) -> None:
-        ModelFullPath = self.MakeNeuralNetworkArchiveFullPath("DDPM", inEpochIndex)
-        torch.save(self.DDPM.state_dict(), ModelFullPath)
-        print("Save Model:" + ModelFullPath)
+        self.NNModelDict["DDPM"] = self.DDPM

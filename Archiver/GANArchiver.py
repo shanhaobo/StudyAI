@@ -16,16 +16,3 @@ class GANArchiver(MultiNNArchiver):
 
         self.NNModelDict["Generator"] = self.Generator
         self.NNModelDict["Discriminator"] = self.Discriminator
-
-    def IsExistModel(self, inForTrain : bool = True, *inArgs, **inKWArgs) -> bool:
-        Path, _ = self.FindLatestModelFile("Generator") 
-        if ((Path != None) and (inForTrain == False)) :
-            return True
-        
-        Path, _ = self.FindLatestModelFile("Discriminator")
-        return Path != None
-
-    def Load(self, inForTrain : bool = True, inSuffix = "") -> None :
-        self.Generator.load_state_dict(torch.load(f"{self.ModelRootFolderPath}/Generator{inSuffix}.pkl"))
-        if inForTrain :
-            self.Discriminator.load_state_dict(torch.load(f"{self.ModelRootFolderPath}/Discriminator{inSuffix}.pkl")) 

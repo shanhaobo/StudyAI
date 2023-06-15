@@ -1,4 +1,5 @@
 import os
+import torch
 from datetime import datetime
 from Utils.ModelFileOp import FindFileWithMaxNum
 
@@ -14,28 +15,19 @@ class BaseArchiver(object):
         self.FileNameManager = FileManagerWithNum(self.ModelArchiveRootFolderPath, ".pkl", 100, True)
 
         self.SaveEpochIndex             = -1
+        self.NNModelDict                = {}
 
-    def Save(self, inEpochIndex : int) -> None:
-        # if SaveEpochIndex == inEpochIndex means already saved
-        if (self.SaveEpochIndex < inEpochIndex):
-            self._Save(inEpochIndex=inEpochIndex)
-            self.SaveEpochIndex = inEpochIndex
-    
-    def _Save(self, inEpochIndex : int) -> None:
-        pass
+############################################################################
 
-    def Load(self, inForTrain : bool, inEpochIndex : int, inSuffix : str) -> None :
-        pass
+    def IsExistModel(self, inForTrain : bool = True) -> bool:
+        for Name, Model in self.NNModelDict.items():
+            Path, _ = self.FindLatestModelFile(Name) 
+            if Path is None:
+                return False
+            
+        return True
 
-    def LoadLastest(self, inForTrain : bool, inSuffix : str) -> int:
-        self.Load(inForTrain, -1, inSuffix)
-        pass
-
-    def LoadLastestByModelName(self, inModelName : str):
-        pass
-    
-    def IsExistModel(self, inForTrain : bool = True, *inArgs, **inKWArgs) -> bool:
-        pass
+############################################################################
 
     def MakeNeuralNetworkArchiveFullPath(self, inNeuralNetworkName : str, inEpochIndex : int) -> str:
         return self.FileNameManager.MakeFileFullPath(FileName = inNeuralNetworkName, Num = inEpochIndex)
@@ -74,3 +66,52 @@ class BaseArchiver(object):
         if FileName is None :
             return None, None
         return os.path.join(LatestFolderPath, FileName), MaxNum
+    
+############################################################################
+
+    def Save(self, inEpochIndex : int) -> None:
+        # if SaveEpochIndex == inEpochIndex means already saved
+        if (self.SaveEpochIndex < inEpochIndex):
+            self._Save(inEpochIndex=inEpochIndex)
+            self.SaveEpochIndex = inEpochIndex
+    
+    def _Save(self, inEpochIndex : int) -> None:
+        for Name, Model in self.NNModelDict.items():
+            ModelFullPath = self.MakeNeuralNetworkArchiveFullPath(Name, inEpochIndex)
+            torch.save(Model.state_dict(), ModelFullPath)
+            print("Save Model:" + ModelFullPath)
+
+    def Load(self, inForTrain : bool, inEpochIndex : int) -> None :
+        pass
+
+    def LoadLastest(self, inForTrain : bool = True):
+        MaxEpochIndex = -1
+        for Name, _ in self.NNModelDict.items():
+            EpochIndex = self.LoadLastestByModelName(Name)
+            if EpochIndex <= 0 :
+                return None
+            if EpochIndex > MaxEpochIndex :
+                MaxEpochIndex = EpochIndex
+        return MaxEpochIndex
+
+    def LoadLastestByModelName(self, inModelName : str):
+        ModelFullPath, EpochIndex = self.FindLatestModelFile(inModelName)
+        if ModelFullPath is None :
+            return None
+        self.NNModelDict[inModelName].load_state_dict(torch.load(ModelFullPath))
+        print("Load Model:" + ModelFullPath)
+        return EpochIndex
+
+    def LoadModelByTimestamp(self, inTimestamp:str, inEpochIndex):
+        for Name, Model in self.NNModelDict.items():
+            ModelFullPath = self.FileNameManager.GetFilePathByTimestamp(
+                inTimestamp=inTimestamp,
+                Num=inEpochIndex,
+                FileName=Name
+            )
+            if ModelFullPath is None :
+                return None
+            Model.load_state_dict(torch.load(ModelFullPath))
+            print("Load Model:" + ModelFullPath)
+
+############################################################################

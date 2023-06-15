@@ -19,6 +19,19 @@ class BaseFileManager() :
     def MakeFileName(self, **inKWArgs) -> str:
         pass
 
+    #
+    def GetFilePathByTimestamp(self, inTimestamp:str,  **inKWArgs)->str:
+        LeafDir = self.MakeLeafDirName(**inKWArgs)
+        FileName = self.MakeFileName(**inKWArgs)
+
+        if LeafDir is None or FileName is None:
+            return None
+
+        TimeStampPath = os.path.join(self.RawRootPath, inTimestamp)
+        LeafPath = os.path.join(TimeStampPath, LeafDir)
+
+        return os.path.join(LeafPath, FileName)
+
     def MakeTimestampDirName(self)->str:
         return datetime.now().strftime(self.TimeStampDirFormat)
 

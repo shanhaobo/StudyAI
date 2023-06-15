@@ -1,5 +1,7 @@
 import torch
 
+from datetime import datetime
+
 from .BaseTrainer import BaseTrainer
 
 from Models.Zoo.EMA import EMA
@@ -17,9 +19,9 @@ class DDPMTrainer(BaseTrainer) :
 
         self.EMA            = EMA(inDDPM, 0.999)
 
-    def Initialize(self):
-        
-        pass
+        self.EndBatchTrain.add(self.DDPMEndBatchTrain)
+
+###########################################################################################
 
     def _CreateOptimizer(self) -> None:
         self.Optimizer = torch.optim.Adam(self.DiffusionModel.parameters(),     lr=self.LearningRate, betas=(0.5, 0.999))
@@ -40,3 +42,19 @@ class DDPMTrainer(BaseTrainer) :
 
         self.CurrBatchDDPMLoss = loss.item()
 
+###########################################################################################
+
+    def DDPMEndBatchTrain(self, *inArgs, **inKWArgs) -> None:
+        NowStr  = datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]")
+        print(
+            "{} | Epoch:{:0>4d} | Batch:{:0>6d} | Loss:{:.8f}".
+            format(
+                NowStr,
+                self.CurrEpochIndex + 1,
+                self.CurrBatchIndex + 1,
+                self.CurrBatchDDPMLoss,
+            )
+        )
+        pass
+
+###########################################################################################

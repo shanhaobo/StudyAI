@@ -153,23 +153,8 @@ class DDPMModel(BaseModel) :
         NewArchiver     = DDPMArchiver(self.DMModel, "DDPM", inModeRootlFolderPath)
         super().__init__(NewTrainer, NewArchiver)
 
-        self.Trainer.EndBatchTrain.add(self.EndBatchTrain)
-
     def Eval(self, *inArgs, **inKWArgs):
         if (super().Eval(*inArgs, **inKWArgs) == False) :
             return None
-        #self.Trainer.Generator.eval()
+        self.DMModel.eval()
         #return self.Trainer.Generator(torch.randn((1, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
-
-    def EndBatchTrain(self, *inArgs, **inKWArgs) -> None:
-        NowStr  = datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]")
-        print(
-            "{} | Epoch:{:0>4d} | Batch:{:0>6d} | Loss:{:.8f}".
-            format(
-                NowStr,
-                self.Trainer.CurrEpochIndex + 1,
-                self.Trainer.CurrBatchIndex + 1,
-                self.Trainer.CurrBatchDDPMLoss,
-            )
-        )
-        pass

@@ -52,20 +52,4 @@ class GANModel(BaseModel):
 
     ###########################################################################################
 
-    ############################################
-
-    def EndBatchTrain(self, *inArgs, **inKWArgs) -> None:
-        NowStr  = datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]")
-        print(
-            "{} | Epoch:{:0>4d} | Batch:{:0>6d} | DLoss:{:.8f} | GLoss:{:.8f}".
-            format(
-                NowStr,
-                self.Trainer.CurrEpochIndex + 1,
-                self.Trainer.CurrBatchIndex + 1,
-                self.Trainer.CurrBatchDiscriminatorLoss,
-                self.Trainer.CurrBatchGeneratorLoss
-            )
-        )
-        pass
-
     ###########################################################################################

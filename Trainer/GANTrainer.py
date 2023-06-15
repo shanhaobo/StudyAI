@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from datetime import datetime
+
 from .MultiNNTrainer import MultiNNTrainer
 
 class GANTrainer(MultiNNTrainer):
@@ -19,7 +21,10 @@ class GANTrainer(MultiNNTrainer):
 
         self.GeneratorInputSize         = inGeneratorInputSize
 
-        pass
+        self.EndBatchTrain.add(self.MyEndBatchTrain)
+
+###########################################################################################
+
 
     def _CreateOptimizer(self) -> None:
         self.OptimizerG = optim.Adam(self.Generator.parameters(),     lr=self.LearningRate, betas=(0.5, 0.999))
@@ -67,3 +72,21 @@ class GANTrainer(MultiNNTrainer):
         self.CurrBatchGeneratorLoss     = GLoss.item()
 
         pass
+
+###########################################################################################
+
+    def MyEndBatchTrain(self, *inArgs, **inKWArgs) -> None:
+        NowStr  = datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]")
+        print(
+            "{} | Epoch:{:0>4d} | Batch:{:0>6d} | DLoss:{:.8f} | GLoss:{:.8f}".
+            format(
+                NowStr,
+                self.Trainer.CurrEpochIndex + 1,
+                self.Trainer.CurrBatchIndex + 1,
+                self.Trainer.CurrBatchDiscriminatorLoss,
+                self.Trainer.CurrBatchGeneratorLoss
+            )
+        )
+        pass
+
+###########################################################################################
