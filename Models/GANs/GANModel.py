@@ -35,11 +35,8 @@ class GANModel(BaseModel):
         super().__init__(NewTrainer, NewArchiver)
 
         self.Trainer.EndBatchTrain.add(self.EndBatchTrain)
-        self.Trainer.EndEpochTrain.add(self.EndEpochTrain)
-        self.Trainer.EndTrain.add(self.EndTrain)
-        self.Trainer.BeginTrain.add(self.BeginTrain)
 
-        self.SaveEpochIndex = -1
+    ###########################################################################################
 
     def Train(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
         super().Train(inDataLoader, inNumEpochs, *inArgs, **inKWArgs)
@@ -52,6 +49,10 @@ class GANModel(BaseModel):
             return None
         self.Trainer.Generator.eval()
         return self.Trainer.Generator(torch.randn((1, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
+
+    ###########################################################################################
+
+    ############################################
 
     def EndBatchTrain(self, *inArgs, **inKWArgs) -> None:
         NowStr  = datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]")
@@ -67,18 +68,4 @@ class GANModel(BaseModel):
         )
         pass
 
-    def EndEpochTrain(self, *inArgs, **inKWArgs) -> None:
-        interval = inKWArgs["SaveModelInterval"]
-        if self.Trainer.CurrEpochIndex % interval == 0 and self.Trainer.CurrEpochIndex > 0 :
-            print("Epoch:{} Save Models".format(self.Trainer.CurrEpochIndex + 1))
-            self.Archiver.Save(self.Trainer.CurrEpochIndex + 1)
-            self.SaveEpochIndex = self.Trainer.CurrEpochIndex
-        pass
-
-    def EndTrain(self, *inArgs, **inKWArgs)->None:
-        if (self.SaveEpochIndex < self.Trainer.CurrEpochIndex) : 
-            self.Archiver.Save(self.Trainer.CurrEpochIndex + 1)
-        print("End Train")
-
-    def BeginTrain(self, *inArgs, **inKWArgs)->None:
-        print("Begin Training...")
+    ###########################################################################################

@@ -3,8 +3,8 @@ import re
 
 #match  anystr_digitals_anystr
 def FindFileWithMaxNum(inFileList, inPrefix, inSuffix, inExtension=None):
-    max_num = -1
-    max_file = None
+    MaxNum = -1
+    ResultFile = None
 
     # 添加了转义字符 '\' 到 prefix 和 suffix
     # 因为 '.' 在正则表达式中有特殊含义
@@ -17,15 +17,15 @@ def FindFileWithMaxNum(inFileList, inPrefix, inSuffix, inExtension=None):
     else:
         Pattern = f'^{PartialPrefix}.*?(\d+){PartialSuffix}\..*$'
 
-    for file in inFileList:
-        match = re.match(Pattern, file)
-        if match:
-            num = int(match.group(1))  # 这是括号中的数字
-            if num > max_num:
-                max_num = num
-                max_file = file
+    for File in inFileList:
+        Match = re.match(Pattern, File)
+        if Match:
+            Num = int(Match.group(1))  # 这是括号中的数字
+            if Num > MaxNum:
+                MaxNum = Num
+                ResultFile = File
 
-    return max_file, max_num
+    return ResultFile, MaxNum
 
 def FindFileWithMaxNumByFolderPath(inFolderPath, inPrefix, inSuffix, inExtension=None):
     FlieName, MaxNum = FindFileWithMaxNum(os.listdir(inFolderPath), inPrefix, inSuffix, inExtension)

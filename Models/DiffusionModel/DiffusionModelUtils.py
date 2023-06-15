@@ -254,7 +254,7 @@ class PreNorm(nn.Module):
 class Unet(nn.Module):
     def __init__(
         self,
-        dim,
+        ImageSize,
         init_dim=None,
         out_dim=None,
         dim_mults=(1, 2, 4, 8),
@@ -269,10 +269,10 @@ class Unet(nn.Module):
         # determine dimensions
         self.channels = channels
 
-        init_dim = default(init_dim, dim // 3 * 2)
+        init_dim = default(init_dim, ImageSize // 3 * 2)
         self.init_conv = nn.Conv2d(channels, init_dim, 7, padding=3)
 
-        dims = [init_dim, *map(lambda m: dim * m, dim_mults)]
+        dims = [init_dim, *map(lambda m: ImageSize * m, dim_mults)]
         in_out = list(zip(dims[:-1], dims[1:]))
         
         if use_convnext:
@@ -282,10 +282,10 @@ class Unet(nn.Module):
 
         # time embeddings
         if with_time_emb:
-            time_dim = dim * 4
+            time_dim = ImageSize * 4
             self.time_mlp = nn.Sequential(
-                SinusoidalPositionEmbeddings(dim),
-                nn.Linear(dim, time_dim),
+                SinusoidalPositionEmbeddings(ImageSize),
+                nn.Linear(ImageSize, time_dim),
                 nn.GELU(),
                 nn.Linear(time_dim, time_dim),
             )
@@ -333,7 +333,7 @@ class Unet(nn.Module):
 
         out_dim = default(out_dim, channels)
         self.final_conv = nn.Sequential(
-            block_klass(dim, dim), nn.Conv2d(dim, out_dim, 1)
+            block_klass(ImageSize, ImageSize), nn.Conv2d(ImageSize, out_dim, 1)
         )
 
     def forward(self, x, time):

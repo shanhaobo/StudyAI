@@ -13,9 +13,17 @@ class BaseArchiver(object):
 
         self.FileNameManager = FileManagerWithNum(self.ModelArchiveRootFolderPath, ".pkl", 100, True)
 
-    def Save(self, inEpochIndex : int, inSuffix : str) -> None:
-        pass
+        self.SaveEpochIndex             = -1
+
+    def Save(self, inEpochIndex : int) -> None:
+        # if SaveEpochIndex == inEpochIndex means already saved
+        if (self.SaveEpochIndex < inEpochIndex):
+            self._Save(inEpochIndex=inEpochIndex)
+            self.SaveEpochIndex = inEpochIndex
     
+    def _Save(self, inEpochIndex : int) -> None:
+        pass
+
     def Load(self, inForTrain : bool, inEpochIndex : int, inSuffix : str) -> None :
         pass
 
@@ -63,6 +71,6 @@ class BaseArchiver(object):
 
          # 返回数字最大（也就是最新）的文件
         FileName, MaxNum =  FindFileWithMaxNum(os.listdir(LatestFolderPath), inModelName, "*", "pkl")
-        if not FileName:
+        if FileName is None :
             return None, None
         return os.path.join(LatestFolderPath, FileName), MaxNum

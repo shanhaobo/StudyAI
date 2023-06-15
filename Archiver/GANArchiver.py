@@ -29,15 +29,3 @@ class GANArchiver(MultiNNArchiver):
         self.Generator.load_state_dict(torch.load(f"{self.ModelRootFolderPath}/Generator{inSuffix}.pkl"))
         if inForTrain :
             self.Discriminator.load_state_dict(torch.load(f"{self.ModelRootFolderPath}/Discriminator{inSuffix}.pkl")) 
-
-    def LoadLastest(self, inForTrain : bool = False) -> bool:
-        bSuccess, EpochIndex = self.LoadLastestByModelName("Generator")
-        if bSuccess == False :
-            return False, -1
-        
-        if inForTrain :
-            bSuccess, EpochIndex =  self.LoadLastestByModelName("Discriminator")
-            if bSuccess == False :
-                return False, -1
-
-        return True, EpochIndex

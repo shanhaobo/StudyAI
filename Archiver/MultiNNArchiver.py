@@ -7,7 +7,7 @@ class MultiNNArchiver(BaseArchiver):
         super().__init__(inModelPrefix, inModelRootFolderPath)
         self.NNModelDict = {}
 
-    def Save(self, inEpochIndex : int) -> None:
+    def _Save(self, inEpochIndex : int) -> None:
         for Name, Model in self.NNModelDict.items():
             ModelFullPath = self.MakeNeuralNetworkArchiveFullPath(Name, inEpochIndex)
             torch.save(Model.state_dict(), ModelFullPath)
@@ -16,17 +16,17 @@ class MultiNNArchiver(BaseArchiver):
     def LoadLastest(self, inForTrain : bool = True):
         MaxEpochIndex = -1
         for Name, _ in self.NNModelDict.items():
-            bSuccess, EpochIndex = self.LoadLastestByModelName(Name)
-            if bSuccess == False :
-                return False, -1
+            EpochIndex = self.LoadLastestByModelName(Name)
+            if EpochIndex <= 0 :
+                return None
             if EpochIndex > MaxEpochIndex :
                 MaxEpochIndex = EpochIndex
-        return True, MaxEpochIndex
+        return MaxEpochIndex
 
     def LoadLastestByModelName(self, inModelName : str):
         ModelFullPath, EpochIndex = self.FindLatestModelFile(inModelName)
-        if ModelFullPath == None :
-            return False, -1
+        if ModelFullPath is None :
+            return None
         self.NNModelDict[inModelName].load_state_dict(torch.load(ModelFullPath))
         print("Load Model:" + ModelFullPath)
-        return True, EpochIndex
+        return EpochIndex
