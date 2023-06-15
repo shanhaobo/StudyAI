@@ -35,20 +35,18 @@ if __name__ == "__main__" :
         print(GenImage.size())
         
         reverse_transform = transforms.Compose([
-            transforms.Lambda(lambda t: (t + 1) / 2),
-            transforms.Lambda(lambda t: t.permute(1, 2, 0)), # CHW to HWC
-            transforms.Lambda(lambda t: t * 255.),
-            transforms.Lambda(lambda t: t.numpy().astype(np.uint8)),
-            transforms.ToPILImage(),
+            transforms.Normalize((-0.5,), (2.0,)),
+            transforms.Lambda(lambda t : (t + 1) * 0.5)
         ])
-        
+
         save_image(reverse_transform(GenImage), "images/{}.png".format(datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else:
         transform = transforms.Compose([
             transforms.Resize(image_size),
             transforms.CenterCrop(image_size),
             transforms.ToTensor(), # turn into Numpy array of shape HWC, divide by 255
-            transforms.Lambda(lambda t: (t * 2) - 1),
+            transforms.Lambda(lambda t : (t * 2) - 1),
+            transforms.Normalize((0.5,), (0.5,))
             
         ])
         dataset = torchvision.datasets.FashionMNIST(

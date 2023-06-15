@@ -132,12 +132,11 @@ class DMModel(Unet):
         b = inShape[0]
         # start from pure noise (for each example in the batch)
         img = torch.randn(inShape, device=device)
-        imgs = []
 
         for i in reversed(range(0, self.Timesteps)):
             img = self.P_Sample(model, img, torch.full((b,), i, device=device, dtype=torch.long), i)
-            imgs.append(img.cpu().numpy())
-        return imgs
+            print("Sample Count : {}/{}".format(self.Timesteps - 1, self.Timesteps))
+        return img
 
     # 函数入口
     @torch.no_grad()
