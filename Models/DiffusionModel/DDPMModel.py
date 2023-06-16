@@ -23,9 +23,9 @@ from .Utils import BetaSchedule
 
 from ..Moduels.UNet2D import UNet2D
 
-from .DiffusionModelUtils import Unet
+from .DiffusionModelUtils import ConditionUNet
 
-class DMModel(Unet):
+class DMModel(ConditionUNet):
     def __init__(self,
             dim,
             init_dim=None,
