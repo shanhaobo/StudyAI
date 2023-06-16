@@ -2,6 +2,8 @@ import torch
 
 from datetime import datetime
 
+import torch.nn.functional as F
+
 from .BaseTrainer import BaseTrainer
 
 from Models.Zoo.EMA import EMA
@@ -28,16 +30,29 @@ class DDPMTrainer(BaseTrainer) :
         pass
 
     def _CreateLossFN(self) -> None:
+        LossType = "huber"
+        if LossType == "L1":
+            self.LossFN = F.l1_loss
+        elif LossType == "L2":
+            self.LossFN = F.mse_loss
+        else:
+            self.LossFN = F.smooth_l1_loss
         pass
 
     def _BatchTrain(self, inBatchData, inBatchLabel, *inArgs, **inKWArgs) :
         # get BatchSize
-        nBatchSize = inBatchData.size(0)
-        RealData = inBatchData.to(self.Device)
+        nBatchSize          = inBatchData.size(0)
+        RealData            = inBatchData.to(self.Device)
+        Noise               = torch.randn_like(RealData)
 
-        T = torch.randint(0, self.Timesteps, (nBatchSize,), device=self.Device).long()
-        loss = self.DiffusionModel.P_Losses(self.DiffusionModel, RealData, T, inLossType="huber")
-        
+        TimeEmbedding       = torch.randint(0, self.Timesteps, (nBatchSize,), device=self.Device).long()
+        RealDataWithNoise   = self.DiffusionModel.Q_Sample(inXStart = RealData, inT = TimeEmbedding, inNoise = Noise)
+
+        PredictedNoise      = self.DiffusionModel(RealDataWithNoise, TimeEmbedding)
+
+        #loss = self.LossFN(PredictedNoise, RealData)
+        loss = self.LossFN(Noise, PredictedNoise)
+
         self._BackPropagate(self.Optimizer, loss)
 
         self.CurrBatchDDPMLoss = loss.item()
@@ -55,6 +70,5 @@ class DDPMTrainer(BaseTrainer) :
                 self.CurrBatchDDPMLoss,
             )
         )
-        pass
 
 ###########################################################################################

@@ -78,9 +78,8 @@ class DMModel(Unet):
     
     #这个函数用于生成噪声样本
     def Q_Sample(self, inXStart, inT, inNoise):
-        XStartShape                 = inXStart.shape
-        SqrtAlphasCumprod_T         = self.Extract(self.SqrtAlphasCumprod, inT, XStartShape)
-        SqrtOneMinusAlphasCumprod_T = self.Extract(self.SqrtOneMinusAlphasCumprod, inT, XStartShape)
+        SqrtAlphasCumprod_T         = self.Extract(self.SqrtAlphasCumprod, inT, inXStart.shape)
+        SqrtOneMinusAlphasCumprod_T = self.Extract(self.SqrtOneMinusAlphasCumprod, inT, inXStart.shape)
         #print("QSampleDevice:XStart:{}, Noise:{}, SQACT:{}, SQOMACT:{}".format(inXStart.device, inNoise.device, SqrtAlphasCumprod_T.device, SqrtOneMinusAlphasCumprod_T.device))
         return SqrtAlphasCumprod_T * inXStart + SqrtOneMinusAlphasCumprod_T * inNoise
 

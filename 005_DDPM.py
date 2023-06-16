@@ -55,39 +55,6 @@ if __name__ == "__main__" :
         Exec.Train(dataloader, SaveModelInterval=1)
 
 """
-reverse_transform = transforms.Compose([
-     transforms.Lambda(lambda t: (t + 1) / 2),
-     transforms.Lambda(lambda t: t.permute(1, 2, 0)), # CHW to HWC
-     transforms.Lambda(lambda t: t * 255.),
-     transforms.Lambda(lambda t: t.numpy().astype(np.uint8)),
-     transforms.ToPILImage(),
-])
-
-model = DDPMModel(0.00001, 10, ".")
-print("================")
-
-def Extract(a, t, x_shape):
-    batch_size = t.shape[0]
-    out = a.gather(-1, t.cpu())
-    print(out.shape)
-    return out.reshape(batch_size, *((1,) * (len(x_shape) - 1))).to(t.device)
-
-t = torch.randint(2, 10, (4,)).long()
-print(t)
-x_start = torch.randn((3, 4, 5))
-print(model.DMModel.SqrtAlphasCumprod)
-e = Extract(model.DMModel.SqrtAlphasCumprod, t, x_start.shape)
-print(e.shape)
-print(e)
-
-transform = transforms.Compose([
-    transforms.Resize(image_size),
-    transforms.CenterCrop(image_size),
-    transforms.ToTensor(), # turn into Numpy array of shape HWC, divide by 255
-    transforms.Lambda(lambda t: (t * 2) - 1),
-    
-])
-
 url = 'D:/AI/Datasets/cartoon_faces/faces/00a44dac107792065c96f27664e91cf6-0.jpg'
 image = Image.open(url)
 
