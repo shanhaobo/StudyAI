@@ -2,11 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .UNetBase import UNetBase
+
 # UNet的一大层，包含了两层小的卷积
 class DoubleConv(nn.Module):
     def __init__(self, inInputChannels, inOutputChannels):
         super(DoubleConv, self).__init__()
 
+        """
         self.Blocks = nn.Sequential(
             nn.Conv2d(inInputChannels, inOutputChannels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(inOutputChannels),
@@ -15,8 +18,12 @@ class DoubleConv(nn.Module):
             nn.BatchNorm2d(inOutputChannels),
             nn.ReLU(inplace=True)
         )
+        """
+        print("{},{}".format(inInputChannels, inOutputChannels))
+        self.Blocks = nn.Conv2d(inInputChannels, inOutputChannels, kernel_size=3, padding=1, bias=False)
 
     def forward(self, inData):
+        print(inData.size())
         return self.Blocks(inData)
 
 # 定义输入进来的第一层
@@ -66,8 +73,8 @@ class UpSample(nn.Module):
 class OutputConv(nn.Module):
     def __init__(self, inInputChannels, inOutputChannels):
         super(OutputConv, self).__init__()
+        
         self.Blocks = nn.Conv2d(inInputChannels, inOutputChannels, 1)
-
     def forward(self, inData):
         return self.Blocks(inData)
 
@@ -101,3 +108,10 @@ class UNet2D(nn.Module):
         out = self.Up4(out, x1)
 
         return self.OutConv(out)
+
+
+
+class UNet2DNew(UNetBase):
+    def __init__(self, inInputDim, inOutputDim, inImageSize, inLevelCount) -> None:
+        super().__init__(inInputDim, inOutputDim, inImageSize, inLevelCount, InputConv, DownSample, DoubleConv, DownSample, OutputConv)
+

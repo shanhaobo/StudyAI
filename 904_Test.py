@@ -2,12 +2,38 @@ import torch
 
 from Models.DiffusionModel.Utils import Extract
 
-t = torch.tensor([[1, 2], [3, 4]])
+from Models.Moduels.UNet2D import UNet2DNew
+
+from torchvision.transforms import transforms
+
+#input  dim 1
+#output dim 8
+net = UNet2DNew(1, 8, 128, 5)
+
+"D:/__DevAI__/Datasets/cartoon_faces/faces/00bfa209214d28bd4a22b64fa73841fb-0.jpg"
+
+with open('data/tree.txt', 'w') as f:
+    print(net, file=f)
+
+
+t = torch.randn((1, 1, 128, 128))
+
+x = net(t)
+
+print(x.size())
+
 
 """
 out[i][j] = input[index[i][j]][j]  # if dim == 0
 out[i][j] = input[i][index[i][j]]  # if dim == 1
 """
+
+
+"""
+t = torch.tensor([[1, 2], [3, 4]])
+
+
+
 index = [[0, 0], [1, 1]]
 oo0 = [[0 for _ in range(2)] for _ in range(2)]
 for i in range(2):
@@ -31,4 +57,6 @@ matrix = torch.tensor([[1, 2, 3], [4, 5, 6]])
 print(matrix.shape)
 print(matrix[0,:])
 print(matrix[:,1])
+
+"""
 
