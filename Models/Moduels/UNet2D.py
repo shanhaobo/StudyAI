@@ -9,7 +9,6 @@ class DoubleConv(nn.Module):
     def __init__(self, inInputChannels, inOutputChannels):
         super(DoubleConv, self).__init__()
 
-        """
         self.Blocks = nn.Sequential(
             nn.Conv2d(inInputChannels, inOutputChannels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(inOutputChannels),
@@ -18,12 +17,9 @@ class DoubleConv(nn.Module):
             nn.BatchNorm2d(inOutputChannels),
             nn.ReLU(inplace=True)
         )
-        """
-        print("{},{}".format(inInputChannels, inOutputChannels))
-        self.Blocks = nn.Conv2d(inInputChannels, inOutputChannels, kernel_size=3, padding=1, bias=False)
-
+        print("{}..{}".format(inInputChannels, inOutputChannels))
     def forward(self, inData):
-        print(inData.size())
+        print("{}".format(inData.size()))
         return self.Blocks(inData)
 
 # 定义输入进来的第一层
@@ -76,6 +72,7 @@ class OutputConv(nn.Module):
         
         self.Blocks = nn.Conv2d(inInputChannels, inOutputChannels, 1)
     def forward(self, inData):
+        print("{}".format(inData.size()))
         return self.Blocks(inData)
 
 class UNet2D(nn.Module):

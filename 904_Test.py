@@ -20,7 +20,7 @@ t = torch.randn((1, 1, 128, 128))
 
 x = net(t)
 
-print(x.size())
+#print(x.size())
 
 
 """
