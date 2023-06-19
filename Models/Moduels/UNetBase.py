@@ -29,11 +29,10 @@ class UNetBase(nn.Module):
             AllDims                 = [*(self.ImageSize * i for i in inLevelCountORList)]
         else:
             AllDims                 = [*(self.ImageSize * (2 ** i) for i in range(0, inLevelCountORList + 1))]
-        print(AllDims)
+
         # AllDims = (1, 3, 6, 12, 24, 48, 96) 
         # list(zip(AllDims[:-1], AllDims[1:])) -> ((1, 3, 6, 12, 24, 48), (3, 6, 12, 24, 48, 96))
         InOutPairDims               = list(zip(AllDims[:-1], AllDims[1:]))
-        print(InOutPairDims)
 
         # 1 -> input
         self.InputModule            = InputModuleType(self.InputDim, AllDims[0])
@@ -80,13 +79,13 @@ class UNetBase(nn.Module):
         
         # 4
         for UM in self.UpsampleList:
+            # dim=1 是除Batch后的一个维度,这个维度很可能是Channels
             X = torch.cat((X, Stack.pop()), dim=1)
             X = UM(X)
             X = self.UpSample(X)
 
         # 5
         return self.OutputModule(X)
-
 
 """
 x:torch.Size([3, 4])  

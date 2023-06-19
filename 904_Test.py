@@ -2,13 +2,13 @@ import torch
 
 from Models.DiffusionModel.Utils import Extract
 
-from Models.Moduels.UNet2D import UNet2DNew
+from Models.Moduels.UNet2D import UNet2D
 
 from torchvision.transforms import transforms
 
 #input  dim 1
 #output dim 8
-net = UNet2DNew(3, 8, 128, [1, 2, 4, 8])
+net = UNet2D(3, 8, 128, [1, 2, 4, 8])
 
 "D:/__DevAI__/Datasets/cartoon_faces/faces/00bfa209214d28bd4a22b64fa73841fb-0.jpg"
 
