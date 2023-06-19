@@ -17,9 +17,9 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 #from torchvision.transforms import Compose, ToTensor, Lambda, ToPILImage, CenterCrop, Resize
 
-image_size = 128
+image_size = 32
 channels = 1
-batch_size = 64
+batch_size = 16
 if __name__ == "__main__" :
     DDPM = DDPMModel(inImageSize=image_size, inChannel= channels, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./trained_models/DDPM")
     Exec = Executor(DDPM)

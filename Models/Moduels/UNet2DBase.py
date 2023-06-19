@@ -7,8 +7,8 @@ class UNet2DBase(nn.Module):
             self,
             inInputDim,
             inOutputDim,
-            inImageSize,
-            inLevelCountORList,
+            inEmbedDims,
+            inEmbedLvlCntORList,
             InputModuleType,
             DownsampleModuleType,
             MidModuleType,
@@ -19,16 +19,16 @@ class UNet2DBase(nn.Module):
 
         self.InputDim               = inInputDim
         self.OutputDim              = inOutputDim
-        self.ImageSize              = inImageSize
+        self.EmbedDim               = inEmbedDims
 
         self.DownsampleModuleType   = DownsampleModuleType
         self.MidModuleType          = MidModuleType
         self.UpsampleModuleType     = UpsampleModuleType
 
-        if isinstance(inLevelCountORList, tuple) or isinstance(inLevelCountORList, list):
-            AllDims                 = [*(self.ImageSize * i for i in inLevelCountORList)]
+        if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
+            AllDims                 = [*(self.EmbedDim * i for i in inEmbedLvlCntORList)]
         else:
-            AllDims                 = [*(self.ImageSize * (2 ** i) for i in range(0, inLevelCountORList + 1))]
+            AllDims                 = [*(self.EmbedDim * (2 ** i) for i in range(0, inEmbedLvlCntORList + 1))]
 
         # AllDims = (1, 3, 6, 12, 24, 48, 96) 
         # list(zip(AllDims[:-1], AllDims[1:])) -> ((1, 3, 6, 12, 24, 48), (3, 6, 12, 24, 48, 96))

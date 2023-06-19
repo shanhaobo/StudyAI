@@ -5,11 +5,13 @@ from .BaseArchiver import BaseArchiver
 class DDPMArchiver(BaseArchiver):
     def __init__(
             self,
-            inDDPM : torch.nn.Module,
-            inModelPrefix: str = "DDPM",
+            inNNModel : torch.nn.Module,
+            inDiffusionModel : torch.nn.Module,
             inModelRootFolderPath: str = "."
         ) -> None:
-        super().__init__(inModelPrefix, inModelRootFolderPath)
-        self.DDPM = inDDPM
+        super().__init__("DDPM", inModelRootFolderPath)
+        self.NNModel = inNNModel
+        self.DiffusionModel = inDiffusionModel
 
-        self.NNModelDict["DDPM"] = self.DDPM
+        self.NNModelDict["NNModel"] = self.NNModel
+        self.NNModelDict["DiffusionModel"] = self.DiffusionModel

@@ -10,23 +10,25 @@ from Models.Zoo.EMA import EMA
 
 class DDPMTrainer(BaseTrainer) :
     def __init__(self, 
-            inDDPM : torch.nn.Module,
+            inNN : torch.nn.Module,
+            inDiffusionMode : torch.nn.Module,
             inLearningRate,
             inTimesteps = 1000
         ) -> None:
         super().__init__(inLearningRate)
-        self.DiffusionModel = inDDPM.to(self.Device)
+        self.NNModel        = inNN.to(self.Device)
+        self.DiffusionMode  = inDiffusionMode.to(self.Device)
 
         self.Timesteps      = inTimesteps
 
-        self.EMA            = EMA(inDDPM, 0.999)
+        self.EMA            = EMA(inNN, 0.999)
 
         self.EndBatchTrain.add(self.DDPMEndBatchTrain)
 
 ###########################################################################################
 
     def _CreateOptimizer(self) -> None:
-        self.Optimizer = torch.optim.Adam(self.DiffusionModel.parameters(),     lr=self.LearningRate, betas=(0.5, 0.999))
+        self.Optimizer = torch.optim.Adam(self.NNModel.parameters(),     lr=self.LearningRate, betas=(0.5, 0.999))
         pass
 
     def _CreateLossFN(self) -> None:
@@ -46,9 +48,9 @@ class DDPMTrainer(BaseTrainer) :
         Noise               = torch.randn_like(RealData)
 
         TimeEmbedding       = torch.randint(0, self.Timesteps, (nBatchSize,), device=self.Device).long()
-        RealDataWithNoise   = self.DiffusionModel.Q_Sample(inXStart = RealData, inT = TimeEmbedding, inNoise = Noise)
+        RealDataWithNoise   = self.DiffusionMode.Q_Sample(inXStart = RealData, inT = TimeEmbedding, inNoise = Noise)
 
-        PredictedNoise      = self.DiffusionModel(RealDataWithNoise, TimeEmbedding)
+        PredictedNoise      = self.NNModel(RealDataWithNoise, TimeEmbedding)
 
         #loss = self.LossFN(PredictedNoise, RealData)
         loss = self.LossFN(Noise, PredictedNoise)
