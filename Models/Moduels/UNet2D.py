@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .UNetBase import UNetBase
+from .UNetBase import UNet2DBase
 
 # UNet的一大层，包含了两层小的卷积
 class DoubleConv(nn.Module):
@@ -42,7 +42,7 @@ class OutputConv(nn.Module):
         #print("OutputConv:{}".format(inData.size()))
         return self.Blocks(inData)
 
-class UNet2D(UNetBase):
+class UNet2D(UNet2DBase):
     def __init__(self, inInputDim, inOutputDim, inImageSize, inLevelCount) -> None:
         super().__init__(inInputDim, inOutputDim, inImageSize, inLevelCount, InputConv, DoubleConv, DoubleConv, DoubleConv, OutputConv)
 
