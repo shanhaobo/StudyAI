@@ -27,25 +27,10 @@ from .DiffusionModelUtils import ConditionUNet
 
 from .DiffusionModelBase import DiffusionModelBase
 
-class DMModel(ConditionUNet):
-    def __init__(self,
-            dim,
-            init_dim=None,
-            out_dim=None,
-            dim_mults=(1, 2, 4, 8),
-            channels=3,
-            with_time_emb=True,
-            resnet_block_groups=8,
-            use_convnext=True,
-            convnext_mult=2
-        ) -> None:
-        super().__init__(dim, init_dim, out_dim, dim_mults, channels, with_time_emb, resnet_block_groups, use_convnext, convnext_mult)
-
-
 class DDPMModel(BaseModel) :
     def __init__(self, inImageSize, inChannel, inLearningRate=0.00001, inTimesteps : int = 1000, inModeRootlFolderPath="."):
 
-        self.NNModel    = DMModel(dim=inImageSize, channels=inChannel, dim_mults=(1,2,4,))
+        self.NNModel    = ConditionUNet(ImageSize=inImageSize, channels=inChannel, dim_mults=(1,2,4,))
         self.DiffusionModel = DiffusionModelBase(inTimesteps=inTimesteps)
         NewTrainer      = DDPMTrainer(self.NNModel, self.DiffusionModel, inLearningRate, inTimesteps=inTimesteps)
         NewArchiver     = DDPMArchiver(self.NNModel, self.DiffusionModel, inModeRootlFolderPath)
@@ -54,8 +39,8 @@ class DDPMModel(BaseModel) :
     def Eval(self, *inArgs, **inKWArgs):
         if (super().Eval(*inArgs, **inKWArgs) == False) :
             return None
-        self.NNModel.eval()
-        return self.NNModel.Sample(
+        self.DiffusionModel.eval()
+        return self.DiffusionModel.Sample(
             self.NNModel,
             inImageSize=inKWArgs["inImageSize"],
             inBatchSize=inKWArgs["inBatchSize"],
