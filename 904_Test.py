@@ -8,7 +8,7 @@ from torchvision.transforms import transforms
 
 #input  dim 1
 #output dim 8
-net = UNet2DNew(1, 8, 128, 5)
+net = UNet2DNew(3, 8, 128, [1, 2, 4, 8])
 
 "D:/__DevAI__/Datasets/cartoon_faces/faces/00bfa209214d28bd4a22b64fa73841fb-0.jpg"
 
@@ -16,11 +16,11 @@ with open('data/tree.txt', 'w') as f:
     print(net, file=f)
 
 
-t = torch.randn((1, 1, 128, 128))
+t = torch.randn((1, 3, 128, 128))
 
 x = net(t)
 
-#print(x.size())
+print(x.size())
 
 
 """

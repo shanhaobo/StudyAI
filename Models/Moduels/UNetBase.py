@@ -8,7 +8,7 @@ class UNetBase(nn.Module):
             inInputDim,
             inOutputDim,
             inImageSize,
-            inLevelCount,
+            inLevelCountORList,
             InputModuleType,
             DownsampleModuleType,
             MidModuleType,
@@ -25,13 +25,20 @@ class UNetBase(nn.Module):
         self.MidModuleType          = MidModuleType
         self.UpsampleModuleType     = UpsampleModuleType
 
-        AllDims                     = [*(self.ImageSize * i for i in range(1, inLevelCount))]
+        if isinstance(inLevelCountORList, tuple) or isinstance(inLevelCountORList, list):
+            AllDims                 = [*(self.ImageSize * i for i in inLevelCountORList)]
+        else:
+            AllDims                 = [*(self.ImageSize * (2 ** i) for i in range(0, inLevelCountORList + 1))]
+        print(AllDims)
         # AllDims = (1, 3, 6, 12, 24, 48, 96) 
         # list(zip(AllDims[:-1], AllDims[1:])) -> ((1, 3, 6, 12, 24, 48), (3, 6, 12, 24, 48, 96))
         InOutPairDims               = list(zip(AllDims[:-1], AllDims[1:]))
+        print(InOutPairDims)
 
         # 1 -> input
         self.InputModule            = InputModuleType(self.InputDim, AllDims[0])
+
+        self.DownSample             = nn.MaxPool2d(2)
 
         # 2 -> downsample
         self.DownsampleList         = nn.ModuleList([])
@@ -47,8 +54,10 @@ class UNetBase(nn.Module):
         self.UpsampleList           = nn.ModuleList([])
         for _, (inDim, outDim) in enumerate(reversed(InOutPairDims)):
             self.UpsampleList.append(
-                self.UpsampleModuleType(outDim, inDim)
+                self.UpsampleModuleType(outDim * 2, inDim)
             )
+
+        self.UpSample               = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
         # 5 -> output
         self.OutputModule           = OutputModuleType(AllDims[0], self.OutputDim)
@@ -62,20 +71,19 @@ class UNetBase(nn.Module):
 
         # 2
         for DM in self.DownsampleList:
+            X = self.DownSample(X)
             X = DM(X)
             Stack.append(X)
 
         # 3
         X = self.MidModule(X)
-        print("3:X:{}".format(X.size()))
+        
         # 4
         for UM in self.UpsampleList:
-            # 0, 1
-            # X = torch.cat((X, Stack.pop()), dim=1)
-            X = UM(X, Stack.pop())
-            # X = UM(X)
-        
-        print("4:X:{}".format(X.size()))
+            X = torch.cat((X, Stack.pop()), dim=1)
+            X = UM(X)
+            X = self.UpSample(X)
+
         # 5
         return self.OutputModule(X)
 

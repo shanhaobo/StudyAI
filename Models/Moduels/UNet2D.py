@@ -19,8 +19,9 @@ class DoubleConv(nn.Module):
         )
         
     def forward(self, inData):
-        
-        return self.Blocks(inData)
+        Output = self.Blocks(inData)
+        #print("DoubleConv:{}=>{}".format(inData.size(), Output.size()))
+        return Output
 
 # 定义输入进来的第一层
 class InputConv(nn.Module):
@@ -35,13 +36,21 @@ class InputConv(nn.Module):
 class DownSample(nn.Module):
     def __init__(self, inInputChannels, inOutputChannels):
         super(DownSample, self).__init__()
+        """
         self.Blocks = nn.Sequential(
             nn.MaxPool2d(2),
             DoubleConv(inInputChannels, inOutputChannels)
         )
-
+        """
+        self.MaxPool = nn.MaxPool2d(2)
+        self.Out = DoubleConv(inInputChannels, inOutputChannels)
     def forward(self, inData):
-        return self.Blocks(inData)
+        #Out = self.Blocks(inData)
+        X = self.MaxPool(inData)
+        print("DownSample 0:{} => {}".format(inData.size(), X.size()))
+        X = self.Out(X)
+        print("DownSample 1:{} => {}".format(inData.size(), X.size()))
+        return X
 
 # 定义decoder中的向上传播
 class UpSample(nn.Module):
@@ -56,15 +65,24 @@ class UpSample(nn.Module):
         self.Output = DoubleConv(inInputChannels, inOutputChannels)
 
     def forward(self, inData, inSkipConn):  # x2是左侧的输出，x1是上一大层来的输出
-        # inData = self.Up(inData)
-
-        # diffY = inSkipConn.size()[2] - inData.size()[2]
-        # diffX = inSkipConn.size()[3] - inData.size()[3]
+        """
+        diffY = inSkipConn.size()[-2] - inData.size()[-2]
+        diffX = inSkipConn.size()[-1] - inData.size()[-1]
+        
+        if (diffX != 0) or (diffY != 0) :
+            print("UpSample 0:{} vs {}".format(inData.size(), inSkipConn.size()))
+            inData = self.Up(inData)
+            print("UpSample 1:{} vs {}".format(inData.size(), inSkipConn.size()))
 
         # inData = F.pad(inData, (diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2))
-        # x = torch.cat([inSkipConn, inData], dim=1) # 将两个tensor拼接在一起 dim=1：在通道数（C）上进行拼接
-        return self.Output(inData)
-
+        print("UpSample 2:{} vs {}".format(inData.size(), inSkipConn.size()))
+        X = torch.cat([inSkipConn, inData], dim=1) # 将两个tensor拼接在一起 dim=1：在通道数（C）上进行拼接
+        print("UpSample 3:{} vs {}".format(X.size(), inSkipConn.size()))
+        return self.Output(X)
+        """
+        X = torch.cat([inSkipConn, inData], dim=1)
+        X = self.Output(X)
+        return self.Up(X)
 # 定义最终的输出
 class OutputConv(nn.Module):
     def __init__(self, inInputChannels, inOutputChannels):
@@ -72,7 +90,7 @@ class OutputConv(nn.Module):
         self.Blocks = nn.Conv2d(inInputChannels, inOutputChannels, 1)
 
     def forward(self, inData):
-        print("{}".format(inData.size()))
+        #print("OutputConv:{}".format(inData.size()))
         return self.Blocks(inData)
 
 class UNet2D(nn.Module):
@@ -110,5 +128,5 @@ class UNet2D(nn.Module):
 
 class UNet2DNew(UNetBase):
     def __init__(self, inInputDim, inOutputDim, inImageSize, inLevelCount) -> None:
-        super().__init__(inInputDim, inOutputDim, inImageSize, inLevelCount, InputConv, DownSample, DoubleConv, UpSample, OutputConv)
+        super().__init__(inInputDim, inOutputDim, inImageSize, inLevelCount, InputConv, DoubleConv, DoubleConv, DoubleConv, OutputConv)
 
