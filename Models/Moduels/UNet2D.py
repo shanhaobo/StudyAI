@@ -17,9 +17,9 @@ class DoubleConv(nn.Module):
             nn.BatchNorm2d(inOutputChannels),
             nn.ReLU(inplace=True)
         )
-        print("{}..{}".format(inInputChannels, inOutputChannels))
+        
     def forward(self, inData):
-        print("{}".format(inData.size()))
+        
         return self.Blocks(inData)
 
 # 定义输入进来的第一层
@@ -56,21 +56,21 @@ class UpSample(nn.Module):
         self.Output = DoubleConv(inInputChannels, inOutputChannels)
 
     def forward(self, inData, inSkipConn):  # x2是左侧的输出，x1是上一大层来的输出
-        inData = self.Up(inData)
+        # inData = self.Up(inData)
 
-        diffY = inSkipConn.size()[2] - inData.size()[2]
-        diffX = inSkipConn.size()[3] - inData.size()[3]
+        # diffY = inSkipConn.size()[2] - inData.size()[2]
+        # diffX = inSkipConn.size()[3] - inData.size()[3]
 
-        inData = F.pad(inData, (diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2))
-        x = torch.cat([inSkipConn, inData], dim=1) # 将两个tensor拼接在一起 dim=1：在通道数（C）上进行拼接
-        return self.Output(x)
+        # inData = F.pad(inData, (diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2))
+        # x = torch.cat([inSkipConn, inData], dim=1) # 将两个tensor拼接在一起 dim=1：在通道数（C）上进行拼接
+        return self.Output(inData)
 
 # 定义最终的输出
 class OutputConv(nn.Module):
     def __init__(self, inInputChannels, inOutputChannels):
         super(OutputConv, self).__init__()
-        
         self.Blocks = nn.Conv2d(inInputChannels, inOutputChannels, 1)
+
     def forward(self, inData):
         print("{}".format(inData.size()))
         return self.Blocks(inData)
@@ -110,5 +110,5 @@ class UNet2D(nn.Module):
 
 class UNet2DNew(UNetBase):
     def __init__(self, inInputDim, inOutputDim, inImageSize, inLevelCount) -> None:
-        super().__init__(inInputDim, inOutputDim, inImageSize, inLevelCount, InputConv, DownSample, DoubleConv, DownSample, OutputConv)
+        super().__init__(inInputDim, inOutputDim, inImageSize, inLevelCount, InputConv, DownSample, DoubleConv, UpSample, OutputConv)
 

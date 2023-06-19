@@ -67,13 +67,15 @@ class UNetBase(nn.Module):
 
         # 3
         X = self.MidModule(X)
-
+        print("3:X:{}".format(X.size()))
         # 4
         for UM in self.UpsampleList:
             # 0, 1
-            #X = torch.cat((X, Stack.pop()), dim=1)
-            X = UM(X)
+            # X = torch.cat((X, Stack.pop()), dim=1)
+            X = UM(X, Stack.pop())
+            # X = UM(X)
         
+        print("4:X:{}".format(X.size()))
         # 5
         return self.OutputModule(X)
 
