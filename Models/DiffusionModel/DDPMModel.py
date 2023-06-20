@@ -1,25 +1,8 @@
-import torch
-from torch.utils.data import DataLoader
-from torch import nn, einsum
-import torch.nn.functional as F
-
-from datetime import datetime
-
-import math
-from inspect import isfunction
-from functools import partial
-
-from einops import rearrange, reduce
-from einops.layers.torch import Rearrange
 
 from Models.BaseModel import BaseModel
 
 from Archiver.DDPMArchiver import DDPMArchiver
 from Trainer.DDPMTrainer import DDPMTrainer
-
-import torch.nn.functional as F
-
-from .Utils import BetaSchedule
 
 from ..Moduels.UNet2D import UNet2D
 
@@ -39,6 +22,7 @@ class DDPMModel(BaseModel) :
         if (super().Eval(*inArgs, **inKWArgs) == False) :
             return None
         self.DiffusionModel.eval()
+        self.NNModel.eval()
         return self.DiffusionModel.Sample(
             self.NNModel,
             inImageSize=inKWArgs["inImageSize"],
