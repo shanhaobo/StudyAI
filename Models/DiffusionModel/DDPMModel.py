@@ -25,7 +25,7 @@ from ..Moduels.UNet2D import UNet2D
 
 from .DiffusionModelUtils import ConditionUNet
 
-from .DiffusionModelBase import DiffusionModelBase
+from .DiffusionModelBase import DiffusionModel
 
 class DMModel(ConditionUNet):
     def __init__(self,
@@ -45,10 +45,10 @@ class DMModel(ConditionUNet):
 class DDPMModel(BaseModel) :
     def __init__(self, inImageSize, inChannel, inLearningRate=0.00001, inTimesteps : int = 1000, inModeRootlFolderPath="."):
 
-        self.NNModel    = DMModel(dim=inImageSize, channels=inChannel, dim_mults=(1,2,4,))
-        self.DiffusionModel = DiffusionModelBase(inTimesteps=inTimesteps)
-        NewTrainer      = DDPMTrainer(self.NNModel, self.DiffusionModel, inLearningRate, inTimesteps=inTimesteps)
-        NewArchiver     = DDPMArchiver(self.NNModel, self.DiffusionModel, inModeRootlFolderPath)
+        self.NNModel        = DMModel(dim=inImageSize, channels=inChannel, dim_mults=(1,2,4,))
+        self.DiffusionModel = DiffusionModel(inTimesteps=inTimesteps)
+        NewTrainer          = DDPMTrainer(self.NNModel, self.DiffusionModel, inLearningRate, inTimesteps=inTimesteps)
+        NewArchiver         = DDPMArchiver(self.NNModel, self.DiffusionModel, inModeRootlFolderPath)
         super().__init__(NewTrainer, NewArchiver)
 
     def Eval(self, *inArgs, **inKWArgs):

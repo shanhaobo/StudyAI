@@ -3,7 +3,7 @@ import torch.nn.functional as F
 
 from .Utils import BetaSchedule
 
-class DiffusionModelBase(torch.nn.Module):
+class DiffusionModel(torch.nn.Module):
     def __init__(self, inTimesteps) -> None:
         super().__init__()
 
@@ -51,12 +51,12 @@ class DiffusionModelBase(torch.nn.Module):
         return SqrtAlphasCumprod_T * inXStart + SqrtOneMinusAlphasCumprod_T * inNoise
 
     #这个函数用于生成噪声样本
-    def P_Losses(self, inDenoiseModel, inXstart, inT, inNoise=None, inLossType="l1"):
+    def P_Losses(self, inNNModel, inXstart, inT, inNoise=None, inLossType="l1"):
         if inNoise is None:
             inNoise = torch.randn_like(inXstart)
 
         XNoisy = self.Q_Sample(inXStart=inXstart, inT=inT, inNoise=inNoise)
-        PredictedNoise = inDenoiseModel(XNoisy, inT)
+        PredictedNoise = inNNModel(XNoisy, inT)
 
         if inLossType == 'l1':
             LossResult = F.l1_loss(inNoise, PredictedNoise)
@@ -70,42 +70,42 @@ class DiffusionModelBase(torch.nn.Module):
         return LossResult
 
     #这些函数用于在给定的时间点和下一时间点之间进行采样。
-    def P_Sample(self, inModel, x, t, t_index):
-        BetasT = self.Extract(self.Betas, t, x.shape)
+    def P_Sample(self, inNNModel, inXStart, inT, inIndexT):
+        BetasT = self.Extract(self.Betas, inT, inXStart.shape)
         SqrtOneMinusAlphasCumprodT = self.Extract(
-            self.SqrtOneMinusAlphasCumprod, t, x.shape
+            self.SqrtOneMinusAlphasCumprod, inT, inXStart.shape
         )
-        SqrtRecipAlphasT = self.Extract(self.SqrtRecipAlphas, t, x.shape)
+        SqrtRecipAlphasT = self.Extract(self.SqrtRecipAlphas, inT, inXStart.shape)
         
         # Equation 11 in the paper
         # Use our model (noise predictor) to predict the mean
         ModelMean = SqrtRecipAlphasT * (
-            x - BetasT * inModel(x, t) / SqrtOneMinusAlphasCumprodT
+            inXStart - BetasT * inNNModel(inXStart, inT) / SqrtOneMinusAlphasCumprodT
         )
 
-        if t_index == 0:
+        if inIndexT == 0:
             return ModelMean
         else:
-            posterior_variance_t = self.Extract(self.PosteriorVariance, t, x.shape)
-            noise = torch.randn_like(x)
+            PosteriorVarianceT = self.Extract(self.PosteriorVariance, inT, inXStart.shape)
+            Noise = torch.randn_like(inXStart)
             # Algorithm 2 line 4:
-            return ModelMean + torch.sqrt(posterior_variance_t) * noise 
+            return ModelMean + torch.sqrt(PosteriorVarianceT) * Noise 
     
     @torch.no_grad()
-    def P_Sample_Loop(self, model, inShape):
-        device = next(model.parameters()).device
+    def P_Sample_Loop(self, inNNModel, inShape):
+        Device = next(inNNModel.parameters()).device
 
-        b = inShape[0]
+        nBatchSize = inShape[0]
         # start from pure noise (for each example in the batch)
-        img = torch.randn(inShape, device=device)
+        Img = torch.randn(inShape, device=Device)
 
         for i in reversed(range(0, self.Timesteps)):
-            img = self.P_Sample(model, img, torch.full((b,), i, device=device, dtype=torch.long), i)
+            Img = self.P_Sample(inNNModel, Img, torch.full((nBatchSize,), i, device=Device, dtype=torch.long), i)
             print("Sample Count : {}/{}".format(self.Timesteps - i, self.Timesteps))
-        return img
+        return Img
 
     # 函数入口
     @torch.no_grad()
-    def Sample(self, inModel, inImageSize, inBatchSize=16, inChannels=3):
-        return self.P_Sample_Loop(inModel, inShape=(inBatchSize, inChannels, inImageSize, inImageSize))
+    def Sample(self, inNNModel, inImageSize, inBatchSize=16, inChannels=3):
+        return self.P_Sample_Loop(inNNModel, inShape=(inBatchSize, inChannels, inImageSize, inImageSize))
 

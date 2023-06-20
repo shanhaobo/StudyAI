@@ -37,8 +37,8 @@ if __name__ == "__main__" :
             transforms.Lambda(lambda t : (t + 1) * 0.5)
         ])
         Path = "images/DDPM"
-        os.makedirs("images/DDPM", exist_ok=True)
-        save_image(reverse_transform(GenImage), "images/DDPM/{}.png".format(datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
+        os.makedirs(Path, exist_ok=True)
+        save_image(reverse_transform(GenImage), "{}/{}.png".format(Path, datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else:
         transform = transforms.Compose([
             transforms.Resize(image_size),
@@ -46,7 +46,6 @@ if __name__ == "__main__" :
             transforms.ToTensor(), # turn into Numpy array of shape HWC, divide by 255
             transforms.Lambda(lambda t : (t * 2) - 1),
             transforms.Normalize((0.5,), (0.5,))
-            
         ])
         dataset = torchvision.datasets.FashionMNIST(
             root="./data", train=True, transform=transform, download=True
