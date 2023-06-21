@@ -2,6 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+######################################################################################
+######################################################################################
+######################################################################################
+
 class UNet2DBase(nn.Module):
     def __init__(
             self,
@@ -79,7 +83,7 @@ class UNet2DBase(nn.Module):
         
         # 4
         for UM in self.UpsampleList:
-            # dim=1 是除Batch后的一个维度,这个维度很可能是Channels
+            # dim=1 是除Batch后的一个维度,这个维度很可能是EmbedDim
             X = torch.cat((X, Stack.pop()), dim=1)
             X = UM(X)
             X = self.UpSample(X)
@@ -87,10 +91,100 @@ class UNet2DBase(nn.Module):
         # 5
         return self.OutputModule(X)
 
-"""
-x:torch.Size([3, 4])  
-y:torch.Size([3, 4])
+######################################################################################
+######################################################################################
+######################################################################################
 
-cat dim0 torch.Size([6, 4])
-cat dim1 torch.Size([3, 8])
-"""
+class UNet2DBaseWithExtraData(nn.Module):
+    def __init__(
+            self,
+            inInputDim,
+            inOutputDim,
+            inEmbedDims,
+            inEmbedLvlCntORList,
+            InputModuleType,
+            DownsampleModuleType,
+            MidModuleType,
+            UpsampleModuleType,
+            OutputModuleType,
+            ExtraDataProcessorType
+        ) -> None:
+        super().__init__()
+
+        self.InputDim               = inInputDim
+        self.OutputDim              = inOutputDim
+        self.EmbedDim               = inEmbedDims
+
+        self.DownsampleModuleType   = DownsampleModuleType
+        self.MidModuleType          = MidModuleType
+        self.UpsampleModuleType     = UpsampleModuleType
+
+        if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
+            AllDims                 = [*(self.EmbedDim * i for i in inEmbedLvlCntORList)]
+        else:
+            AllDims                 = [*(self.EmbedDim * (2 ** i) for i in range(0, inEmbedLvlCntORList + 1))]
+
+        # AllDims = (1, 3, 6, 12, 24, 48, 96) 
+        # list(zip(AllDims[:-1], AllDims[1:])) -> ((1, 3, 6, 12, 24, 48), (3, 6, 12, 24, 48, 96))
+        InOutPairDims               = list(zip(AllDims[:-1], AllDims[1:]))
+
+        # 1 -> input
+        self.InputModule            = InputModuleType(self.InputDim, AllDims[0])
+
+        self.DownSample             = nn.MaxPool2d(2)
+
+        # 2 -> downsample
+        self.DownsampleList         = nn.ModuleList([])
+        for _, (inDim, outDim) in enumerate(InOutPairDims):
+            self.DownsampleList.append(
+                self.DownsampleModuleType(inDim, outDim)
+            )
+
+        # 3 -> Mid
+        self.MidModule              = MidModuleType(AllDims[-1], AllDims[-1])
+
+        # 4 -> upsample
+        self.UpsampleList           = nn.ModuleList([])
+        for _, (inDim, outDim) in enumerate(reversed(InOutPairDims)):
+            self.UpsampleList.append(
+                self.UpsampleModuleType(outDim * 2, inDim)
+            )
+
+        self.UpSample               = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+
+        # 5 -> output
+        self.OutputModule           = OutputModuleType(AllDims[0], self.OutputDim)
+
+        self.ExtraDataProcessor     = ExtraDataProcessorType(self.EmbedDim)
+
+    def forward(self, inData, inExtraData):
+
+        ProcessedExtraData  = self.ExtraDataProcessor(inExtraData)
+
+        Stack = []
+
+        # 1
+        X = self.InputModule(inData, ProcessedExtraData)
+
+        # 2
+        for DM in self.DownsampleList:
+            X = self.DownSample(X)
+            X = DM(X, ProcessedExtraData)
+            Stack.append(X)
+
+        # 3
+        X = self.MidModule(X, ProcessedExtraData)
+        
+        # 4
+        for UM in self.UpsampleList:
+            # dim=1 是除Batch后的一个维度,这个维度很可能是EmbedDim
+            X = torch.cat((X, Stack.pop()), dim=1)
+            X = UM(X, ProcessedExtraData)
+            X = self.UpSample(X)
+
+        # 5
+        return self.OutputModule(X, ProcessedExtraData)
+
+######################################################################################
+######################################################################################
+######################################################################################
