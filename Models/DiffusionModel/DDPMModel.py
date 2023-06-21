@@ -28,8 +28,8 @@ from .DiffusionModelUtils import ConditionUNet
 from .DiffusionModelBase import DiffusionModel
 
 class DDPMModel(BaseModel) :
-    def __init__(self, inImageSize, inChannel, inLearningRate=0.00001, inTimesteps : int = 1000, inModeRootlFolderPath="."):
-        self.NNModel        = ConditionUNet(dim=inImageSize, channels=inChannel, dim_mults=(1,2,4,))
+    def __init__(self, inEmbedDims, inChannel, inLearningRate=0.00001, inTimesteps : int = 1000, inModeRootlFolderPath="."):
+        self.NNModel        = UNet2D(inChannels=inChannel, inEmbedDims=inEmbedDims, inLevelCount=3)
         self.DiffusionModel = DiffusionModel(inTimesteps=inTimesteps)
         NewTrainer          = DDPMTrainer(self.NNModel, self.DiffusionModel, inLearningRate, inTimesteps=inTimesteps)
         NewArchiver         = DDPMArchiver(self.NNModel, self.DiffusionModel, inModeRootlFolderPath)

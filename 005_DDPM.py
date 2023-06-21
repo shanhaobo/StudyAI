@@ -21,7 +21,7 @@ image_size = 32
 channels = 1
 batch_size = 16
 if __name__ == "__main__" :
-    DDPM = DDPMModel(inImageSize=image_size, inChannel= channels, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./trained_models/DDPM")
+    DDPM = DDPMModel(inEmbedDims=image_size, inChannel= channels, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./trained_models/DDPM")
     Exec = Executor(DDPM)
 
     if Exec.IsExistModel() and Exec.ReadyTrain() == False:
@@ -73,5 +73,4 @@ t = torch.tensor([2])
 genimg = get_noisy_image(x_start, t)
 
 save_image(transform(genimg), "images/{}.png".format(datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
-
 """

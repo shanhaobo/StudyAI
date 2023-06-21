@@ -44,11 +44,11 @@ class OutputConv(nn.Module):
         return self.Blocks(inData)
 
 class UNet2D(UNet2DBase):
-    def __init__(self, inInputDim, inOutputDim, inImageSize, inLevelCount) -> None:
-        super().__init__(inInputDim, inOutputDim, inImageSize, inLevelCount, InputConv, DoubleConv, DoubleConv, DoubleConv, OutputConv)
+    def __init__(self, inChannels, inEmbedDims, inLevelCount) -> None:
+        super().__init__(inChannels, inChannels, inEmbedDims, inLevelCount, InputConv, DoubleConv, DoubleConv, DoubleConv, OutputConv)
 
 
 class UNet2DAttn(UNet2DBase):
-    def __init__(self, inInputDim, inOutputDim, inImageSize, inLevelCount) -> None:
-        super().__init__(inInputDim, inOutputDim, inImageSize, inLevelCount, InputConv, DoubleConv, DoubleConv, DoubleConv, OutputConv)
+    def __init__(self, inChannels, inEmbedDims, inLevelCount) -> None:
+        super().__init__(inChannels, inChannels, inEmbedDims, inLevelCount, InputConv, DoubleConv, DoubleConv, DoubleConv, OutputConv)
 
