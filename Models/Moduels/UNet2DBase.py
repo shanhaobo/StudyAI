@@ -137,17 +137,17 @@ class UNet2DBaseWithExtraData(nn.Module):
         self.DownsampleList         = nn.ModuleList([])
         for _, (inDim, outDim) in enumerate(InOutPairDims):
             self.DownsampleList.append(
-                self.DownsampleModuleType(inDim, outDim)
+                self.DownsampleModuleType(inDim, outDim, self.EmbedDim)
             )
 
         # 3 -> Mid
-        self.MidModule              = MidModuleType(AllDims[-1], AllDims[-1])
+        self.MidModule              = MidModuleType(AllDims[-1], AllDims[-1], self.EmbedDim)
 
         # 4 -> upsample
         self.UpsampleList           = nn.ModuleList([])
         for _, (inDim, outDim) in enumerate(reversed(InOutPairDims)):
             self.UpsampleList.append(
-                self.UpsampleModuleType(outDim * 2, inDim)
+                self.UpsampleModuleType(outDim * 2, inDim, self.EmbedDim)
             )
 
         self.UpSample               = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
@@ -164,7 +164,7 @@ class UNet2DBaseWithExtraData(nn.Module):
         Stack = []
 
         # 1
-        X = self.InputModule(inData, ProcessedExtraData)
+        X = self.InputModule(inData)
 
         # 2
         for DM in self.DownsampleList:
@@ -183,7 +183,7 @@ class UNet2DBaseWithExtraData(nn.Module):
             X = self.UpSample(X)
 
         # 5
-        return self.OutputModule(X, ProcessedExtraData)
+        return self.OutputModule(X)
 
 ######################################################################################
 ######################################################################################
