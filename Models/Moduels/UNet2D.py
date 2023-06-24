@@ -76,7 +76,7 @@ class DoubleConvEmbed(nn.Module):
         h = self.mlp(inExtraData)
 
         h = rearrange(h, "b c -> b c 1 1")
-        print("h:{}=>{}".format(inData.size(), h.size()))
+        #print("h:{}=>{}".format(inData.size(), h.size()))
         Output = self.Blocks(inData + h)
         #print("DoubleConv:{}=>{}".format(inData.size(), Output.size()))
         return Output
