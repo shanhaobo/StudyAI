@@ -91,9 +91,10 @@ class DoubleConvEmbed(DoubleConv):
         super(DoubleConvEmbed, self).__init__(inInputChannels, inOutputChannels)
 
     def forward(self, inData, inExtraData):
-        return self.Blocks(inData + inExtraData)
+        X = inData * (inExtraData + 1) + inExtraData
+        return self.Blocks(X)
 
-class UNet2DPosEmbed2(UNet2DBaseWithExtData):
+class UNet2DPLUSPosEmbed(UNet2DBaseWithExtData):
     def __init__(self, inChannels, inEmbedDims, inLevelCount) -> None:
         super().__init__(
             inChannels,
@@ -104,6 +105,43 @@ class UNet2DPosEmbed2(UNet2DBaseWithExtData):
             DoubleConvEmbed,
             DoubleConvEmbed,
             DoubleConvEmbed,
+            OutputConv,
+            SinusoidalPositionEmbeddings
+        )
+
+################################################################################
+################################################################################
+
+# UNet的一大层，包含了两层小的卷积
+class DoubleConvAttnPosEmbed(nn.Module):
+    def __init__(self, inInputChannels, inOutputChannels):
+        super(DoubleConvAttnPosEmbed, self).__init__()
+
+        Mid = (inInputChannels + inOutputChannels) // 2
+        self.Blocks = nn.Sequential(
+            nn.Conv2d(inInputChannels, Mid, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(Mid),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(Mid, inOutputChannels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(inOutputChannels),
+            nn.ReLU(inplace=True)
+        )
+        
+    def forward(self, inData, inExtraData):
+        X = inData * (inExtraData + 1) + inExtraData
+        return self.Blocks(X)
+
+class UNet2DAttnPosEmbed(UNet2DBaseWithExtData):
+    def __init__(self, inChannels, inEmbedDims, inLevelCount) -> None:
+        super().__init__(
+            inChannels,
+            inChannels,
+            inEmbedDims,
+            inLevelCount,
+            InputConv,
+            DoubleConvAttnPosEmbed,
+            DoubleConvAttnPosEmbed,
+            DoubleConvAttnPosEmbed,
             OutputConv,
             SinusoidalPositionEmbeddings
         )

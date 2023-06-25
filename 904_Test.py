@@ -2,13 +2,13 @@ import torch
 
 from Models.DiffusionModel.Utils import Extract
 
-from Models.Moduels.UNet2D import UNet2DPosEmbed
+from Models.Moduels.UNet2D import UNet2DPosEmbed, UNet2DPLUSPosEmbed, UNet2DAttnPosEmbed
 
 from torchvision.transforms import transforms
 
 #input  dim 1
 #output dim 8
-net = UNet2DPosEmbed(3, 32, [1, 2, 4, 8])
+net = UNet2DAttnPosEmbed(3, 32, [1, 2, 4, 8])
 
 "D:/__DevAI__/Datasets/cartoon_faces/faces/00bfa209214d28bd4a22b64fa73841fb-0.jpg"
 
