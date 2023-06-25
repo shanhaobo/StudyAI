@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+
+from einops import rearrange
 
 ######################################################################################
 ######################################################################################
@@ -14,20 +15,14 @@ class UNet2DBase(nn.Module):
             inEmbedDims,
             inEmbedLvlCntORList,
             InputModuleType,
-            DownsampleModuleType,
-            MidModuleType,
-            UpsampleModuleType,
+            DNSPLEncoderType,
+            MidMLMType,
+            UPSPLDecoderType,
             OutputModuleType
         ) -> None:
         super().__init__()
 
-        self.InputDim               = inInputDim
-        self.OutputDim              = inOutputDim
         self.EmbedDim               = inEmbedDims
-
-        self.DownsampleModuleType   = DownsampleModuleType
-        self.MidModuleType          = MidModuleType
-        self.UpsampleModuleType     = UpsampleModuleType
 
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
             AllDims                 = [*(self.EmbedDim * i for i in inEmbedLvlCntORList)]
@@ -39,31 +34,29 @@ class UNet2DBase(nn.Module):
         InOutPairDims               = list(zip(AllDims[:-1], AllDims[1:]))
 
         # 1 -> input
-        self.InputModule            = InputModuleType(self.InputDim, AllDims[0])
-
-        self.DownSample             = nn.MaxPool2d(2)
+        self.InputModule            = InputModuleType(inInputDim, AllDims[0])
 
         # 2 -> downsample
-        self.DownsampleList         = nn.ModuleList([])
+        self.DownSample             = nn.MaxPool2d(2)
+        self.DSEncoderList          = nn.ModuleList([])
         for _, (inDim, outDim) in enumerate(InOutPairDims):
-            self.DownsampleList.append(
-                self.DownsampleModuleType(inDim, outDim)
+            self.DSEncoderList.append(
+                DNSPLEncoderType(inDim, outDim)
             )
 
         # 3 -> Mid
-        self.MidModule              = MidModuleType(AllDims[-1], AllDims[-1])
+        self.MidMLM                 = MidMLMType(AllDims[-1], AllDims[-1])
 
         # 4 -> upsample
-        self.UpsampleList           = nn.ModuleList([])
+        self.USDecoderList          = nn.ModuleList([])
         for _, (inDim, outDim) in enumerate(reversed(InOutPairDims)):
-            self.UpsampleList.append(
-                self.UpsampleModuleType(outDim * 2, inDim)
+            self.USDecoderList.append(
+                UPSPLDecoderType(outDim * 2, inDim)
             )
-
         self.UpSample               = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
         # 5 -> output
-        self.OutputModule           = OutputModuleType(AllDims[0], self.OutputDim)
+        self.OutputModule           = OutputModuleType(AllDims[0], inOutputDim)
 
     def forward(self, inData):
 
@@ -73,19 +66,19 @@ class UNet2DBase(nn.Module):
         X = self.InputModule(inData)
 
         # 2
-        for DM in self.DownsampleList:
+        for Encoder in self.DSEncoderList:
             X = self.DownSample(X)
-            X = DM(X)
+            X = Encoder(X)
             Stack.append(X)
 
         # 3
-        X = self.MidModule(X)
+        X = self.MidMLM(X)
         
         # 4
-        for UM in self.UpsampleList:
+        for Decoder in self.USDecoderList:
             # dim=1 是除Batch后的一个维度,这个维度很可能是EmbedDim
             X = torch.cat((X, Stack.pop()), dim=1)
-            X = UM(X)
+            X = Decoder(X)
             X = self.UpSample(X)
 
         # 5
@@ -95,7 +88,7 @@ class UNet2DBase(nn.Module):
 ######################################################################################
 ######################################################################################
 
-class UNet2DBaseWithExtraData(nn.Module):
+class UNet2DBaseWithExtData(nn.Module):
     def __init__(
             self,
             inInputDim,
@@ -103,21 +96,15 @@ class UNet2DBaseWithExtraData(nn.Module):
             inEmbedDims,
             inEmbedLvlCntORList,
             InputModuleType,
-            DownsampleModuleType,
-            MidModuleType,
-            UpsampleModuleType,
+            DNSPLEncoderType,   #Downsample Encoder
+            MidMLMType,         #Mid Multi Layer Module
+            UPSPLDecoderType,   #Upsample Decoder
             OutputModuleType,
-            ExtraDataProcessorType
+            ExtDataModuleType
         ) -> None:
         super().__init__()
 
-        self.InputDim               = inInputDim
-        self.OutputDim              = inOutputDim
         self.EmbedDim               = inEmbedDims
-
-        self.DownsampleModuleType   = DownsampleModuleType
-        self.MidModuleType          = MidModuleType
-        self.UpsampleModuleType     = UpsampleModuleType
 
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
             AllDims                 = [*(self.EmbedDim * i for i in inEmbedLvlCntORList)]
@@ -129,75 +116,116 @@ class UNet2DBaseWithExtraData(nn.Module):
         InOutPairDims               = list(zip(AllDims[:-1], AllDims[1:]))
 
         # 1 -> input
-        self.InputModule            = InputModuleType(self.InputDim, AllDims[0])
-
-        self.DownSample             = nn.MaxPool2d(2)
+        self.InputModule            = InputModuleType(inInputDim, AllDims[0])
 
         # 2 -> downsample
-        self.DownsampleList         = nn.ModuleList([])
-        self.DSExtraDataList        = nn.ModuleList([])
-        for _, (inDim, outDim) in enumerate(InOutPairDims):
-            self.DownsampleList.append(
-                self.DownsampleModuleType(inDim, outDim, self.EmbedDim)
+        self.DownSample             = nn.MaxPool2d(2)
+
+        self.DSEncoderList          = nn.ModuleList([])
+        self.DSExtDataProcList      = nn.ModuleList([])
+        for (inDim, outDim) in InOutPairDims:
+            self.DSEncoderList.append(
+                DNSPLEncoderType(inDim, outDim)
             )
-            self.DSExtraDataList.append(
+            self.DSExtDataProcList.append(
                 nn.Sequential(nn.GELU(), nn.Linear(self.EmbedDim, inDim))
             )
 
         # 3 -> Mid
-        self.MidModule              = MidModuleType(AllDims[-1], AllDims[-1], self.EmbedDim)
-        self.MidExtraData           = nn.Sequential(nn.GELU(), nn.Linear(self.EmbedDim, AllDims[-1]))
+        self.MidMLM                 = MidMLMType(AllDims[-1], AllDims[-1])
+        self.MidExtDataProc         = nn.Sequential(nn.GELU(), nn.Linear(self.EmbedDim, AllDims[-1]))
 
         # 4 -> upsample
-        self.UpsampleList           = nn.ModuleList([])
-        self.USExtraDataList        = nn.ModuleList([])
-        for _, (inDim, outDim) in enumerate(reversed(InOutPairDims)):
-            self.UpsampleList.append(
-                self.UpsampleModuleType(outDim * 2, inDim, self.EmbedDim)
+        self.USDecoderList          = nn.ModuleList([])
+        self.USExtDataProcList      = nn.ModuleList([])
+        for (inDim, outDim) in reversed(InOutPairDims):
+            self.USDecoderList.append(
+                UPSPLDecoderType(outDim * 2, inDim)
             )
-            self.USExtraDataList.append(
+            self.USExtDataProcList.append(
                 nn.Sequential(nn.GELU(), nn.Linear(self.EmbedDim, outDim * 2))
             )
-
         self.UpSample               = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
         # 5 -> output
-        self.OutputModule           = OutputModuleType(AllDims[0], self.OutputDim)
+        self.OutputModule           = OutputModuleType(AllDims[0], inOutputDim)
 
-        ### ExtraData
-        self.ExtraDataProcessor     = ExtraDataProcessorType(self.EmbedDim)
+        ### ExtData
+        self.ExtDataModule          = ExtDataModuleType(self.EmbedDim)
 
-    def forward(self, inData, inExtraData):
+    ##########################
+    def forward(self, inData, inExtData):
 
-        ProcessedExtraData  = self.ExtraDataProcessor(inExtraData)
-
+        ProcessedExtData            = self.ExtDataModule(inExtData)
+        # ProcessedExtraData:size(Batch, EmbedDim)
         Stack = []
 
         # 1
         X = self.InputModule(inData)
 
         # 2
-        for DS, Extra in zip(self.DownsampleList, self.DSExtraDataList):
+        for Encoder, ExtDataProc in zip(self.DSEncoderList, self.DSExtDataProcList):
             X = self.DownSample(X)
-            E = Extra(ProcessedExtraData)
-            X = DS(X, E)
+            E = ExtDataProc(ProcessedExtData)
+            E = rearrange(E, "b c -> b c 1 1")
+            # E = E.unsqueeze(2).unsequeeze(3)
+            X = self.HandleData(X, E, Encoder)
             Stack.append(X)
 
         # 3
-        E = self.MidExtraData(ProcessedExtraData)
-        X = self.MidModule(X, E)
+        E = self.MidExtDataProc(ProcessedExtData)
+        E = rearrange(E, "b c -> b c 1 1")
+        # E = E.unsqueeze(2).unsequeeze(3)
+        X = self.HandleData(X, E, self.MidMLM)
         
         # 4
-        for UM, Extra in zip(self.UpsampleList, self.USExtraDataList):
+        for Decoder, ExtDataProc in zip(self.USDecoderList, self.USExtDataProcList):
             # dim=1 是除Batch后的一个维度,这个维度很可能是EmbedDim
             X = torch.cat((X, Stack.pop()), dim=1)
-            E = Extra(ProcessedExtraData)
-            X = UM(X, E)
+            E = ExtDataProc(ProcessedExtData)
+            E = rearrange(E, "b c -> b c 1 1")
+            # E = E.unsqueeze(2).unsequeeze(3)
+            X = self.HandleData(X, E, Decoder)
             X = self.UpSample(X)
 
         # 5
         return self.OutputModule(X)
+    
+    ##########################
+    def HandleData(self, inData, inExtData, inFunc):
+        return inFunc(inData, inExtData)
 
 ######################################################################################
 ######################################################################################
 ######################################################################################
+
+class UNet2DBasePLUSExtData(UNet2DBaseWithExtData):
+    def __init__(
+            self,
+            inInputDim,
+            inOutputDim,
+            inEmbedDims,
+            inEmbedLvlCntORList,
+            InputModuleType,
+            DNSPLEncoderType,   #Downsample Encoder
+            MidMLMType,         #Mid Multi Layer Module
+            UPSPLDecoderType,   #Upsample Decoder
+            OutputModuleType,
+            ExtDataModuleType
+        ) -> None:
+        super().__init__(
+            inInputDim,
+            inOutputDim,
+            inEmbedDims,
+            inEmbedLvlCntORList,
+            InputModuleType,
+            DNSPLEncoderType,   #Downsample Encoder
+            MidMLMType,         #Mid Multi Layer Module
+            UPSPLDecoderType,   #Upsample Decoder
+            OutputModuleType,
+            ExtDataModuleType
+        )
+
+    ##########################
+    def HandleData(self, inData, inExtData, inFunc):
+        return inFunc(inData + inExtData)
