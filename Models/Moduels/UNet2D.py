@@ -51,6 +51,9 @@ class UNet2D(UNet2DBase):
     def __init__(self, inChannels, inEmbedDims, inLevelCount) -> None:
         super().__init__(inChannels, inChannels, inEmbedDims, inLevelCount, InputConv, DoubleConv, DoubleConv, DoubleConv, OutputConv)
 
+################################################################################
+################################################################################
+
 # UNet的一大层，包含了两层小的卷积
 class DoubleConvEmbed(nn.Module):
     def __init__(self, inInputChannels, inOutputChannels, inExtraDataDims = None):
@@ -65,17 +68,10 @@ class DoubleConvEmbed(nn.Module):
             nn.BatchNorm2d(inOutputChannels),
             nn.ReLU(inplace=True)
         )
-
-        self.mlp = (
-            nn.Sequential(nn.GELU(), nn.Linear(inExtraDataDims, inInputChannels))
-            if inExtraDataDims is not None
-            else None
-        )
         
     def forward(self, inData, inExtraData):
-        h = self.mlp(inExtraData)
 
-        h = rearrange(h, "b c -> b c 1 1")
+        h = rearrange(inExtraData, "b c -> b c 1 1")
         #print("h:{}=>{}".format(inData.size(), h.size()))
         Output = self.Blocks(inData + h)
         #print("DoubleConv:{}=>{}".format(inData.size(), Output.size()))
