@@ -55,8 +55,8 @@ class IMultiHeadAttention2D(nn.Module):
         return self._AttOutLayer(Out)
 
 class MultiHeadAttention2D(IMultiHeadAttention2D):
-    def __init__(self, inNumHeads, inHeadEmbedDim):
-        super(MultiHeadAttention2D, self).__init__(inNumHeads, inHeadEmbedDim)
+    def __init__(self, inChannels, inNumHeads, inHeadEmbedDim):
+        super(MultiHeadAttention2D, self).__init__(inChannels, inNumHeads, inHeadEmbedDim)
         
     def forward(self, inX):
         return super(MultiHeadAttention2D, self).CalcAtt(inX)

@@ -159,7 +159,7 @@ class CausalSelfAttention(IMultiHeadAttention):
         self.__CausalMask     = torch.tril(torch.ones(1, 1, inPosEmbedDim, inPosEmbedDim)) == 0
 
     def __Mask(self, Att):
-        # mask
+        # mask, 最主要的作用是屏蔽了后出现的词对前面出现的词
         '''
         print(Att)
         tensor([[

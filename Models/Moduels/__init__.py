@@ -2,5 +2,7 @@ from . import (
     Attention,
     Attention2D,
     PositionEmbedding,
-    UNet2D
+    CustomConv2D,
+    UNet2D,
+    UNet2DBase,
 )
