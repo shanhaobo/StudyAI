@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from einops import rearrange
 
-from .UNet2DBase import UNet2DBase, UNet2DBaseWithExtData, UNet2DBasePLUSExtData
+from .UNet2DBase import UNet2DBase, UNet2DBaseWithExtData
 from ..PositionEmbedding import SinusoidalPositionEmbedding
 from ..CustomEnhancedModules import WeightStandardizedConv2D
 from ..Attention2D import MultiHeadAttention2D
@@ -63,25 +63,6 @@ class UNet2D(UNet2DBase):
             DoubleConv,
             DoubleConv,
             OutputConv
-        )
-
-################################################################################
-################################################################################
-
-class UNet2DPosEmbed(UNet2DBasePLUSExtData):
-    def __init__(self, inColorChanNum, inEmbeddingDim, inEmbedLvlCntORList, inExtDataDim = None) -> None:
-        super().__init__(
-            inColorChanNum,
-            inColorChanNum,
-            inEmbeddingDim,
-            inEmbedLvlCntORList,
-            InputConv,
-            DoubleConv,
-            DoubleConv,
-            DoubleConv,
-            OutputConv,
-            SinusoidalPositionEmbedding,
-            inExtDataDim
         )
 
 ################################################################################

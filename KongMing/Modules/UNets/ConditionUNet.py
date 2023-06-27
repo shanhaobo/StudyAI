@@ -129,7 +129,7 @@ class ResnetBlock(nn.Module):
         return h + self.res_conv(x)
 
 # 定义之前提到的ConvNeXt网络
-class ConvNextBlock(nn.Module):
+class ConvNeXtBlock(nn.Module):
     """https://arxiv.org/abs/2201.03545"""
 
     def __init__(self, dim, dim_out, *, time_emb_dim=None, mult=2, norm=True):
@@ -263,7 +263,7 @@ class ConditionUNet(nn.Module):
         in_out = list(zip(dims[:-1], dims[1:]))
         
         if use_convnext:
-            block_klass = partial(ConvNextBlock, mult=convnext_mult)
+            block_klass = partial(ConvNeXtBlock, mult=convnext_mult)
         else:
             block_klass = partial(ResnetBlock, groups=resnet_block_groups)
 
@@ -358,6 +358,7 @@ class ConditionUNet(nn.Module):
 
 from .UNet2DBase import UNet2DBaseWithExtData
 from ..PositionEmbedding import SinusoidalPositionEmbedding
+from ..UtilsModules import DoubleLinearModuleTO4D
 
 class CU2_InitConv(nn.Module):
     def __init__(self, inInputDim, inOutputDim) -> None:
@@ -373,7 +374,7 @@ class CU2_FinalConv(nn.Module):
         super().__init__()
 
         self.Blocks =  nn.Sequential(
-            ConvNextBlock(inInputDim, inInputDim),
+            ConvNeXtBlock(inInputDim, inInputDim),
             nn.Conv2d(inInputDim, inOutputDim, 1)
         )
 
@@ -384,27 +385,35 @@ class CU2_SampleConv(nn.Module):
     def __init__(self, inInputDim, inOutputDim) -> None:
         super().__init__()
     
-        self.b1 = ConvNextBlock(inInputDim, inInputDim)
-        self.b2 = ConvNextBlock(inInputDim, inOutputDim)
+        self.b1 = ConvNeXtBlock(inInputDim, inOutputDim)
+        self.eb1 = DoubleLinearModuleTO4D(inInputDim, inOutputDim)
+        self.b2 = ConvNeXtBlock(inOutputDim, inOutputDim)
+        self.eb2 = DoubleLinearModuleTO4D(inInputDim, inOutputDim)
         self.b3 = Residual(PreNorm(inOutputDim, LinearAttention(inOutputDim)))
 
     def forward(self, inData, inExtData):
-        x = self.b1(inData, inExtData)
-        x = self.b2(x, inExtData)
-        return self.b3(x)
+        x = self.b1(inData)
+        e = self.eb1(inExtData)
+        x = self.b2(x + e)
+        e = self.eb2(inExtData)
+        return self.b3(x + e)
     
 class CU2_MidSampleConv(nn.Module):
     def __init__(self, inInputDim, inOutputDim) -> None:
         super().__init__()
     
-        self.b1 = ConvNextBlock(inInputDim, inOutputDim)
+        self.b1 = ConvNeXtBlock(inInputDim, inOutputDim)
+        self.eb1 = DoubleLinearModuleTO4D(inInputDim, inOutputDim)
         self.b2 = Residual(PreNorm(inOutputDim, Attention(inOutputDim)))
-        self.b3 = ConvNextBlock(inOutputDim, inOutputDim)
+        self.eb2 = DoubleLinearModuleTO4D(inOutputDim, inOutputDim)
+        self.b3 = ConvNeXtBlock(inOutputDim, inOutputDim)
 
     def forward(self, inData, inExtData):
-        x = self.b1(inData, inExtData)
-        x = self.b2(x)
-        x = self.b3(x, inExtData)
+        x = self.b1(inData)
+        e = self.eb1(inExtData)
+        x = self.b2(x + e)
+        e = self.eb2(inExtData)
+        x = self.b3(x + e)
         return x
     
 class ConditionUNet2(UNet2DBaseWithExtData) :

@@ -15,7 +15,21 @@ class DoubleLinearModule(nn.Module):
     def forward(self, inData):
         return self.Blocks(inData)
 
-class DownsampleModule(nn.Module):
+class DoubleLinearModuleTO4D(nn.Module):
+    def __init__(self, inInputDim, inOutputDim, inMidScale = 4) -> None:
+        super().__init__()
+        MidDim = inOutputDim * inMidScale
+        self.Blocks = nn.Sequential(
+            nn.Linear(inInputDim, MidDim),
+            nn.GELU(),
+            nn.Linear(MidDim, inOutputDim),
+            Rearrange("b c -> b c 1 1")
+        )
+
+    def forward(self, inData):
+        return self.Blocks(inData)
+
+class DownsampleModule2D(nn.Module):
     def __init__(self, inInputDim) -> None:
         super().__init__()
 
@@ -28,7 +42,7 @@ class DownsampleModule(nn.Module):
         return self.Blocks(inData)
 
 
-class UpsampleModule(nn.Module):
+class UpsampleModule2D(nn.Module):
     def __init__(self, inInputDim) -> None:
         super().__init__()
 
