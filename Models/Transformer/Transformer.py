@@ -4,11 +4,11 @@ import torch.nn as nn
 from Modules.Attention import CausalSelfAttention
 
 class _BlockMLP(nn.Module):
-    def __init__(self, inEmbedDim, inEnableBias):
+    def __init__(self, inEmbeddingDim, inEnableBias):
         super().__init__()
-        self.__FCLayer  = nn.Linear(inEmbedDim, 4 * inEmbedDim, bias=inEnableBias)
+        self.__FCLayer  = nn.Linear(inEmbeddingDim, 4 * inEmbeddingDim, bias=inEnableBias)
         self.__Activate = nn.GELU()
-        self.__OutLayer = nn.Linear(4 * inEmbedDim, inEmbedDim, bias=inEnableBias)
+        self.__OutLayer = nn.Linear(4 * inEmbeddingDim, inEmbeddingDim, bias=inEnableBias)
 
     def forward(self, inX):
         # (EmbedDim, 4 * EmbedDim) -> (4 * EmbedDim, EmbedDim)
@@ -19,14 +19,14 @@ class _BlockMLP(nn.Module):
 
 # 一次Attention
 class _TransformerBlock(nn.Module):
-    def __init__(self, inEmbedDim, inHeadNum, inPosEmbedDim, inEnableBias, inEpsNorm):
+    def __init__(self, inEmbeddingDim, inHeadNum, inPosEmbedDim, inEnableBias, inEpsNorm):
         super().__init__()
         #LayerNorm 防止梯度爆炸与消失,从而加速训练过程并提高模型性能
-        self.__AttLayerNorm = nn.LayerNorm(inEmbedDim, inEpsNorm)
+        self.__AttLayerNorm = nn.LayerNorm(inEmbeddingDim, inEpsNorm)
         #自注意力机制允许模型根据输入序列中各个单词之间的关系来计算每个单词的表示
-        self.__AttLayer     = CausalSelfAttention(inHeadNum, inEmbedDim // inHeadNum, inPosEmbedDim)
-        self.__MLPLayerNorm = nn.LayerNorm(inEmbedDim, inEpsNorm)
-        self.__MLPLayer     = _BlockMLP(inEmbedDim, inEnableBias)
+        self.__AttLayer     = CausalSelfAttention(inHeadNum, inEmbeddingDim // inHeadNum, inPosEmbedDim)
+        self.__MLPLayerNorm = nn.LayerNorm(inEmbeddingDim, inEpsNorm)
+        self.__MLPLayer     = _BlockMLP(inEmbeddingDim, inEnableBias)
 
     def forward(self, inX):
         # 自注意力机制生成新单词,与输入(inX)相加形成了ResNet

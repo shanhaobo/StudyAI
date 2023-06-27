@@ -9,7 +9,7 @@ from functools import partial
 from einops import rearrange, reduce
 from einops.layers.torch import Rearrange
 
-from Modules.PositionEmbedding import SinusoidalPositionEmbeddings
+from Modules.PositionEmbedding import SinusoidalPositionEmbedding
 
 """
 ====================================================================================
@@ -238,7 +238,7 @@ class PreNorm(nn.Module):
 class ConditionUNet(nn.Module):
     def __init__(
         self,
-        inEmbedDim,
+        inEmbeddingDim,
         init_dim=None,
         out_dim=None,
         inEmbedLvlCntORList=(1, 2, 4, 8),
@@ -253,10 +253,10 @@ class ConditionUNet(nn.Module):
         # determine dimensions
         self.channels = inChannel
 
-        init_dim = default(init_dim, inEmbedDim // 3 * 2)
+        init_dim = default(init_dim, inEmbeddingDim // 3 * 2)
         self.init_conv = nn.Conv2d(inChannel, init_dim, 7, padding=3)
 
-        dims = [init_dim, *map(lambda m: inEmbedDim * m, inEmbedLvlCntORList)]
+        dims = [init_dim, *map(lambda m: inEmbeddingDim * m, inEmbedLvlCntORList)]
         in_out = list(zip(dims[:-1], dims[1:]))
         
         if use_convnext:
@@ -266,10 +266,10 @@ class ConditionUNet(nn.Module):
 
         # time embeddings
         if with_time_emb:
-            time_dim = inEmbedDim * 4
+            time_dim = inEmbeddingDim * 4
             self.time_mlp = nn.Sequential(
-                SinusoidalPositionEmbeddings(inEmbedDim),
-                nn.Linear(inEmbedDim, time_dim),
+                SinusoidalPositionEmbedding(inEmbeddingDim),
+                nn.Linear(inEmbeddingDim, time_dim),
                 nn.GELU(),
                 nn.Linear(time_dim, time_dim),
             )
@@ -317,7 +317,7 @@ class ConditionUNet(nn.Module):
 
         out_dim = default(out_dim, inChannel)
         self.final_conv = nn.Sequential(
-            block_klass(inEmbedDim, inEmbedDim), nn.Conv2d(inEmbedDim, out_dim, 1)
+            block_klass(inEmbeddingDim, inEmbeddingDim), nn.Conv2d(inEmbeddingDim, out_dim, 1)
         )
 
     def forward(self, x, time):

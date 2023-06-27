@@ -36,7 +36,7 @@ class MNISTDataset(torch.utils.data.Dataset):
 '''
 
 if __name__ == "__main__" :
-    GAN = DCGANModel(128, 3, (128, 1, 1), inModeRootlFolderPath="./output/trained_models/CFGAN")
+    GAN = DCGANModel(128, 3, (128, 1, 1), inModeRootlFolderPath="./output/004_DCGAN/CF/trained_models")
     Exec = Executor(GAN)
 
     if Exec.IsExistModel() and Exec.ReadyTrain() == False:
@@ -47,7 +47,7 @@ if __name__ == "__main__" :
             transforms.Normalize((-0.5,), (2.0,)),
             transforms.Lambda(lambda t : (t + 1) * 0.5)
         ])
-        save_image(transform(GenImage), "./output/images/{}.png".format(datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
+        save_image(transform(GenImage), "./output/004_DCGAN/CF/images/{}.png".format(datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else :
         #dataset = MNISTDataset()
         transform = transforms.Compose([

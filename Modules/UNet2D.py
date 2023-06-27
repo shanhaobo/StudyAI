@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from einops import rearrange
 
 from .UNet2DBase import UNet2DBase, UNet2DBaseWithExtData, UNet2DBasePLUSExtData
-from .PositionEmbedding import SinusoidalPositionEmbeddings
+from .PositionEmbedding import SinusoidalPositionEmbedding
 from .CustomConv2D import WeightStandardizedConv2D
 from .Attention2D import MultiHeadAttention2D
 
@@ -52,11 +52,11 @@ class OutputConv(nn.Module):
 ################################################################################
 
 class UNet2D(UNet2DBase):
-    def __init__(self, inDim, inEmbedDim, inEmbedLvlCntORList) -> None:
+    def __init__(self, inColorChanNum, inEmbeddingDim, inEmbedLvlCntORList) -> None:
         super().__init__(
-            inDim,
-            inDim,
-            inEmbedDim,
+            inColorChanNum,
+            inColorChanNum,
+            inEmbeddingDim,
             inEmbedLvlCntORList,
             InputConv,
             DoubleConv,
@@ -69,18 +69,19 @@ class UNet2D(UNet2DBase):
 ################################################################################
 
 class UNet2DPosEmbed(UNet2DBasePLUSExtData):
-    def __init__(self, inDim, inEmbedDim, inEmbedLvlCntORList) -> None:
+    def __init__(self, inColorChanNum, inEmbeddingDim, inEmbedLvlCntORList, inExtDataDim = None) -> None:
         super().__init__(
-            inDim,
-            inDim,
-            inEmbedDim,
+            inColorChanNum,
+            inColorChanNum,
+            inEmbeddingDim,
             inEmbedLvlCntORList,
             InputConv,
             DoubleConv,
             DoubleConv,
             DoubleConv,
             OutputConv,
-            SinusoidalPositionEmbeddings
+            SinusoidalPositionEmbedding,
+            inExtDataDim
         )
 
 ################################################################################
@@ -96,18 +97,19 @@ class DoubleConvEmbed(DoubleConv):
         return self.Blocks(X)
 
 class UNet2DPLUSPosEmbed(UNet2DBaseWithExtData):
-    def __init__(self, inDim, inEmbedDim, inEmbedLvlCntORList) -> None:
+    def __init__(self, inDim, inEmbeddingDim, inEmbedLvlCntORList, inExtDataDim = None) -> None:
         super().__init__(
             inDim,
             inDim,
-            inEmbedDim,
+            inEmbeddingDim,
             inEmbedLvlCntORList,
             InputConv,
             DoubleConvEmbed,
             DoubleConvEmbed,
             DoubleConvEmbed,
             OutputConv,
-            SinusoidalPositionEmbeddings
+            SinusoidalPositionEmbedding,
+            inExtDataDim
         )
 
 ################################################################################
@@ -120,7 +122,6 @@ class GroupAttn(nn.Module):
 
     def forward(self, inData):
         return inData + self.Norm(self.Attn(inData))
-
 
 # UNet的一大层，包含了两层小的卷积
 class DoubleConvAttnPosEmbed(nn.Module):
@@ -141,26 +142,74 @@ class DoubleConvAttnPosEmbed(nn.Module):
         X = inData * (inExtraData + 1) + inExtraData
         return self.Blocks(X)
 
-class UNet2DAttnPosEmbed_RestNetBlock(nn.Module):
+class UNet2DPosEmbed_DoubleAttnResNetBlock(nn.Module):
     def __init__(self, inInputDim, inOutputDim):
-        super(UNet2DAttnPosEmbed_RestNetBlock, self).__init__()
+        super(UNet2DPosEmbed_DoubleAttnResNetBlock, self).__init__()
         self.Block = DoubleConvAttnPosEmbed(inInputDim, inOutputDim)
         self.ResBlock = nn.Conv2d(inInputDim, inOutputDim, 1)
         
     def forward(self, inData, inExtraData):
         return self.Block(inData, inExtraData) + self.ResBlock(inData)
 
-class UNet2DAttnPosEmbed(UNet2DBaseWithExtData):
-    def __init__(self, inChannel, inEmbedDim, inEmbedLvlCntORList) -> None:
+class UNet2DPosEmbed_DoubleAttn(UNet2DBaseWithExtData):
+    def __init__(self, inColorChanNum, inEmbeddingDim, inEmbedLvlCntORList, inExtDataDim = None) -> None:
         super().__init__(
-            inChannel,
-            inChannel,
-            inEmbedDim,
+            inColorChanNum,
+            inColorChanNum,
+            inEmbeddingDim,
             inEmbedLvlCntORList,
             InputConv,
-            UNet2DAttnPosEmbed_RestNetBlock,
-            UNet2DAttnPosEmbed_RestNetBlock,
-            UNet2DAttnPosEmbed_RestNetBlock,
+            UNet2DPosEmbed_DoubleAttnResNetBlock,
+            UNet2DPosEmbed_DoubleAttnResNetBlock,
+            UNet2DPosEmbed_DoubleAttnResNetBlock,
             OutputConv,
-            SinusoidalPositionEmbeddings
+            SinusoidalPositionEmbedding,
+            inExtDataDim
+        )
+
+################################################################################
+################################################################################
+
+# UNet的一大层，包含了两层小的卷积
+class TripleConvAttnPosEmbed(nn.Module):
+    def __init__(self, inInputDim, inOutputDim):
+        super().__init__()
+
+        self.Blocks = nn.Sequential(
+            WeightStandardizedConv2D(inInputDim, inOutputDim, kernel_size=3, padding=1, bias=False),
+            nn.GroupNorm(8, inOutputDim),
+            nn.SiLU(),
+            GroupAttn(inOutputDim),
+            WeightStandardizedConv2D(inOutputDim, inOutputDim, kernel_size=3, padding=1, bias=False),
+            nn.GroupNorm(8, inOutputDim),
+            nn.SiLU()
+        )
+        
+    def forward(self, inData, inExtraData):
+        X = inData * (inExtraData + 1) + inExtraData
+        return self.Blocks(X)
+
+class UNet2DPosEmbed_TripleAttnResNetBlock(nn.Module):
+    def __init__(self, inInputDim, inOutputDim):
+        super().__init__()
+        self.Block = TripleConvAttnPosEmbed(inInputDim, inOutputDim)
+        self.ResBlock = nn.Conv2d(inInputDim, inOutputDim, 1)
+        
+    def forward(self, inData, inExtraData):
+        return self.Block(inData, inExtraData) + self.ResBlock(inData)
+
+class UNet2DPosEmbed_TripleAttn(UNet2DBaseWithExtData):
+    def __init__(self, inColorChanNum, inEmbeddingDim, inEmbedLvlCntORList, inExtDataDim = None) -> None:
+        super().__init__(
+            inColorChanNum,
+            inColorChanNum,
+            inEmbeddingDim,
+            inEmbedLvlCntORList,
+            InputConv,
+            UNet2DPosEmbed_TripleAttnResNetBlock,
+            UNet2DPosEmbed_TripleAttnResNetBlock,
+            UNet2DPosEmbed_TripleAttnResNetBlock,
+            OutputConv,
+            SinusoidalPositionEmbedding,
+            inExtDataDim
         )

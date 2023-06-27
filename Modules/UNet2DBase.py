@@ -12,19 +12,19 @@ from .UtilsModules import DoubleLinearModule
 class UNet2DBase(nn.Module):
     def __init__(
             self,
-            inInputDim,
-            inOutputDim,
-            inEmbedDim,
+            inInputColorChanNum,
+            inOutputColorChanNum,
+            inEmbeddingDim,
             inEmbedLvlCntORList,
-            InputModuleType,
-            DNSPLEncoderType,
-            MidMLMType,
-            UPSPLDecoderType,
-            OutputModuleType
+            inInputModuleType,
+            inDNSPLEncoderType,
+            inMidMLMType,
+            inUPSPLDecoderType,
+            inOutputModuleType
         ) -> None:
         super().__init__()
 
-        self.EmbedDim               = inEmbedDim
+        self.EmbedDim               = inEmbeddingDim
 
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
             AllDims                 = [*(self.EmbedDim * i for i in inEmbedLvlCntORList)]
@@ -36,29 +36,29 @@ class UNet2DBase(nn.Module):
         InOutPairDims               = list(zip(AllDims[:-1], AllDims[1:]))
 
         # 1 -> input
-        self.InputModule            = InputModuleType(inInputDim, AllDims[0])
+        self.InputModule            = inInputModuleType(inInputColorChanNum, AllDims[0])
 
         # 2 -> downsample
         self.DownSample             = nn.MaxPool2d(2)
         self.DSEncoderList          = nn.ModuleList([])
         for inDim, outDim in InOutPairDims:
             self.DSEncoderList.append(nn.ModuleList([
-                DNSPLEncoderType(inDim, outDim)
+                inDNSPLEncoderType(inDim, outDim)
             ]))
 
         # 3 -> Mid
-        self.MidMLM                 = MidMLMType(AllDims[-1], AllDims[-1])
+        self.MidMLM                 = inMidMLMType(AllDims[-1], AllDims[-1])
 
         # 4 -> upsample
         self.USDecoderList          = nn.ModuleList([])
         for inDim, outDim in reversed(InOutPairDims):
             self.USDecoderList.append(nn.ModuleList([
-                UPSPLDecoderType(outDim * 2, inDim)
+                inUPSPLDecoderType(outDim * 2, inDim)
             ]))
         self.UpSample               = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
         # 5 -> output
-        self.OutputModule           = OutputModuleType(AllDims[0], inOutputDim)
+        self.OutputModule           = inOutputModuleType(AllDims[0], inOutputColorChanNum)
 
     def forward(self, inData):
 
@@ -95,61 +95,60 @@ class UNet2DBaseWithExtData(nn.Module):
             self,
             inInputDim,
             inOutputDim,
-            inEmbedDim,
+            inEmbeddingDim,
             inEmbedLvlCntORList,
-            InputModuleType,
-            DNSPLEncoderType,   #Downsample Encoder
-            MidMLMType,         #Mid Multi Layer Module
-            UPSPLDecoderType,   #Upsample Decoder
-            OutputModuleType,
-            ExtDataModuleType,
-            inExtEmbedDim =  None
+            inInputModuleType,
+            inDNSPLEncoderType,   #Downsample Encoder
+            inMidMLMType,         #Mid Multi Layer Module
+            inUPSPLDecoderType,   #Upsample Decoder
+            inOutputModuleType,
+            inExtDataModuleType,
+            inExtDataDim =  None
         ) -> None:
         super().__init__()
 
-        self.EmbedDim               = inEmbedDim
-        self.ExtEmbedDim            = inEmbedDim if inExtEmbedDim is None else inExtEmbedDim
+        ExtDataDim                  = inExtDataDim if inExtDataDim is not None else inEmbeddingDim
 
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
-            AllDims                 = [*(self.EmbedDim * i for i in inEmbedLvlCntORList)]
+            AllDims                 = [*(inEmbeddingDim * i for i in inEmbedLvlCntORList)]
         else:
-            AllDims                 = [*(self.EmbedDim * (2 ** i) for i in range(0, inEmbedLvlCntORList + 1))]
+            AllDims                 = [*(inEmbeddingDim * (2 ** i) for i in range(0, inEmbedLvlCntORList + 1))]
 
         # AllDims = (1, 3, 6, 12, 24, 48, 96) 
         # list(zip(AllDims[:-1], AllDims[1:])) -> ((1, 3, 6, 12, 24, 48), (3, 6, 12, 24, 48, 96))
         InOutPairDims               = list(zip(AllDims[:-1], AllDims[1:]))
 
         # 1 -> input
-        self.InputModule            = InputModuleType(inInputDim, AllDims[0])
+        self.InputModule            = inInputModuleType(inInputDim, AllDims[0])
 
         # 2 -> downsample
         self.DownSample             = nn.MaxPool2d(2)
         self.DSEncoderList          = nn.ModuleList([])
         for (InDim, OutDim) in InOutPairDims:
             self.DSEncoderList.append(nn.ModuleList([
-                DoubleLinearModule(self.ExtEmbedDim, InDim),
-                DNSPLEncoderType(InDim, OutDim)
+                DoubleLinearModule(ExtDataDim, InDim),
+                inDNSPLEncoderType(InDim, OutDim)
             ]))
 
         # 3 -> Mid
-        self.MidExtDataProc         = DoubleLinearModule(self.ExtEmbedDim, AllDims[-1])
-        self.MidMLM                 = MidMLMType(AllDims[-1], AllDims[-1])
+        self.MidExtDataProc         = DoubleLinearModule(ExtDataDim, AllDims[-1])
+        self.MidMLM                 = inMidMLMType(AllDims[-1], AllDims[-1])
 
         # 4 -> upsample
         self.USDecoderList          = nn.ModuleList([])
         for (OutDim, InDim) in reversed(InOutPairDims):
             self.USDecoderList.append(nn.ModuleList([
                 ## 因为需要cat 所以InDim需要 * 2
-                DoubleLinearModule(self.ExtEmbedDim, InDim * 2),
-                UPSPLDecoderType(InDim * 2, OutDim)
+                DoubleLinearModule(ExtDataDim, InDim * 2),
+                inUPSPLDecoderType(InDim * 2, OutDim)
             ]))
         self.UpSample               = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
         # 5 -> output
-        self.OutputModule           = OutputModuleType(AllDims[0], inOutputDim)
+        self.OutputModule           = inOutputModuleType(AllDims[0], inOutputDim)
 
         ### ExtData
-        self.ExtDataModule          = ExtDataModuleType(self.ExtEmbedDim)
+        self.ExtDataModule          = inExtDataModuleType(ExtDataDim)
 
     ##########################
     def forward(self, inData, inExtData):
@@ -202,26 +201,28 @@ class UNet2DBasePLUSExtData(UNet2DBaseWithExtData):
             self,
             inInputDim,
             inOutputDim,
-            inEmbedDim,
+            inEmbeddingDim,
             inEmbedLvlCntORList,
-            InputModuleType,
-            DNSPLEncoderType,   #Downsample Encoder
-            MidMLMType,         #Mid Multi Layer Module
-            UPSPLDecoderType,   #Upsample Decoder
-            OutputModuleType,
-            ExtDataModuleType
+            inInputModuleType,
+            inDNSPLEncoderType,   #Downsample Encoder
+            inMidMLMType,         #Mid Multi Layer Module
+            inUPSPLDecoderType,   #Upsample Decoder
+            inOutputModuleType,
+            inExtDataModuleType,
+            inExtDataDim = None
         ) -> None:
         super().__init__(
             inInputDim,
             inOutputDim,
-            inEmbedDim,
+            inEmbeddingDim,
             inEmbedLvlCntORList,
-            InputModuleType,
-            DNSPLEncoderType,   #Downsample Encoder
-            MidMLMType,         #Mid Multi Layer Module
-            UPSPLDecoderType,   #Upsample Decoder
-            OutputModuleType,
-            ExtDataModuleType
+            inInputModuleType,
+            inDNSPLEncoderType,   #Downsample Encoder
+            inMidMLMType,         #Mid Multi Layer Module
+            inUPSPLDecoderType,   #Upsample Decoder
+            inOutputModuleType,
+            inExtDataModuleType,
+            inExtDataDim
         )
 
     ##########################

@@ -5,7 +5,8 @@ import math
 """
 ====================================================================================
 """
-class SinusoidalPositionEmbeddings(nn.Module):
+## 为什么要加上sin 与 cos 都是为了将离散的数据与连续的数据关联起来
+class SinusoidalPositionEmbedding(nn.Module):
     def __init__(self, inDim):
         super().__init__()
         self.Dim = inDim
@@ -13,8 +14,8 @@ class SinusoidalPositionEmbeddings(nn.Module):
     def forward(self, inTimesteps):
         Device = inTimesteps.device
         HalfDim = self.Dim // 2
-        Embeddings = math.log(10000) / (HalfDim - 1)
-        Embeddings = torch.exp(torch.arange(HalfDim, device=Device) * -Embeddings)
-        Embeddings = inTimesteps[:, None] * Embeddings[None, :]
-        Embeddings = torch.cat((Embeddings.sin(), Embeddings.cos()), dim=-1)
-        return Embeddings
+        Embedding = math.log(10000) / (HalfDim - 1)
+        Embedding = torch.exp(torch.arange(HalfDim, device=Device) * -Embedding)
+        Embedding = inTimesteps[:, None] * Embedding[None, :]
+        Embedding = torch.cat((Embedding.sin(), Embedding.cos()), dim=-1)
+        return Embedding

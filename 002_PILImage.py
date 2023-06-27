@@ -22,6 +22,6 @@ Img2 = Transform2(Img1)
 
 now = datetime.now()
 timestamp = now.strftime("%Y%m%d%H%M%S")
-save_image(Img2, "images/{}.png".format(timestamp), nrow=5, normalize=True)
+save_image(Img2, "output/PIL/images/{}.png".format(timestamp), nrow=5, normalize=True)
 
 

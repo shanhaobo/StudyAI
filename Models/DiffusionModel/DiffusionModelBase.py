@@ -106,6 +106,6 @@ class DiffusionModel(torch.nn.Module):
 
     # 函数入口
     @torch.no_grad()
-    def Sample(self, inNNModel, inImageSize, inImageChannel, inBatchSize):
-        return self.P_Sample_Loop(inNNModel, inShape=(inBatchSize, inImageChannel, inImageSize, inImageSize))
+    def Sample(self, inNNModel, inImageSize, inColorChanNum, inBatchSize):
+        return self.P_Sample_Loop(inNNModel, inShape=(inBatchSize, inColorChanNum, inImageSize, inImageSize))
 

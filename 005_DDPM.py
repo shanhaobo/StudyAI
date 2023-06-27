@@ -22,13 +22,19 @@ image_channel = 1
 batch_size = 16
 EmbedDim = 32
 if __name__ == "__main__" :
-    DDPM = DDPMModel(inEmbedDim=EmbedDim, inChannel= image_channel, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./output/DDPM/trained_models/")
+    DDPM = DDPMModel(
+        inEmbeddingDim=EmbedDim,
+        inColorChanNum= image_channel,
+        inLearningRate=0.00001,
+        inTimesteps=1000,
+        inModeRootlFolderPath="./output/005_DDPM/trained_models/"
+    )
     Exec = Executor(DDPM)
 
     if Exec.IsExistModel() and Exec.ReadyTrain() == False:
         GenImage = Exec.Eval(
             inImageSize=image_size,
-            inImageChannel=image_channel,
+            inColorChanNum=image_channel,
             inBatchSize=15
         )
         print(GenImage.size())
@@ -37,7 +43,7 @@ if __name__ == "__main__" :
             transforms.Normalize((-0.5,), (2.0,)),
             transforms.Lambda(lambda t : (t + 1) * 0.5)
         ])
-        Path = "output/DDPM/images"
+        Path = "output/005_DDPM/images"
         os.makedirs(Path, exist_ok=True)
         save_image(reverse_transform(GenImage), "{}/{}.png".format(Path, datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else:
