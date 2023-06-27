@@ -18,4 +18,3 @@ class SinusoidalPositionEmbeddings(nn.Module):
         Embeddings = inTimesteps[:, None] * Embeddings[None, :]
         Embeddings = torch.cat((Embeddings.sin(), Embeddings.cos()), dim=-1)
         return Embeddings
-

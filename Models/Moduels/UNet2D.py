@@ -5,11 +5,8 @@ import torch.nn.functional as F
 from einops import rearrange
 
 from .UNet2DBase import UNet2DBase, UNet2DBaseWithExtData, UNet2DBasePLUSExtData
-
 from .PositionEmbedding import SinusoidalPositionEmbeddings
-
 from .CustomConv2D import WeightStandardizedConv2D
-
 from .Attention2D import MultiHeadAttention2D
 
 # UNet的一大层，包含了两层小的卷积
@@ -122,22 +119,21 @@ class GroupAttn(nn.Module):
         self.Attn = MultiHeadAttention2D(inInputChannels, 4, inInputChannels // 4)
 
     def forward(self, inData):
-        return inData + self.Attn(self.Norm(inData))
+        return inData + self.Norm(self.Attn(inData))
 
 
 # UNet的一大层，包含了两层小的卷积
 class DoubleConvAttnPosEmbed(nn.Module):
-    def __init__(self, inInputChannels, inOutputChannels):
+    def __init__(self, inInputDims, inOutputDims):
         super(DoubleConvAttnPosEmbed, self).__init__()
 
-        Mid = (inInputChannels + inOutputChannels) // 2
         self.Blocks = nn.Sequential(
-            WeightStandardizedConv2D(inInputChannels, Mid, kernel_size=3, padding=1, bias=False),
-            nn.GroupNorm(8, Mid),
+            WeightStandardizedConv2D(inInputDims, inOutputDims, kernel_size=3, padding=1, bias=False),
+            nn.GroupNorm(8, inOutputDims),
             nn.SiLU(),
-            GroupAttn(Mid),
-            WeightStandardizedConv2D(Mid, inOutputChannels, kernel_size=3, padding=1, bias=False),
-            nn.GroupNorm(8, inOutputChannels),
+            GroupAttn(inOutputDims),
+            WeightStandardizedConv2D(inOutputDims, inOutputDims, kernel_size=3, padding=1, bias=False),
+            nn.GroupNorm(8, inOutputDims),
             nn.SiLU()
         )
         

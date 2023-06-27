@@ -39,6 +39,11 @@ class BaseModel(object):
 
     ###########################################################################################
 
+    def _SumParameters(self,inNN):
+        return sum(p.nelement() for p in inNN.parameters())
+
+    ###########################################################################################
+
     def __BMBeginTrain(self, *inArgs, **inKWArgs)->None:
         print("Begin Training...")
 

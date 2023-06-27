@@ -17,11 +17,12 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 #from torchvision.transforms import Compose, ToTensor, Lambda, ToPILImage, CenterCrop, Resize
 
-image_size = 32
+image_size = 64
 channels = 1
 batch_size = 16
+EmbedDim = 32
 if __name__ == "__main__" :
-    DDPM = DDPMModel(inEmbedDims=image_size, inChannel= channels, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./trained_models/DDPM")
+    DDPM = DDPMModel(inEmbedDims=EmbedDim, inChannel= channels, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./trained_models/DDPM")
     Exec = Executor(DDPM)
 
     if Exec.IsExistModel() and Exec.ReadyTrain() == False:
@@ -42,7 +43,6 @@ if __name__ == "__main__" :
     else:
         transform = transforms.Compose([
             transforms.Resize(image_size),
-            transforms.CenterCrop(image_size),
             transforms.ToTensor(), # turn into Numpy array of shape HWC, divide by 255
             transforms.Lambda(lambda t : (t * 2) - 1),
             transforms.Normalize((0.5,), (0.5,))
@@ -51,7 +51,7 @@ if __name__ == "__main__" :
             root="./data", train=True, transform=transform, download=True
         )
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-        Exec.Train(dataloader, SaveModelInterval=1)
+        Exec.Train(dataloader, SaveModelInterval=10)
 
 """
 url = 'D:/AI/Datasets/cartoon_faces/faces/00a44dac107792065c96f27664e91cf6-0.jpg'

@@ -3,6 +3,8 @@ import torch.nn as nn
 
 from einops import rearrange
 
+from .UtilsModules import DoubleLinearModule
+
 ######################################################################################
 ######################################################################################
 ######################################################################################
@@ -93,18 +95,20 @@ class UNet2DBaseWithExtData(nn.Module):
             self,
             inInputDim,
             inOutputDim,
-            inEmbedDims,
+            inEmbedDim,
             inEmbedLvlCntORList,
             InputModuleType,
             DNSPLEncoderType,   #Downsample Encoder
             MidMLMType,         #Mid Multi Layer Module
             UPSPLDecoderType,   #Upsample Decoder
             OutputModuleType,
-            ExtDataModuleType
+            ExtDataModuleType,
+            inExtEmbedDim =  None
         ) -> None:
         super().__init__()
 
-        self.EmbedDim               = inEmbedDims
+        self.EmbedDim               = inEmbedDim
+        self.ExtEmbedDim            = inEmbedDim if inExtEmbedDim is None else inExtEmbedDim
 
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
             AllDims                 = [*(self.EmbedDim * i for i in inEmbedLvlCntORList)]
@@ -121,22 +125,23 @@ class UNet2DBaseWithExtData(nn.Module):
         # 2 -> downsample
         self.DownSample             = nn.MaxPool2d(2)
         self.DSEncoderList          = nn.ModuleList([])
-        for (inDim, outDim) in InOutPairDims:
+        for (InDim, OutDim) in InOutPairDims:
             self.DSEncoderList.append(nn.ModuleList([
-                DNSPLEncoderType(inDim, outDim),
-                nn.Sequential(nn.GELU(), nn.Linear(self.EmbedDim, inDim))
+                DoubleLinearModule(self.ExtEmbedDim, InDim),
+                DNSPLEncoderType(InDim, OutDim)
             ]))
 
         # 3 -> Mid
+        self.MidExtDataProc         = DoubleLinearModule(self.ExtEmbedDim, AllDims[-1])
         self.MidMLM                 = MidMLMType(AllDims[-1], AllDims[-1])
-        self.MidExtDataProc         = nn.Sequential(nn.GELU(), nn.Linear(self.EmbedDim, AllDims[-1]))
 
         # 4 -> upsample
         self.USDecoderList          = nn.ModuleList([])
-        for (inDim, outDim) in reversed(InOutPairDims):
+        for (OutDim, InDim) in reversed(InOutPairDims):
             self.USDecoderList.append(nn.ModuleList([
-                UPSPLDecoderType(outDim * 2, inDim),
-                nn.Sequential(nn.GELU(), nn.Linear(self.EmbedDim, outDim * 2))
+                ## 因为需要cat 所以InDim需要 * 2
+                DoubleLinearModule(self.ExtEmbedDim, InDim * 2),
+                UPSPLDecoderType(InDim * 2, OutDim)
             ]))
         self.UpSample               = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
@@ -144,7 +149,7 @@ class UNet2DBaseWithExtData(nn.Module):
         self.OutputModule           = OutputModuleType(AllDims[0], inOutputDim)
 
         ### ExtData
-        self.ExtDataModule          = ExtDataModuleType(self.EmbedDim)
+        self.ExtDataModule          = ExtDataModuleType(self.ExtEmbedDim)
 
     ##########################
     def forward(self, inData, inExtData):
@@ -157,7 +162,7 @@ class UNet2DBaseWithExtData(nn.Module):
         X = self.InputModule(inData)
 
         # 2
-        for Encoder, ExtDataProc in self.DSEncoderList:
+        for ExtDataProc, Encoder in self.DSEncoderList:
             X = self.DownSample(X)
             E = ExtDataProc(ProcessedExtData)
             E = rearrange(E, "b c -> b c 1 1")
@@ -172,7 +177,7 @@ class UNet2DBaseWithExtData(nn.Module):
         X = self.HandleData(X, E, self.MidMLM)
         
         # 4
-        for Decoder, ExtDataProc in self.USDecoderList:
+        for ExtDataProc, Decoder in self.USDecoderList:
             # dim=1 是除Batch后的一个维度,这个维度很可能是EmbedDim
             X = torch.cat((X, Stack.pop()), dim=1)
             E = ExtDataProc(ProcessedExtData)
