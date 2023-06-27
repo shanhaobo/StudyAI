@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from einops import rearrange
 
-from .UtilsModules import DoubleLinearModule, DownsampleModule, UpsampleModule
+from ..UtilsModules import DoubleLinearModule, DownsampleModule, UpsampleModule
 
 ######################################################################################
 ######################################################################################

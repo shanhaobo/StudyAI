@@ -15,7 +15,7 @@ class IMultiHeadAttention2D(nn.Module):
         self._HeadEmbedDim   = inHeadEmbedDim
         self._EmbedDim       = inHeadEmbedDim * inNumHeads
         self._ScaledFctr     = 1.0 / math.sqrt(self._HeadEmbedDim)
-        self._AttLayer       = nn.Conv2d(in_channels = self._inChannel,out_channels = self._EmbedDim * 3,  kernel_size = 1, bias=False)
+        self._AttLayer       = nn.Conv2d(in_channels = self._inChannel, out_channels = self._EmbedDim * 3,  kernel_size = 1, bias=False)
         self._AttOutLayer    = nn.Conv2d(in_channels = self._EmbedDim,  out_channels = inChannel,          kernel_size = 1)
     
     def _ToQKV(self, inX):

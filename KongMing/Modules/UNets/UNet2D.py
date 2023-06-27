@@ -5,9 +5,9 @@ import torch.nn.functional as F
 from einops import rearrange
 
 from .UNet2DBase import UNet2DBase, UNet2DBaseWithExtData, UNet2DBasePLUSExtData
-from .PositionEmbedding import SinusoidalPositionEmbedding
-from .CustomEnhancedModules import WeightStandardizedConv2D
-from .Attention2D import MultiHeadAttention2D
+from ..PositionEmbedding import SinusoidalPositionEmbedding
+from ..CustomEnhancedModules import WeightStandardizedConv2D
+from ..Attention2D import MultiHeadAttention2D
 
 # UNet的一大层，包含了两层小的卷积
 class DoubleConv(nn.Module):

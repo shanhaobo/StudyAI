@@ -357,7 +357,7 @@ class ConditionUNet(nn.Module):
 """
 
 from .UNet2DBase import UNet2DBaseWithExtData
-from .PositionEmbedding import SinusoidalPositionEmbedding
+from ..PositionEmbedding import SinusoidalPositionEmbedding
 
 class CU2_InitConv(nn.Module):
     def __init__(self, inInputDim, inOutputDim) -> None:

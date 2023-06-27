@@ -3,8 +3,8 @@ import os
 
 from KongMing.Models.DiffusionModel.Utils import Extract
 
-from KongMing.Modules.UNet2D import UNet2DPosEmbed_TripleAttn, UNet2DPosEmbed_DoubleAttn
-from KongMing.Modules.ConditionUNet import ConditionUNet2
+from KongMing.Modules.UNets.UNet2D import UNet2DPosEmbed_TripleAttn, UNet2DPosEmbed_DoubleAttn
+from KongMing.Modules.UNets.ConditionUNet import ConditionUNet2
 from torchvision.transforms import transforms
 
 #input  dim 1
