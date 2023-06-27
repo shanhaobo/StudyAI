@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from einops import rearrange
 
-from .UtilsModules import DoubleLinearModule
+from .UtilsModules import DoubleLinearModule, DownsampleModule, UpsampleModule
 
 ######################################################################################
 ######################################################################################
@@ -39,7 +39,7 @@ class UNet2DBase(nn.Module):
         self.InputModule            = inInputModuleType(inInputDim, AllDims[0])
 
         # 2 -> downsample
-        self.DownSample             = nn.MaxPool2d(2)
+        self.DownSample             = DownsampleModule(AllDims[0])
         self.DSEncoderList          = nn.ModuleList([])
         for inDim, outDim in InOutPairDims:
             self.DSEncoderList.append(nn.ModuleList([
@@ -55,7 +55,7 @@ class UNet2DBase(nn.Module):
             self.USDecoderList.append(nn.ModuleList([
                 inUPSPLDecoderType(outDim * 2, inDim)
             ]))
-        self.UpSample               = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+        self.UpSample               = UpsampleModule(AllDims[0])
 
         # 5 -> output
         self.OutputModule           = inOutputModuleType(AllDims[0], inOutputDim)
@@ -122,10 +122,10 @@ class UNet2DBaseWithExtData(nn.Module):
         self.InputModule            = inInputModuleType(inInputDim, AllDims[0])
 
         # 2 -> downsample
-        self.DownSample             = nn.MaxPool2d(2)
         self.DSEncoderList          = nn.ModuleList([])
         for (InDim, OutDim) in InOutPairDims:
             self.DSEncoderList.append(nn.ModuleList([
+                DownsampleModule(InDim),
                 DoubleLinearModule(ExtDataDim, InDim),
                 inDNSPLEncoderType(InDim, OutDim)
             ]))
@@ -140,9 +140,9 @@ class UNet2DBaseWithExtData(nn.Module):
             self.USDecoderList.append(nn.ModuleList([
                 ## 因为需要cat 所以InDim需要 * 2
                 DoubleLinearModule(ExtDataDim, InDim * 2),
-                inUPSPLDecoderType(InDim * 2, OutDim)
+                inUPSPLDecoderType(InDim * 2, OutDim),
+                UpsampleModule(OutDim)
             ]))
-        self.UpSample               = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
         # 5 -> output
         self.OutputModule           = inOutputModuleType(AllDims[0], inOutputDim)
@@ -161,8 +161,8 @@ class UNet2DBaseWithExtData(nn.Module):
         X = self.InputModule(inData)
 
         # 2
-        for ExtDataProc, Encoder in self.DSEncoderList:
-            X = self.DownSample(X)
+        for DownSample, ExtDataProc, Encoder in self.DSEncoderList:
+            X = DownSample(X)
             E = ExtDataProc(ProcessedExtData)
             E = rearrange(E, "b c -> b c 1 1")
             # E = E.unsqueeze(2).unsequeeze(3)
@@ -176,14 +176,14 @@ class UNet2DBaseWithExtData(nn.Module):
         X = self.HandleData(X, E, self.MidMLM)
         
         # 4
-        for ExtDataProc, Decoder in self.USDecoderList:
+        for ExtDataProc, Decoder, UpSample in self.USDecoderList:
             # dim=1 是除Batch后的一个维度,这个维度很可能是EmbedDim
             X = torch.cat((X, Stack.pop()), dim=1)
             E = ExtDataProc(ProcessedExtData)
             E = rearrange(E, "b c -> b c 1 1")
             # E = E.unsqueeze(2).unsequeeze(3)
             X = self.HandleData(X, E, Decoder)
-            X = self.UpSample(X)
+            X = UpSample(X)
 
         # 5
         return self.OutputModule(X)

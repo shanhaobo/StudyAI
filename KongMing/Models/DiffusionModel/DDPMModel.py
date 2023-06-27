@@ -19,7 +19,7 @@ class DDPMModel(BaseModel) :
             inModeRootlFolderPath="."
         ):
         #self.NNModel =  UNet2DPosEmbed_TripleAttn(inColorChanNum=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=3)
-        self.NNModel = ConditionUNet(inChannel=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=(1, 2, 4))
+        self.NNModel = ConditionUNet2(inColorChanNum=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=(1, 2, 4))
         self.DiffusionModel = DiffusionModel(inTimesteps=inTimesteps)
         NewTrainer          = DDPMTrainer(self.NNModel, self.DiffusionModel, inLearningRate, inTimesteps=inTimesteps)
         NewArchiver         = DDPMArchiver(self.NNModel, self.DiffusionModel, inModeRootlFolderPath)

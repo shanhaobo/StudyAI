@@ -245,7 +245,7 @@ class ConditionUNet(nn.Module):
         init_dim=None,
         out_dim=None,
         inEmbedLvlCntORList=(1, 2, 4, 8),
-        inChannel=3,
+        inColorChanNum=3,
         with_time_emb=True,
         resnet_block_groups=8,
         use_convnext=True,
@@ -254,10 +254,10 @@ class ConditionUNet(nn.Module):
         super().__init__()
 
         # determine dimensions
-        self.channels = inChannel
+        self.channels = inColorChanNum
 
         init_dim = default(init_dim, inEmbeddingDim // 3 * 2)
-        self.init_conv = nn.Conv2d(inChannel, init_dim, 7, padding=3)
+        self.init_conv = nn.Conv2d(inColorChanNum, init_dim, 7, padding=3)
 
         dims = [init_dim, *map(lambda m: inEmbeddingDim * m, inEmbedLvlCntORList)]
         in_out = list(zip(dims[:-1], dims[1:]))
@@ -318,7 +318,7 @@ class ConditionUNet(nn.Module):
                 )
             )
 
-        out_dim = default(out_dim, inChannel)
+        out_dim = default(out_dim, inColorChanNum)
         self.final_conv = nn.Sequential(
             block_klass(inEmbeddingDim, inEmbeddingDim), nn.Conv2d(inEmbeddingDim, out_dim, 1)
         )
