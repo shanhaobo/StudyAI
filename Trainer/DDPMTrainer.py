@@ -67,8 +67,8 @@ class DDPMTrainer(BaseTrainer) :
             "{} | Epoch:{:0>4d} | Batch:{:0>6d} | Loss:{:.8f}".
             format(
                 NowStr,
-                self.CurrEpochIndex + 1,
-                self.CurrBatchIndex + 1,
+                self.CurrEpochIndex,
+                self.CurrBatchIndex,
                 self.CurrBatchDDPMLoss,
             )
         )

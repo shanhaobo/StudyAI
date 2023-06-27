@@ -44,7 +44,7 @@ class WGANTrainer(GANTrainer) :
         # Prepare Real and Fake Data
         RealData = inBatchData.to(self.Device)
         FakeData = self.Generator(torch.randn((nBatchSize,) + self.GeneratorInputSize, device=self.Device))
-        #print("DatumSize:{} {}".format(RealDatum.size(),GenFakeDatum.size()))
+        #print("DataSize:{} {}".format(RealData.size(),GenFakeData.size()))
 
         # Calc Scores
         RealScores                  = self.Discriminator(RealData)

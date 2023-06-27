@@ -81,8 +81,8 @@ class GANTrainer(MultiNNTrainer):
             "{} | Epoch:{:0>4d} | Batch:{:0>6d} | DLoss:{:.8f} | GLoss:{:.8f}".
             format(
                 NowStr,
-                self.CurrEpochIndex + 1,
-                self.CurrBatchIndex + 1,
+                self.CurrEpochIndex,
+                self.CurrBatchIndex,
                 self.CurrBatchDiscriminatorLoss,
                 self.CurrBatchGeneratorLoss
             )
