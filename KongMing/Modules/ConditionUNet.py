@@ -155,9 +155,12 @@ class ConvNextBlock(nn.Module):
     def forward(self, x, time_emb=None):
         h = self.ds_conv(x)
 
-        if exists(self.mlp) and exists(time_emb):
-            condition = self.mlp(time_emb)
-            h = h + rearrange(condition, "b c -> b c 1 1")
+        if exists(time_emb):
+            if exists(self.mlp): 
+                condition = self.mlp(time_emb)
+                h = h + rearrange(condition, "b c -> b c 1 1")
+            else :
+                h = h + time_emb
 
         h = self.net(h)
         return h + self.res_conv(x)
@@ -352,3 +355,70 @@ class ConditionUNet(nn.Module):
 """
 ====================================================================================
 """
+
+from .UNet2DBase import UNet2DBaseWithExtData
+from .PositionEmbedding import SinusoidalPositionEmbedding
+
+class CU2_InitConv(nn.Module):
+    def __init__(self, inInputDim, inOutputDim) -> None:
+        super().__init__()
+
+        self.Blocks = nn.Conv2d(inInputDim, inOutputDim, 7, padding=3)
+
+    def forward(self, inData):
+        return self.Blocks(inData)
+    
+class CU2_FinalConv(nn.Module):
+    def __init__(self, inInputDim, inOutputDim) -> None:
+        super().__init__()
+
+        self.Blocks =  nn.Sequential(
+            ConvNextBlock(inInputDim, inInputDim),
+            nn.Conv2d(inInputDim, inOutputDim, 1)
+        )
+
+    def forward(self, inData):
+        return self.Blocks(inData)
+    
+class CU2_SampleConv(nn.Module):
+    def __init__(self, inInputDim, inOutputDim) -> None:
+        super().__init__()
+    
+        self.b1 = ConvNextBlock(inInputDim, inInputDim)
+        self.b2 = ConvNextBlock(inInputDim, inOutputDim)
+        self.b3 = Residual(PreNorm(inOutputDim, LinearAttention(inOutputDim)))
+
+    def forward(self, inData, inExtData):
+        x = self.b1(inData, inExtData)
+        x = self.b2(x, inExtData)
+        return self.b3(x)
+    
+class CU2_MidSampleConv(nn.Module):
+    def __init__(self, inInputDim, inOutputDim) -> None:
+        super().__init__()
+    
+        self.b1 = ConvNextBlock(inInputDim, inOutputDim)
+        self.b2 = Residual(PreNorm(inOutputDim, Attention(inOutputDim)))
+        self.b3 = ConvNextBlock(inOutputDim, inOutputDim)
+
+    def forward(self, inData, inExtData):
+        x = self.b1(inData, inExtData)
+        x = self.b2(x)
+        x = self.b3(x, inExtData)
+        return x
+    
+class ConditionUNet2(UNet2DBaseWithExtData) :
+    def __init__(self, inColorChanNum, inEmbeddingDim, inEmbedLvlCntORList, inExtDataDim = None) -> None:
+        super().__init__(
+            inColorChanNum,
+            inColorChanNum,
+            inEmbeddingDim,
+            inEmbedLvlCntORList,
+            CU2_InitConv,
+            CU2_SampleConv,
+            CU2_MidSampleConv,
+            CU2_SampleConv,
+            CU2_FinalConv,
+            SinusoidalPositionEmbedding,
+            inExtDataDim
+        )
