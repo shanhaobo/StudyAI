@@ -55,11 +55,11 @@ class BaseModel(object):
     def __BMEndEpochTrain(self, *inArgs, **inKWArgs) -> None:
         interval = inKWArgs["SaveModelInterval"]
         if (self.Trainer.CurrEpochIndex % interval == 0) and (self.Trainer.CurrEpochIndex > 0) :
-            print("Epoch:{} Save Models".format(self.Trainer.CurrEpochIndex + 1))
-            self.Archiver.Save(self.Trainer.CurrEpochIndex + 1)
+            print("Epoch:{} Save Models".format(self.Trainer.CurrEpochIndex))
+            self.Archiver.Save(self.Trainer.CurrEpochIndex)
 
     def __BMEndTrain(self, *inArgs, **inKWArgs)->None:
-        self.Archiver.Save(self.Trainer.CurrEpochIndex + 1)
+        self.Archiver.Save(self.Trainer.CurrEpochIndex)
         print("End Train")
 
     ###########################################################################################

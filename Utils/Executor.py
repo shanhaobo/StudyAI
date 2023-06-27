@@ -9,9 +9,10 @@ class Executor :
     def Train(self, inDataLoader:DataLoader, *inArgs, **inKWArgs) :
         bIncTrain = False
         for i in sys.argv :
-            if (i == "IncTrain") :
+            tmpi = i.casefold()
+            if (tmpi == "inctrain" or tmpi == "inc") :
                 bIncTrain = True
-            elif (i == "NewTrain") :
+            elif (tmpi == "newtrain" or tmpi == "new") :
                 bIncTrain = False
         
         if bIncTrain :
@@ -32,10 +33,11 @@ class Executor :
     
     def ReadyTrain(self) :
         for i in sys.argv :
-            if (i == "IncTrain") :
+            tmpi = i.casefold()
+            if (i == "inctrain" or i == "inc") :
                 return True
-            if (i == "Train") :
+            if (i == "train") :
                 return True
-            if (i == "NewTrain") :
+            if (i == "newtrain" or i == "new") :
                 return True
         return False

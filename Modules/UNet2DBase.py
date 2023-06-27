@@ -14,7 +14,7 @@ class UNet2DBase(nn.Module):
             self,
             inInputDim,
             inOutputDim,
-            inEmbedDims,
+            inEmbedDim,
             inEmbedLvlCntORList,
             InputModuleType,
             DNSPLEncoderType,
@@ -24,7 +24,7 @@ class UNet2DBase(nn.Module):
         ) -> None:
         super().__init__()
 
-        self.EmbedDim               = inEmbedDims
+        self.EmbedDim               = inEmbedDim
 
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
             AllDims                 = [*(self.EmbedDim * i for i in inEmbedLvlCntORList)]
@@ -202,7 +202,7 @@ class UNet2DBasePLUSExtData(UNet2DBaseWithExtData):
             self,
             inInputDim,
             inOutputDim,
-            inEmbedDims,
+            inEmbedDim,
             inEmbedLvlCntORList,
             InputModuleType,
             DNSPLEncoderType,   #Downsample Encoder
@@ -214,7 +214,7 @@ class UNet2DBasePLUSExtData(UNet2DBaseWithExtData):
         super().__init__(
             inInputDim,
             inOutputDim,
-            inEmbedDims,
+            inEmbedDim,
             inEmbedLvlCntORList,
             InputModuleType,
             DNSPLEncoderType,   #Downsample Encoder

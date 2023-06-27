@@ -22,7 +22,7 @@ channels = 1
 batch_size = 16
 EmbedDim = 32
 if __name__ == "__main__" :
-    DDPM = DDPMModel(inEmbedDims=EmbedDim, inChannel= channels, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./trained_models/DDPM")
+    DDPM = DDPMModel(inEmbedDim=EmbedDim, inChannel= channels, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./trained_models/DDPM")
     Exec = Executor(DDPM)
 
     if Exec.IsExistModel() and Exec.ReadyTrain() == False:

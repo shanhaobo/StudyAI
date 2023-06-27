@@ -238,11 +238,11 @@ class PreNorm(nn.Module):
 class ConditionUNet(nn.Module):
     def __init__(
         self,
-        ImageSize,
+        inEmbedDim,
         init_dim=None,
         out_dim=None,
-        dim_mults=(1, 2, 4, 8),
-        channels=3,
+        inEmbedLvlCntORList=(1, 2, 4, 8),
+        inChannel=3,
         with_time_emb=True,
         resnet_block_groups=8,
         use_convnext=True,
@@ -251,12 +251,12 @@ class ConditionUNet(nn.Module):
         super().__init__()
 
         # determine dimensions
-        self.channels = channels
+        self.channels = inChannel
 
-        init_dim = default(init_dim, ImageSize // 3 * 2)
-        self.init_conv = nn.Conv2d(channels, init_dim, 7, padding=3)
+        init_dim = default(init_dim, inEmbedDim // 3 * 2)
+        self.init_conv = nn.Conv2d(inChannel, init_dim, 7, padding=3)
 
-        dims = [init_dim, *map(lambda m: ImageSize * m, dim_mults)]
+        dims = [init_dim, *map(lambda m: inEmbedDim * m, inEmbedLvlCntORList)]
         in_out = list(zip(dims[:-1], dims[1:]))
         
         if use_convnext:
@@ -266,10 +266,10 @@ class ConditionUNet(nn.Module):
 
         # time embeddings
         if with_time_emb:
-            time_dim = ImageSize * 4
+            time_dim = inEmbedDim * 4
             self.time_mlp = nn.Sequential(
-                SinusoidalPositionEmbeddings(ImageSize),
-                nn.Linear(ImageSize, time_dim),
+                SinusoidalPositionEmbeddings(inEmbedDim),
+                nn.Linear(inEmbedDim, time_dim),
                 nn.GELU(),
                 nn.Linear(time_dim, time_dim),
             )
@@ -315,9 +315,9 @@ class ConditionUNet(nn.Module):
                 )
             )
 
-        out_dim = default(out_dim, channels)
+        out_dim = default(out_dim, inChannel)
         self.final_conv = nn.Sequential(
-            block_klass(ImageSize, ImageSize), nn.Conv2d(ImageSize, out_dim, 1)
+            block_klass(inEmbedDim, inEmbedDim), nn.Conv2d(inEmbedDim, out_dim, 1)
         )
 
     def forward(self, x, time):

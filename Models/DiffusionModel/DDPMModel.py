@@ -11,8 +11,9 @@ from .DiffusionModelUtils import ConditionUNet
 from .DiffusionModelBase import DiffusionModel
 
 class DDPMModel(BaseModel) :
-    def __init__(self, inEmbedDims, inChannel, inLearningRate=0.00001, inTimesteps : int = 1000, inModeRootlFolderPath="."):
-        self.NNModel        = UNet2DAttnPosEmbed(inChannels=inChannel, inEmbedDims=inEmbedDims, inLevelCount=3)
+    def __init__(self, inEmbedDim, inChannel, inLearningRate=0.00001, inTimesteps : int = 1000, inModeRootlFolderPath="."):
+        self.NNModel        = UNet2DAttnPosEmbed(inChannel=inChannel, inEmbedDim=inEmbedDim, inEmbedLvlCntORList=3)
+        #self.NNModel        = ConditionUNet(inChannel=inChannel, inEmbedDim=inEmbedDim, inEmbedLvlCntORList=(1, 2, 4))
         self.DiffusionModel = DiffusionModel(inTimesteps=inTimesteps)
         NewTrainer          = DDPMTrainer(self.NNModel, self.DiffusionModel, inLearningRate, inTimesteps=inTimesteps)
         NewArchiver         = DDPMArchiver(self.NNModel, self.DiffusionModel, inModeRootlFolderPath)

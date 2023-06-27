@@ -11,16 +11,16 @@ from .Attention2D import MultiHeadAttention2D
 
 # UNet的一大层，包含了两层小的卷积
 class DoubleConv(nn.Module):
-    def __init__(self, inInputChannels, inOutputChannels):
+    def __init__(self, inInputDim, inOutputDim):
         super(DoubleConv, self).__init__()
 
-        Mid = (inInputChannels + inOutputChannels) // 2
+        Mid = (inInputDim + inOutputDim) // 2
         self.Blocks = nn.Sequential(
-            nn.Conv2d(inInputChannels, Mid, kernel_size=3, padding=1, bias=False),
+            nn.Conv2d(inInputDim, Mid, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(Mid),
             nn.ReLU(inplace=True),
-            nn.Conv2d(Mid, inOutputChannels, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(inOutputChannels),
+            nn.Conv2d(Mid, inOutputDim, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(inOutputDim),
             nn.ReLU(inplace=True)
         )
         
@@ -31,18 +31,18 @@ class DoubleConv(nn.Module):
 
 # 定义输入进来的第一层
 class InputConv(nn.Module):
-    def __init__(self, inInputChannels, inOutputChannels):
+    def __init__(self, inInputDim, inOutputDim):
         super(InputConv, self).__init__()
-        self.Blocks = DoubleConv(inInputChannels, inOutputChannels)
+        self.Blocks = DoubleConv(inInputDim, inOutputDim)
 
     def forward(self, inData):
         return self.Blocks(inData)
 
 # 定义最终的输出
 class OutputConv(nn.Module):
-    def __init__(self, inInputChannels, inOutputChannels):
+    def __init__(self, inInputDim, inOutputDim):
         super(OutputConv, self).__init__()
-        self.Blocks = DoubleConv(inInputChannels, inOutputChannels)
+        self.Blocks = DoubleConv(inInputDim, inOutputDim)
 
     def forward(self, inData):
         #print("OutputConv:{}".format(inData.size()))
@@ -52,12 +52,12 @@ class OutputConv(nn.Module):
 ################################################################################
 
 class UNet2D(UNet2DBase):
-    def __init__(self, inChannels, inEmbedDims, inLevelCount) -> None:
+    def __init__(self, inDim, inEmbedDim, inEmbedLvlCntORList) -> None:
         super().__init__(
-            inChannels,
-            inChannels,
-            inEmbedDims,
-            inLevelCount,
+            inDim,
+            inDim,
+            inEmbedDim,
+            inEmbedLvlCntORList,
             InputConv,
             DoubleConv,
             DoubleConv,
@@ -69,12 +69,12 @@ class UNet2D(UNet2DBase):
 ################################################################################
 
 class UNet2DPosEmbed(UNet2DBasePLUSExtData):
-    def __init__(self, inChannels, inEmbedDims, inLevelCount) -> None:
+    def __init__(self, inDim, inEmbedDim, inEmbedLvlCntORList) -> None:
         super().__init__(
-            inChannels,
-            inChannels,
-            inEmbedDims,
-            inLevelCount,
+            inDim,
+            inDim,
+            inEmbedDim,
+            inEmbedLvlCntORList,
             InputConv,
             DoubleConv,
             DoubleConv,
@@ -88,20 +88,20 @@ class UNet2DPosEmbed(UNet2DBasePLUSExtData):
 
 # UNet的一大层，包含了两层小的卷积
 class DoubleConvEmbed(DoubleConv):
-    def __init__(self, inInputChannels, inOutputChannels):
-        super(DoubleConvEmbed, self).__init__(inInputChannels, inOutputChannels)
+    def __init__(self, inInputDim, inOutputDim):
+        super(DoubleConvEmbed, self).__init__(inInputDim, inOutputDim)
 
     def forward(self, inData, inExtraData):
         X = inData * (inExtraData + 1) + inExtraData
         return self.Blocks(X)
 
 class UNet2DPLUSPosEmbed(UNet2DBaseWithExtData):
-    def __init__(self, inChannels, inEmbedDims, inLevelCount) -> None:
+    def __init__(self, inDim, inEmbedDim, inEmbedLvlCntORList) -> None:
         super().__init__(
-            inChannels,
-            inChannels,
-            inEmbedDims,
-            inLevelCount,
+            inDim,
+            inDim,
+            inEmbedDim,
+            inEmbedLvlCntORList,
             InputConv,
             DoubleConvEmbed,
             DoubleConvEmbed,
@@ -113,10 +113,10 @@ class UNet2DPLUSPosEmbed(UNet2DBaseWithExtData):
 ################################################################################
 ################################################################################
 class GroupAttn(nn.Module):
-    def __init__(self, inInputChannels) -> None:
+    def __init__(self, inInputDim) -> None:
         super().__init__()
-        self.Norm = nn.GroupNorm(1, inInputChannels)
-        self.Attn = MultiHeadAttention2D(inInputChannels, 4, inInputChannels // 4)
+        self.Norm = nn.GroupNorm(1, inInputDim)
+        self.Attn = MultiHeadAttention2D(inInputDim, 4, inInputDim // 4)
 
     def forward(self, inData):
         return inData + self.Norm(self.Attn(inData))
@@ -124,16 +124,16 @@ class GroupAttn(nn.Module):
 
 # UNet的一大层，包含了两层小的卷积
 class DoubleConvAttnPosEmbed(nn.Module):
-    def __init__(self, inInputDims, inOutputDims):
+    def __init__(self, inInputDim, inOutputDim):
         super(DoubleConvAttnPosEmbed, self).__init__()
 
         self.Blocks = nn.Sequential(
-            WeightStandardizedConv2D(inInputDims, inOutputDims, kernel_size=3, padding=1, bias=False),
-            nn.GroupNorm(8, inOutputDims),
+            WeightStandardizedConv2D(inInputDim, inOutputDim, kernel_size=3, padding=1, bias=False),
+            nn.GroupNorm(8, inOutputDim),
             nn.SiLU(),
-            GroupAttn(inOutputDims),
-            WeightStandardizedConv2D(inOutputDims, inOutputDims, kernel_size=3, padding=1, bias=False),
-            nn.GroupNorm(8, inOutputDims),
+            GroupAttn(inOutputDim),
+            WeightStandardizedConv2D(inOutputDim, inOutputDim, kernel_size=3, padding=1, bias=False),
+            nn.GroupNorm(8, inOutputDim),
             nn.SiLU()
         )
         
@@ -142,21 +142,21 @@ class DoubleConvAttnPosEmbed(nn.Module):
         return self.Blocks(X)
 
 class UNet2DAttnPosEmbed_RestNetBlock(nn.Module):
-    def __init__(self, inInputChannels, inOutputChannels):
+    def __init__(self, inInputDim, inOutputDim):
         super(UNet2DAttnPosEmbed_RestNetBlock, self).__init__()
-        self.Block = DoubleConvAttnPosEmbed(inInputChannels, inOutputChannels)
-        self.ResBlock = nn.Conv2d(inInputChannels, inOutputChannels, 1)
+        self.Block = DoubleConvAttnPosEmbed(inInputDim, inOutputDim)
+        self.ResBlock = nn.Conv2d(inInputDim, inOutputDim, 1)
         
     def forward(self, inData, inExtraData):
         return self.Block(inData, inExtraData) + self.ResBlock(inData)
 
 class UNet2DAttnPosEmbed(UNet2DBaseWithExtData):
-    def __init__(self, inChannels, inEmbedDims, inLevelCount) -> None:
+    def __init__(self, inChannel, inEmbedDim, inEmbedLvlCntORList) -> None:
         super().__init__(
-            inChannels,
-            inChannels,
-            inEmbedDims,
-            inLevelCount,
+            inChannel,
+            inChannel,
+            inEmbedDim,
+            inEmbedLvlCntORList,
             InputConv,
             UNet2DAttnPosEmbed_RestNetBlock,
             UNet2DAttnPosEmbed_RestNetBlock,
