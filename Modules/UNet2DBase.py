@@ -12,8 +12,8 @@ from .UtilsModules import DoubleLinearModule
 class UNet2DBase(nn.Module):
     def __init__(
             self,
-            inInputColorChanNum,
-            inOutputColorChanNum,
+            inInputDim,
+            inOutputDim,
             inEmbeddingDim,
             inEmbedLvlCntORList,
             inInputModuleType,
@@ -36,7 +36,7 @@ class UNet2DBase(nn.Module):
         InOutPairDims               = list(zip(AllDims[:-1], AllDims[1:]))
 
         # 1 -> input
-        self.InputModule            = inInputModuleType(inInputColorChanNum, AllDims[0])
+        self.InputModule            = inInputModuleType(inInputDim, AllDims[0])
 
         # 2 -> downsample
         self.DownSample             = nn.MaxPool2d(2)
@@ -58,7 +58,7 @@ class UNet2DBase(nn.Module):
         self.UpSample               = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
         # 5 -> output
-        self.OutputModule           = inOutputModuleType(AllDims[0], inOutputColorChanNum)
+        self.OutputModule           = inOutputModuleType(AllDims[0], inOutputDim)
 
     def forward(self, inData):
 

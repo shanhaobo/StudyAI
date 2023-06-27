@@ -114,7 +114,7 @@ class UNet2DPLUSPosEmbed(UNet2DBaseWithExtData):
 
 ################################################################################
 ################################################################################
-class GroupAttn(nn.Module):
+class ResGroupAttn(nn.Module):
     def __init__(self, inInputDim) -> None:
         super().__init__()
         self.Norm = nn.GroupNorm(1, inInputDim)
@@ -132,7 +132,7 @@ class DoubleConvAttnPosEmbed(nn.Module):
             WeightStandardizedConv2D(inInputDim, inOutputDim, kernel_size=3, padding=1, bias=False),
             nn.GroupNorm(8, inOutputDim),
             nn.SiLU(),
-            GroupAttn(inOutputDim),
+            ResGroupAttn(inOutputDim),
             WeightStandardizedConv2D(inOutputDim, inOutputDim, kernel_size=3, padding=1, bias=False),
             nn.GroupNorm(8, inOutputDim),
             nn.SiLU()
@@ -172,22 +172,23 @@ class UNet2DPosEmbed_DoubleAttn(UNet2DBaseWithExtData):
 
 # UNet的一大层，包含了两层小的卷积
 class TripleConvAttnPosEmbed(nn.Module):
-    def __init__(self, inInputDim, inOutputDim):
+    def __init__(self, inInputDim, inOutputDim, inScale = 2):
         super().__init__()
 
+        self.InConv = WeightStandardizedConv2D(inInputDim, inInputDim, kernel_size=7, padding=3, groups=inInputDim)
         self.Blocks = nn.Sequential(
-            WeightStandardizedConv2D(inInputDim, inOutputDim, kernel_size=3, padding=1, bias=False),
-            nn.GroupNorm(8, inOutputDim),
-            nn.SiLU(),
-            GroupAttn(inOutputDim),
-            WeightStandardizedConv2D(inOutputDim, inOutputDim, kernel_size=3, padding=1, bias=False),
-            nn.GroupNorm(8, inOutputDim),
-            nn.SiLU()
+            nn.GroupNorm(1, inInputDim),
+            WeightStandardizedConv2D(inInputDim, inOutputDim * inScale, kernel_size=3, padding=1),
+            nn.GroupNorm(1, inOutputDim * inScale),
+            nn.GELU(),
+            WeightStandardizedConv2D(inOutputDim * inScale, inOutputDim, kernel_size=3, padding=1),
         )
         
+        self.ResConv = WeightStandardizedConv2D(inInputDim, inOutputDim, kernel_size=3, padding=1)
+        
     def forward(self, inData, inExtraData):
-        X = inData * (inExtraData + 1) + inExtraData
-        return self.Blocks(X)
+        X = self.InConv(inData) + inExtraData
+        return self.Blocks(X) +  self.ResConv(inData)
 
 class UNet2DPosEmbed_TripleAttnResNetBlock(nn.Module):
     def __init__(self, inInputDim, inOutputDim):

@@ -4,7 +4,7 @@ from Models.BaseModel import BaseModel
 from Archiver.DDPMArchiver import DDPMArchiver
 from Trainer.DDPMTrainer import DDPMTrainer
 
-from Modules.UNet2D import UNet2DPosEmbed_DoubleAttn,UNet2TripleAttnPosEmbed
+from Modules.UNet2D import UNet2DPosEmbed_DoubleAttn, UNet2DPosEmbed_TripleAttn
 
 from .DiffusionModelUtils import ConditionUNet
 
