@@ -184,17 +184,15 @@ class TripleConvAttnPosEmbed(nn.Module):
             WeightStandardizedConv2D(inOutputDim * inScale, inOutputDim, kernel_size=3, padding=1),
         )
         
-        self.ResConv = WeightStandardizedConv2D(inInputDim, inOutputDim, kernel_size=3, padding=1)
-        
     def forward(self, inData, inExtraData):
         X = self.InConv(inData) + inExtraData
-        return self.Blocks(X) +  self.ResConv(inData)
+        return self.Blocks(X)
 
 class UNet2DPosEmbed_TripleAttnResNetBlock(nn.Module):
     def __init__(self, inInputDim, inOutputDim):
         super().__init__()
         self.Block = TripleConvAttnPosEmbed(inInputDim, inOutputDim)
-        self.ResBlock = nn.Conv2d(inInputDim, inOutputDim, 1)
+        self.ResBlock = nn.Conv2d(inInputDim, inOutputDim, kernel_size=3, padding=1)
         
     def forward(self, inData, inExtraData):
         return self.Block(inData, inExtraData) + self.ResBlock(inData)
