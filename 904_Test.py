@@ -2,7 +2,7 @@ import torch
 
 from Models.DiffusionModel.Utils import Extract
 
-from Models.Moduels.UNet2D import UNet2DPosEmbed, UNet2DPLUSPosEmbed, UNet2DAttnPosEmbed
+from Models.Modules.UNet2D import UNet2DPosEmbed, UNet2DPLUSPosEmbed, UNet2DAttnPosEmbed
 
 from torchvision.transforms import transforms
 

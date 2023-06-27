@@ -9,7 +9,7 @@ from functools import partial
 from einops import rearrange, reduce
 from einops.layers.torch import Rearrange
 
-from ..Moduels.PositionEmbedding import SinusoidalPositionEmbeddings
+from ..Modules.PositionEmbedding import SinusoidalPositionEmbeddings
 
 """
 ====================================================================================

@@ -3,7 +3,7 @@ from torch import nn
 from einops import rearrange
 from torch import einsum
 
-from Models.Moduels.Attention2D import IMultiHeadAttention2D
+from Models.Modules.Attention2D import IMultiHeadAttention2D
 
 
 class Attention(nn.Module):
