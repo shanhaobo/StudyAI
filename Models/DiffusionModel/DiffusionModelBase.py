@@ -97,15 +97,15 @@ class DiffusionModel(torch.nn.Module):
 
         nBatchSize = inShape[0]
         # start from pure noise (for each example in the batch)
-        Img = torch.randn(inShape, device=Device)
+        Image = torch.randn(inShape, device=Device)
 
         for i in reversed(range(0, self.Timesteps)):
-            Img = self.P_Sample(inNNModel, Img, torch.full((nBatchSize,), i, device=Device, dtype=torch.long), i)
+            Image = self.P_Sample(inNNModel, Image, torch.full((nBatchSize,), i, device=Device, dtype=torch.long), i)
             print("Sample Count : {}/{}".format(self.Timesteps - i, self.Timesteps))
-        return Img
+        return Image
 
     # 函数入口
     @torch.no_grad()
-    def Sample(self, inNNModel, inImageSize, inBatchSize=16, inChannels=3):
-        return self.P_Sample_Loop(inNNModel, inShape=(inBatchSize, inChannels, inImageSize, inImageSize))
+    def Sample(self, inNNModel, inImageSize, inImageChannel, inBatchSize):
+        return self.P_Sample_Loop(inNNModel, inShape=(inBatchSize, inImageChannel, inImageSize, inImageSize))
 

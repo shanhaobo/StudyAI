@@ -32,6 +32,6 @@ class DDPMModel(BaseModel) :
         return self.DiffusionModel.Sample(
             self.NNModel,
             inImageSize=inKWArgs["inImageSize"],
-            inBatchSize=inKWArgs["inBatchSize"],
-            inChannels=inKWArgs["inChannels"]
+            inImageChannel=inKWArgs["inImageChannel"],
+            inBatchSize=inKWArgs["inBatchSize"]
         )

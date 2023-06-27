@@ -18,18 +18,18 @@ from torch.utils.data import DataLoader
 #from torchvision.transforms import Compose, ToTensor, Lambda, ToPILImage, CenterCrop, Resize
 
 image_size = 64
-channels = 1
+image_channel = 1
 batch_size = 16
 EmbedDim = 32
 if __name__ == "__main__" :
-    DDPM = DDPMModel(inEmbedDim=EmbedDim, inChannel= channels, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./trained_models/DDPM")
+    DDPM = DDPMModel(inEmbedDim=EmbedDim, inChannel= image_channel, inLearningRate=0.00001, inTimesteps=1000, inModeRootlFolderPath="./output/DDPM/trained_models/")
     Exec = Executor(DDPM)
 
     if Exec.IsExistModel() and Exec.ReadyTrain() == False:
         GenImage = Exec.Eval(
             inImageSize=image_size,
-            inBatchSize=1,
-            inChannels=channels
+            inImageChannel=image_channel,
+            inBatchSize=15
         )
         print(GenImage.size())
         
@@ -37,7 +37,7 @@ if __name__ == "__main__" :
             transforms.Normalize((-0.5,), (2.0,)),
             transforms.Lambda(lambda t : (t + 1) * 0.5)
         ])
-        Path = "images/DDPM"
+        Path = "output/DDPM/images"
         os.makedirs(Path, exist_ok=True)
         save_image(reverse_transform(GenImage), "{}/{}.png".format(Path, datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else:
@@ -52,25 +52,3 @@ if __name__ == "__main__" :
         )
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         Exec.Train(dataloader, SaveModelInterval=10)
-
-"""
-url = 'D:/AI/Datasets/cartoon_faces/faces/00a44dac107792065c96f27664e91cf6-0.jpg'
-image = Image.open(url)
-
-x_start = transform(image).unsqueeze(0)
-x_start.shape
-def get_noisy_image(x_start, t):
-  # add noise
-  x_noisy = model.DMModel.Q_Sample(x_start, inT=t, inNoise=torch.randn_like(x_start))
-
-  # turn back into PIL image
-  noisy_image = reverse_transform(x_noisy.squeeze())
-
-  return noisy_image
-
-t = torch.tensor([2])
-
-genimg = get_noisy_image(x_start, t)
-
-save_image(transform(genimg), "images/{}.png".format(datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
-"""

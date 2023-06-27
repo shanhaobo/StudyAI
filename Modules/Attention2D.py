@@ -7,19 +7,19 @@ from torch.nn import functional as F
 from einops import rearrange
 
 class IMultiHeadAttention2D(nn.Module):
-    def __init__(self, inChannels, inNumHeads, inHeadEmbedDim):
+    def __init__(self, inChannel, inNumHeads, inHeadEmbedDim):
         super(IMultiHeadAttention2D, self).__init__()
 
-        self._InChannels     = inChannels
+        self._inChannel     = inChannel
         self._NumHeads       = inNumHeads
         self._HeadEmbedDim   = inHeadEmbedDim
         self._EmbedDim       = inHeadEmbedDim * inNumHeads
         self._ScaledFctr     = 1.0 / math.sqrt(self._HeadEmbedDim)
-        self._AttLayer       = nn.Conv2d(in_channels = self._InChannels,out_channels = self._EmbedDim * 3,  kernel_size = 1, bias=False)
-        self._AttOutLayer    = nn.Conv2d(in_channels = self._EmbedDim,  out_channels = inChannels,          kernel_size = 1)
+        self._AttLayer       = nn.Conv2d(in_channels = self._inChannel,out_channels = self._EmbedDim * 3,  kernel_size = 1, bias=False)
+        self._AttOutLayer    = nn.Conv2d(in_channels = self._EmbedDim,  out_channels = inChannel,          kernel_size = 1)
     
     def _ToQKV(self, inX):
-        # inX = (b, c_in = inChannels x, y)  ->  QKV = (b, c_out = self._EmbedDim * 3, x_out, y_out) 
+        # inX = (b, c_in = inChannel x, y)  ->  QKV = (b, c_out = self._EmbedDim * 3, x_out, y_out) 
         QKV = self._AttLayer(inX)
         # k = 3 because (q k v)
         # (k h d) means EmbedDim = c_out = self._EmbedDim * 3 也就是隐藏层, Conv2d输出的3倍隐藏层维度
@@ -55,8 +55,8 @@ class IMultiHeadAttention2D(nn.Module):
         return self._AttOutLayer(Out)
 
 class MultiHeadAttention2D(IMultiHeadAttention2D):
-    def __init__(self, inChannels, inNumHeads, inHeadEmbedDim):
-        super(MultiHeadAttention2D, self).__init__(inChannels, inNumHeads, inHeadEmbedDim)
+    def __init__(self, inChannel, inNumHeads, inHeadEmbedDim):
+        super(MultiHeadAttention2D, self).__init__(inChannel, inNumHeads, inHeadEmbedDim)
         
     def forward(self, inX):
         return super(MultiHeadAttention2D, self).CalcAtt(inX)
