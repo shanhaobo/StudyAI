@@ -1,9 +1,9 @@
 import torch
 import os
 
-from Models.DiffusionModel.Utils import Extract
+from KongMing.Models.DiffusionModel.Utils import Extract
 
-from Modules.UNet2D import UNet2DPosEmbed_TripleAttn, UNet2DPosEmbed_DoubleAttn
+from KongMing.Modules.UNet2D import UNet2DPosEmbed_TripleAttn, UNet2DPosEmbed_DoubleAttn
 
 from torchvision.transforms import transforms
 

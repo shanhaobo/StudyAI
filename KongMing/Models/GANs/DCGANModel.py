@@ -6,7 +6,6 @@ import torch.nn.functional as F
 from .GANModel import GANModel
 
 class DCGANModel(GANModel):
-    
     # G(z)
     class InnerGenerator(nn.Module):
         # initializers

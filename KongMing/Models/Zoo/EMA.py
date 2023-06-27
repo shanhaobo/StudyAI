@@ -1,4 +1,4 @@
-from Modules.AveragedModel import AveragedModel
+from KongMing.Modules.AveragedModel import AveragedModel
 
 class EMA(AveragedModel):
     def __init__(self, model, decay, device="cpu"):

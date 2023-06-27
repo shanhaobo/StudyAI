@@ -1,6 +1,6 @@
 import sys
 from torch.utils.data import DataLoader
-from Models.BaseModel import BaseModel
+from KongMing.Models.BaseModel import BaseModel
 
 class Executor :
     def __init__(self, inModel : BaseModel) -> None:

@@ -5,11 +5,11 @@ import torchvision.datasets as datasets
 from torchvision.transforms import transforms
 from torchvision.utils import save_image
 
-from Models.GANs.DCGANModel import DCGANModel
+from KongMing.Models.GANs.DCGANModel import DCGANModel
 
 from datetime import datetime
 
-from Utils.Executor import Executor
+from KongMing.Utils.Executor import Executor
 
 '''
 # 定义数据集

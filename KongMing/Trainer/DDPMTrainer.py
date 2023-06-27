@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 from .BaseTrainer import BaseTrainer
 
-from Models.Zoo.EMA import EMA
+from KongMing.Models.Zoo.EMA import EMA
 
 class DDPMTrainer(BaseTrainer) :
     def __init__(self, 

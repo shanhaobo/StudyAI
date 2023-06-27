@@ -3,11 +3,11 @@ from torch.utils.data import DataLoader
 
 from datetime import datetime
 
-from Models.BaseModel import BaseModel
+from KongMing.Models.BaseModel import BaseModel
 
-from Trainer.GANTrainer import GANTrainer
-from Trainer.WGANTrainer import WGANTrainer
-from Archiver.GANArchiver import GANArchiver
+from KongMing.Trainer.GANTrainer import GANTrainer
+from KongMing.Trainer.WGANTrainer import WGANTrainer
+from KongMing.Archiver.GANArchiver import GANArchiver
 
 class GANModel(BaseModel):
     def __init__(

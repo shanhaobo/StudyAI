@@ -1,12 +1,11 @@
 
-from Models.BaseModel import BaseModel
+from KongMing.Models.BaseModel import BaseModel
 
-from Archiver.DDPMArchiver import DDPMArchiver
-from Trainer.DDPMTrainer import DDPMTrainer
+from KongMing.Archiver.DDPMArchiver import DDPMArchiver
+from KongMing.Trainer.DDPMTrainer import DDPMTrainer
 
-from Modules.UNet2D import UNet2DPosEmbed_DoubleAttn, UNet2DPosEmbed_TripleAttn
-
-from Modules.ConditionUNet import ConditionUNet
+from KongMing.Modules.UNet2D import UNet2DPosEmbed_DoubleAttn, UNet2DPosEmbed_TripleAttn
+from KongMing.Modules.ConditionUNet import ConditionUNet
 
 from .DiffusionModelBase import DiffusionModel
 

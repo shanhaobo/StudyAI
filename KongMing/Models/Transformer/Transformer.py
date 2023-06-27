@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from Modules.Attention import CausalSelfAttention
+from KongMing.Modules.Attention import CausalSelfAttention
 
 class _BlockMLP(nn.Module):
     def __init__(self, inEmbeddingDim, inEnableBias):

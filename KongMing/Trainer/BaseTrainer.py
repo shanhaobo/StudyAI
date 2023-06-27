@@ -6,7 +6,7 @@ from torch.optim.optimizer import Optimizer
 
 from torch.utils.data import DataLoader
 
-from Utils.Delegate import Delegate
+from KongMing.Utils.Delegate import Delegate
 
 class BaseTrainer(abc.ABC):
     def __init__(self, inLearningRate) -> None:

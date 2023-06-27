@@ -6,9 +6,9 @@ from datetime import datetime
 from torchvision.utils import save_image
 import os
 
-from Models.DiffusionModel.DDPMModel import DDPMModel
+from KongMing.Models.DiffusionModel.DDPMModel import DDPMModel
 
-from Utils.Executor import Executor
+from KongMing.Utils.Executor import Executor
 
 torch.set_printoptions(precision=10, sci_mode=False)
 
