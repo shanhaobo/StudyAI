@@ -6,7 +6,7 @@ from Trainer.DDPMTrainer import DDPMTrainer
 
 from Modules.UNet2D import UNet2DPosEmbed_DoubleAttn, UNet2DPosEmbed_TripleAttn
 
-from Modules.DiffusionModelUtils import ConditionUNet
+from Modules.ConditionUNet import ConditionUNet
 
 from .DiffusionModelBase import DiffusionModel
 
