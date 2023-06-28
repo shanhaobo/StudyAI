@@ -10,13 +10,13 @@ class IMultiHeadAttention2D(nn.Module):
     def __init__(self, inChannel, inNumHeads, inHeadEmbedDim):
         super(IMultiHeadAttention2D, self).__init__()
 
-        self._inChannel     = inChannel
+        self._inChannel      = inChannel
         self._NumHeads       = inNumHeads
         self._HeadEmbedDim   = inHeadEmbedDim
-        self._EmbedDim       = inHeadEmbedDim * inNumHeads
+        self._HiddenEmbedDim = inHeadEmbedDim * inNumHeads
         self._ScaledFctr     = 1.0 / math.sqrt(self._HeadEmbedDim)
-        self._AttLayer       = nn.Conv2d(in_channels = self._inChannel, out_channels = self._EmbedDim * 3,  kernel_size = 1, bias=False)
-        self._AttOutLayer    = nn.Conv2d(in_channels = self._EmbedDim,  out_channels = inChannel,          kernel_size = 1)
+        self._AttLayer       = nn.Conv2d(in_channels = self._inChannel, out_channels = self._HiddenEmbedDim * 3,  kernel_size = 1, bias=False)
+        self._AttOutLayer    = nn.Conv2d(in_channels = self._HiddenEmbedDim,  out_channels = inChannel,          kernel_size = 1)
     
     def _ToQKV(self, inX):
         # inX = (b, c_in = inChannel x, y)  ->  QKV = (b, c_out = self._EmbedDim * 3, x_out, y_out) 
@@ -53,10 +53,36 @@ class IMultiHeadAttention2D(nn.Module):
         Out = rearrange(Out, "b h (x y) d -> b (h d) x y", x=h, y=w)
         
         return self._AttOutLayer(Out)
+    
+    def CalcLinearAtt(self, inX):
+        _, _, h, w = inX.size()
+
+        Q, K, V = self._ToQKV(inX)
+
+        Q = Q.softmax(dim=-2)
+        K = K.softmax(dim=-1)
+        
+        Ctxt = torch.einsum("b h i j, b h d j -> b h i d", K, V)
+        # d means embedding dim
+        # i j means data dim
+        # 其实就是将Q,K的数据组合到一起
+        AttScaled = torch.einsum("b h d i, b h d j -> b h i j", Ctxt, Q)  * self._ScaledFctr
+        Out = rearrange(AttScaled, "b h d (x y) -> b (h d) x y", x=h, y=w)
+        
+        return self._AttOutLayer(Out)
+    
 
 class MultiHeadAttention2D(IMultiHeadAttention2D):
-    def __init__(self, inChannel, inNumHeads, inHeadEmbedDim):
-        super(MultiHeadAttention2D, self).__init__(inChannel, inNumHeads, inHeadEmbedDim)
+    def __init__(self, inDim, inNumHeads, inHeadEmbedDim):
+        super(MultiHeadAttention2D, self).__init__(inDim, inNumHeads, inHeadEmbedDim)
         
     def forward(self, inX):
-        return super(MultiHeadAttention2D, self).CalcAtt(inX)
+        return self.CalcAtt(inX)
+
+class MultiHeadLinearAttn2D(IMultiHeadAttention2D):
+    def __init__(self, inDim, inNumHeads, inHeadEmbedDim):
+        super(MultiHeadLinearAttn2D, self).__init__(inDim, inNumHeads, inHeadEmbedDim)
+        self.GN = nn.GroupNorm(1, inDim)
+
+    def forward(self, inX):
+        return self.GN(self.CalcLinearAtt(inX))

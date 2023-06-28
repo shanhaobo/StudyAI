@@ -2,6 +2,25 @@ from torch import nn
 
 from einops.layers.torch import Rearrange
 
+# Residual Network
+class ResNet(nn.Module):
+    def __init__(self, inFunc):
+        super().__init__()
+        self.Func = inFunc
+
+    def forward(self, inData, *inArgs, **inKWArgs):
+        return self.Func(inData, *inArgs, **inKWArgs) + inData
+
+# 
+class PreNorm(nn.Module):
+    def __init__(self, inDim, inFunc):
+        super().__init__()
+        self.Func = inFunc
+        self.Norm = nn.GroupNorm(1, inDim)
+
+    def forward(self, inData):
+        return self.Func(self.Norm(inData))
+
 class DoubleLinearModule(nn.Module):
     def __init__(self, inInputDim, inOutputDim, inMidScale = 4) -> None:
         super().__init__()
