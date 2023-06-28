@@ -4,7 +4,7 @@ from KongMing.Models.BaseModel import BaseModel
 from KongMing.Archiver.DDPMArchiver import DDPMArchiver
 from KongMing.Trainer.DDPMTrainer import DDPMTrainer
 
-from KongMing.Modules.UNets.UNet2D import UNet2D_ConvNeXt, UNet2DPosEmbed_TripleAttn
+from KongMing.Modules.UNets.UNet2D import UNet2D_ConvNeXt, UNet2D_WSR
 from KongMing.Modules.UNets.ConditionUNet import ConditionUNet
 
 from .DiffusionModelBase import DiffusionModel
@@ -18,7 +18,7 @@ class DDPMModel(BaseModel) :
             inTimesteps : int = 1000,
             inModeRootlFolderPath="."
         ):
-        self.NNModel =  UNet2DPosEmbed_TripleAttn(inColorChanNum=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=3)
+        self.NNModel =  UNet2D_WSR(inColorChanNum=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=(1, 2, 4))
         #self.NNModel = UNet2D_ConvNeXt(inColorChanNum=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=(1, 2, 4))
         self.DiffusionModel = DiffusionModel(inTimesteps=inTimesteps)
         NewTrainer          = DDPMTrainer(self.NNModel, self.DiffusionModel, inLearningRate, inTimesteps=inTimesteps)

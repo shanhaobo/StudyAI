@@ -29,7 +29,7 @@ class UNet2DBase(nn.Module):
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
             AllDims                 = [*(self.EmbedDim * i for i in inEmbedLvlCntORList)]
         else:
-            AllDims                 = [*(self.EmbedDim * (2 ** i) for i in range(0, inEmbedLvlCntORList + 1))]
+            AllDims                 = [*(self.EmbedDim * (2 ** i) for i in range(0, inEmbedLvlCntORList))]
 
         # AllDims = (1, 3, 6, 12, 24, 48, 96) 
         # list(zip(AllDims[:-1], AllDims[1:])) -> ((1, 3, 6, 12, 24, 48), (3, 6, 12, 24, 48, 96))
@@ -112,7 +112,7 @@ class UNet2DBaseWithExtData(nn.Module):
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
             AllDims                 = [*(inEmbeddingDim * i for i in inEmbedLvlCntORList)]
         else:
-            AllDims                 = [*(inEmbeddingDim * (2 ** i) for i in range(0, inEmbedLvlCntORList + 1))]
+            AllDims                 = [*(inEmbeddingDim * (2 ** i) for i in range(0, inEmbedLvlCntORList))]
 
         # AllDims = (1, 3, 6, 12, 24, 48, 96) 
         # list(zip(AllDims[:-1], AllDims[1:])) -> ((1, 3, 6, 12, 24, 48), (3, 6, 12, 24, 48, 96))
@@ -164,30 +164,26 @@ class UNet2DBaseWithExtData(nn.Module):
         for DownSample, ExtDataProc, Encoder in self.DSEncoderList:
             X = DownSample(X)
             E = ExtDataProc(ProcessedExtData)
-            E2 = rearrange(E, "b c -> b c 1 1")
-            # E = E.unsqueeze(2).unsequeeze(3)
-            X = Encoder(X + E2, E)
+            # E2 = rearrange(E, "b c -> b c 1 1")
+            # E2 = E.unsqueeze(2).unsequeeze(3)
+            X = Encoder(X, E)
             Stack.append(X)
 
         # 3
         E = self.MidExtDataProc(ProcessedExtData)
-        E2 = rearrange(E, "b c -> b c 1 1")
-        # E = E.unsqueeze(2).unsequeeze(3)
-        X = self.MidMLM(X + E2, E)
+        # E2 = rearrange(E, "b c -> b c 1 1")
+        # E2 = E.unsqueeze(2).unsequeeze(3)
+        X = self.MidMLM(X, E)
         
         # 4
         for ExtDataProc, Decoder, UpSample in self.USDecoderList:
             # dim=1 是除Batch后的一个维度,这个维度很可能是EmbedDim
             X = torch.cat((X, Stack.pop()), dim=1)
             E = ExtDataProc(ProcessedExtData)
-            E2 = rearrange(E, "b c -> b c 1 1")
-            # E = E.unsqueeze(2).unsequeeze(3)
-            X = Decoder(X + E2, E)
+            # E2 = rearrange(E, "b c -> b c 1 1")
+            # E2 = E.unsqueeze(2).unsequeeze(3)
+            X = Decoder(X, E)
             X = UpSample(X)
 
         # 5
         return self.OutputModule(X)
-    
-    ##########################
-    def HandleData(self, inData, inExtData, inFunc):
-        return inFunc(inData, inExtData)
