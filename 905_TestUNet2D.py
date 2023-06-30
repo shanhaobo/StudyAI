@@ -1,5 +1,10 @@
-import torch
+###################################
 import os
+OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
+os.makedirs(OutputPath, exist_ok=True)
+###################################
+
+import torch
 
 from KongMing.Models.DiffusionModel.Utils import Extract
 
@@ -18,9 +23,9 @@ def SumParameters(inNN):
 
 s = SumParameters(net)
 print("sum of params:{}".format(s))
-Path = "output/904_Test"
-os.makedirs(Path, exist_ok=True)
-with open("{}/tree.txt".format(Path), 'w') as f:
+OutputPath = "output/905_TestUNet2D"
+os.makedirs(OutputPath, exist_ok=True)
+with open("{}/tree.txt".format(OutputPath), 'w') as f:
     print(net, file=f)
 
 

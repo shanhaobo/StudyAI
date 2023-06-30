@@ -1,4 +1,8 @@
+###################################
 import os
+OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
+os.makedirs(OutputPath, exist_ok=True)
+###################################
 
 class TreeNode:
     def __init__(self, name):
@@ -38,6 +42,8 @@ root = build_tree(folder_path)
 root = build_tree(folder_path)
 
 print(root.print_tree())
+
+
 # 将目录树写入文本文件
-with open('tree.txt', 'w') as f:
+with open('{}/tree.txt'.format(OutputPath), 'w') as f:
     f.write(root.print_tree())
