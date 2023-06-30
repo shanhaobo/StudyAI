@@ -93,6 +93,5 @@ class BaseTrainer(abc.ABC):
     def __Continue(self)->bool:
         return True
 
-    def __SoftExit(self, event):
-        print("prepare soft exit.......")
+    def __SoftExit(self):
         self.SoftExit = True

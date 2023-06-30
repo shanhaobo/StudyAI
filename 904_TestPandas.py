@@ -11,4 +11,3 @@ data = {'Name': ['Alice', 'Bob', 'Charlie'],
 df = pd.DataFrame(data)
 
 df.to_excel('{}/data.xlsx'.format(OutputPath), sheet_name='Sheet1', index=False)
-
