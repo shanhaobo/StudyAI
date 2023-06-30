@@ -70,17 +70,17 @@ class DDPMTrainer(BaseTrainer) :
     def DDPMEndBatchTrain(self, *inArgs, **inKWArgs) -> None:
         NowStr  = datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]")
         print(
-            "{} | Epoch:{:0>4d} | Batch:{:0>6d} | Loss:{:.8f}".
+            "{} | Epoch:{:0>4d} | Batch:{:0>6d} | Loss:{:.8f} | AverageLoss:{:.8f}".
             format(
                 NowStr,
                 self.CurrEpochIndex,
                 self.CurrBatchIndex,
                 self.CurrBatchDDPMLoss,
+                self.SumLoss / (self.CurrBatchIndex + 1)
             )
         )
 
     def __Continue(self)->bool:
         AverageLoss = self.SumLoss / self.LastBatch
-
         return AverageLoss > 0.01
 ###########################################################################################
