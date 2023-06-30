@@ -25,6 +25,9 @@ class DDPMTrainer(BaseTrainer) :
 
         self.EndBatchTrain.add(self.DDPMEndBatchTrain)
 
+        self.SumLoss        = 0
+        self.LastBatch      = 1
+
 ###########################################################################################
 
     def _CreateOptimizer(self) -> None:
@@ -59,6 +62,9 @@ class DDPMTrainer(BaseTrainer) :
 
         self.CurrBatchDDPMLoss = loss.item()
 
+        self.SumLoss        += self.CurrBatchDDPMLoss
+        self.LastBatch      = self.CurrBatchIndex + 1
+
 ###########################################################################################
 
     def DDPMEndBatchTrain(self, *inArgs, **inKWArgs) -> None:
@@ -73,4 +79,8 @@ class DDPMTrainer(BaseTrainer) :
             )
         )
 
+    def __Continue(self)->bool:
+        AverageLoss = self.SumLoss / self.LastBatch
+
+        return AverageLoss > 0.01
 ###########################################################################################

@@ -1,6 +1,8 @@
 import abc
 import torch
 
+import keyboard
+
 from torch import Tensor
 from torch.optim.optimizer import Optimizer
 
@@ -25,6 +27,9 @@ class BaseTrainer(abc.ABC):
 
         self.CurrEpochIndex     = 0
         self.CurrBatchIndex     = 0
+
+        self.SoftExit           = False
+        keyboard.add_hotkey('ctrl + x', self.__SoftExit)
 
     @staticmethod
     def _BackPropagate(inOptimizer : Optimizer, inLoss : Tensor) -> None:
@@ -69,17 +74,25 @@ class BaseTrainer(abc.ABC):
 
         if inNumEpochs <= 0 :
             self.CurrEpochIndex = inStartEpochIndex
-            while True:
+            while self.__Continue() or self.SoftExit:
                 self.__DontOverride__EpochTrain(inDataLoader, *inArgs, **inKWArgs)
                 self.CurrEpochIndex += 1
         else:
             # For Each Epoch Train
             for self.CurrEpochIndex in range(inStartEpochIndex, inNumEpochs) :
                 self.__DontOverride__EpochTrain(inDataLoader, *inArgs, **inKWArgs)
+                if self.SoftExit:
+                    break
         
         # End Train
         self.EndTrain(*inArgs, **inKWArgs)
 
-
     def Train(self, inDataLoader : DataLoader, inNumEpochs : int = 0, inStartEpochIndex : int = 0, *inArgs, **inKWArgs) -> None:
         self.__DontOverride__Train(inDataLoader, inNumEpochs, inStartEpochIndex, *inArgs, **inKWArgs)
+
+    def __Continue(self)->bool:
+        return True
+
+    def __SoftExit(self, event):
+        print("prepare soft exit.......")
+        self.SoftExit = True
