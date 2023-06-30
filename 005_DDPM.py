@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader
 #from torchvision.transforms import Compose, ToTensor, Lambda, ToPILImage, CenterCrop, Resize
 
 image_size = 64
-image_channel = 1
+image_channel = 3
 batch_size = 16
 EmbedDim = 32
 if __name__ == "__main__" :
@@ -53,8 +53,11 @@ if __name__ == "__main__" :
             transforms.Lambda(lambda t : (t * 2) - 1),
             transforms.Normalize((0.5,), (0.5,))
         ])
-        dataset = torchvision.datasets.FashionMNIST(
-            root="./data", train=True, transform=transform, download=True
-        )
+        if False :
+            dataset = torchvision.datasets.FashionMNIST(
+                root="./data", train=True, transform=transform, download=True
+            )
+        else:
+            dataset = torchvision.datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         Exec.Train(dataloader, SaveModelInterval=10)

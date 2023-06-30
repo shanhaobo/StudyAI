@@ -6,8 +6,6 @@ os.makedirs(OutputPath, exist_ok=True)
 
 import torch
 
-from KongMing.Models.DiffusionModel.Utils import Extract
-
 from KongMing.Modules.UNets.UNet2D import UNet2D_ConvNeXt, UNet2D_WSR
 from torchvision.transforms import transforms
 
