@@ -82,5 +82,7 @@ class DDPMTrainer(BaseTrainer) :
 
     def __Continue(self)->bool:
         AverageLoss = self.SumLoss / self.LastBatch
-        return AverageLoss > 0.01
+        Result =  AverageLoss > 0.01
+        self.SumLoss = 0
+        return Result
 ###########################################################################################
