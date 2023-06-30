@@ -74,9 +74,11 @@ class BaseTrainer(abc.ABC):
 
         if inNumEpochs <= 0 :
             self.CurrEpochIndex = inStartEpochIndex
-            while self.__Continue() or self.SoftExit:
+            while self.__Continue():
                 self.__DontOverride__EpochTrain(inDataLoader, *inArgs, **inKWArgs)
                 self.CurrEpochIndex += 1
+                if self.SoftExit:
+                    break
         else:
             # For Each Epoch Train
             for self.CurrEpochIndex in range(inStartEpochIndex, inNumEpochs) :
@@ -94,4 +96,5 @@ class BaseTrainer(abc.ABC):
         return True
 
     def __SoftExit(self):
+        print("Soft Exiting......................")
         self.SoftExit = True
