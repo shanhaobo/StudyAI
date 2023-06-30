@@ -25,7 +25,7 @@ class DDPMTrainer(BaseTrainer) :
 
         self.EndBatchTrain.add(self.DDPMEndBatchTrain)
 
-        self.SumLoss        = 0
+        self.SumLoss        = 1
         self.LastBatch      = 1
 
 ###########################################################################################
