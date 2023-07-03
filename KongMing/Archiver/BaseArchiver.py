@@ -36,38 +36,43 @@ class BaseArchiver(object):
         return self.FileNameManager.MakeFileFullPath(FileName = inNeuralNetworkName, Num = inEpochIndex)
     
     def GetLatestModelFolder(self) -> str :
-        LatestSubFolderPath = self.FileNameManager.GetLatestTimestampDirPath()
-        if not LatestSubFolderPath:
+        AllTimestampDirNames = self.FileNameManager.GetAllTimestampDirNames()
+        if len(AllTimestampDirNames) == 0:
             return None
+        
+        AllTimestampDirNames.sort(key=lambda x: int(x), reverse=True)
 
-        # 获取所有子文件夹
-        LeafFolders = self.FileNameManager.GetAllLeafDirNames(LatestSubFolderPath)
-        if not LeafFolders:
-            return None
-
-        LeafFolders.sort(key=lambda x: int(x), reverse=True)
-
-        for SF in LeafFolders:
-            # 取最新的子文件夹
-            LatestLeafFolderPath = os.path.join(LatestSubFolderPath, SF)
-
-            # 使用 glob 以及文件名前缀来获取子文件夹下所有的 .pkl 文件
-            ModelFiles = os.listdir(LatestLeafFolderPath)
-
-            if not ModelFiles:
+        for DirName in range(AllTimestampDirNames):
+            LatestSubFolderPath = os.path.join(self.FileNameManager.RawRootPath, DirName)
+            # 获取所有子文件夹
+            LeafFolders = self.FileNameManager.GetAllLeafDirNames(LatestSubFolderPath)
+            if LeafFolders is None:
                 continue
 
-            return LatestLeafFolderPath
-        
+            for SF in LeafFolders:
+                # 取最新的子文件夹
+                LatestLeafFolderPath = os.path.join(LatestSubFolderPath, SF)
+
+                # 使用 glob 以及文件名前缀来获取子文件夹下所有的 .pkl 文件
+                ModelFiles = os.listdir(LatestLeafFolderPath)
+
+                if not ModelFiles:
+                    continue
+
+                return LatestLeafFolderPath
+            
         return None
 
     def FindLatestModelFile(self, inModelName : str):
         LatestFolderPath = self.GetLatestModelFolder()
-
+        if LatestFolderPath is None :
+            return None, None
+        
          # 返回数字最大（也就是最新）的文件
         FileName, MaxNum =  FindFileWithMaxNum(os.listdir(LatestFolderPath), inModelName, "*", "pkl")
         if FileName is None :
             return None, None
+        
         return os.path.join(LatestFolderPath, FileName), MaxNum
     
 ############################################################################
