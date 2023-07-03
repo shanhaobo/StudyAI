@@ -32,8 +32,8 @@ class BaseArchiver(object):
 
 ############################################################################
 
-    def MakeNeuralNetworkArchiveFullPath(self, inNeuralNetworkName : str, inEpochIndex : int) -> str:
-        return self.FileNameManager.MakeFileFullPath(FileName = inNeuralNetworkName, Num = inEpochIndex)
+    def GetNeuralNetworkArchiveFullPath(self, inNeuralNetworkName : str, inEpochIndex : int) -> str:
+        return self.FileNameManager.GetFileFullPathAndFileName(FileName = inNeuralNetworkName, Num = inEpochIndex)
     
     def GetLatestModelFolder(self) -> str :
         AllTimestampDirNames = self.FileNameManager.GetAllTimestampDirNames()
@@ -87,8 +87,9 @@ class BaseArchiver(object):
     
     def _Save(self, inEpochIndex : int) -> None:
         for Name, Model in self.NNModelDict.items():
-            ModelFullPath = self.MakeNeuralNetworkArchiveFullPath(Name, inEpochIndex)
-            os.makedirs(ModelFullPath, exist_ok=True)
+            ModelFolderPath, ModelFileName = self.GetNeuralNetworkArchiveFullPath(Name, inEpochIndex)
+            os.makedirs(ModelFolderPath, exist_ok=True)
+            ModelFullPath = os.path.join(ModelFolderPath, ModelFileName)
             torch.save(Model.state_dict(), ModelFullPath)
             print("Save Model:" + ModelFullPath)
 

@@ -63,6 +63,24 @@ class BaseFileManager() :
         
         return os.path.join(LeafDirFullPath, FileName)
     
+    def GetFileFullPathAndFileName(self, **inKWArgs):
+        RootPath = self.GetRootPath()
+
+        LeafDirName = self.MakeLeafDirName(**inKWArgs)
+        if not LeafDirName:
+            return None
+
+        LeafDirFullPath = os.path.join(RootPath, LeafDirName)
+
+        FileName = self.MakeFileName(**inKWArgs)
+        if not FileName:
+            return None
+        
+        if FileName.endswith(self.Extension) == False:
+            FileName = FileName + self.Extension
+        
+        return LeafDirFullPath, FileName
+    
     def GetAllTimestampDirNames(self) :
         AllSubDirNames = [d for d in os.listdir(self.RawRootPath) if (os.path.isdir(os.path.join(self.RawRootPath, d)))]
         AllTimestampDirs = []
