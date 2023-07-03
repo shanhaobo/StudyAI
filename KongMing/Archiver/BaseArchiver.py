@@ -42,7 +42,7 @@ class BaseArchiver(object):
         
         AllTimestampDirNames.sort(key=lambda x: int(x), reverse=True)
 
-        for DirName in range(AllTimestampDirNames):
+        for DirName in AllTimestampDirNames:
             LatestSubFolderPath = os.path.join(self.FileNameManager.RawRootPath, DirName)
             # 获取所有子文件夹
             LeafFolders = self.FileNameManager.GetAllLeafDirNames(LatestSubFolderPath)
