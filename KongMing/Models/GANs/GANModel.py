@@ -34,8 +34,6 @@ class GANModel(BaseModel):
 
         super().__init__(NewTrainer, NewArchiver)
 
-        self.Trainer.EndBatchTrain.add(self.EndBatchTrain)
-
     ###########################################################################################
 
     def Train(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:

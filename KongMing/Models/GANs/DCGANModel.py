@@ -67,10 +67,18 @@ class DCGANModel(GANModel):
             return x
 
     def __init__(self, inDim, inChannel, inGeneratorSize, inLearningRate=0.00001, inModeRootlFolderPath=".") -> None:
+        
+        self.Generator = DCGANModel.InnerGenerator(inDim, inChannel)
+        self.Discriminator = DCGANModel.InnerDiscriminator(inDim, inChannel)
+
         super().__init__(
-            DCGANModel.InnerGenerator(inDim, inChannel),
-            DCGANModel.InnerDiscriminator(inDim, inChannel),
+            self.Generator,
+            self.Discriminator,
             inGeneratorSize,
             inLearningRate,
             inModeRootlFolderPath
         )
+
+        m = self._SumParameters(self.Generator)
+        b = self._SumParameters(self.Discriminator)
+        print("Sum of Params:{:,} | Model Params:{:,} | Buffer Params:{:,}".format(m + b, m, b))

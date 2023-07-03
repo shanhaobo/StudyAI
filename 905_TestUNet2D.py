@@ -20,7 +20,7 @@ def SumParameters(inNN):
     return sum(p.nelement() for p in inNN.parameters())
 
 s = SumParameters(net)
-print("sum of params:{}".format(s))
+print("sum of params:{:,}".format(s))
 OutputPath = "output/905_TestUNet2D"
 os.makedirs(OutputPath, exist_ok=True)
 with open("{}/tree.txt".format(OutputPath), 'w') as f:
