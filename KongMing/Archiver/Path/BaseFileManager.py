@@ -39,7 +39,6 @@ class BaseFileManager() :
         if self.__RootPath is None :
             if self.NeedJoinTimestampDir : 
                 self.__RootPath = os.path.join(self.RawRootPath, self.MakeTimestampDirName())
-                os.makedirs(self.__RootPath, exist_ok=True)
                 self.NeedJoinTimestampDir = False
             else:
                 self.__RootPath = self.RawRootPath
@@ -54,7 +53,6 @@ class BaseFileManager() :
             return None
 
         LeafDirFullPath = os.path.join(RootPath, LeafDirName)
-        os.makedirs(LeafDirFullPath, exist_ok=True)
 
         FileName = self.MakeFileName(**inKWArgs)
         if not FileName:

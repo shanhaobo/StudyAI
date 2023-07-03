@@ -1,5 +1,5 @@
 import torch
-
+import os
 from datetime import datetime
 
 import torch.nn.functional as F
@@ -93,6 +93,7 @@ class DDPMTrainer(BaseTrainer) :
 
     def DDPMEndEpochTrain(self, *inArgs, **inKWArgs) -> None:
         df = pd.DataFrame(self.LossData)
+        os.makedirs(self.LogRootPath, exist_ok=True)
         df.to_csv("{}/loss.csv".format(self.LogRootPath), mode='a', index=False)
         self.LossData["Epoch"].clear()
         self.LossData["Batch"].clear()

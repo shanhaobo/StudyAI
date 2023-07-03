@@ -86,6 +86,7 @@ class BaseArchiver(object):
     def _Save(self, inEpochIndex : int) -> None:
         for Name, Model in self.NNModelDict.items():
             ModelFullPath = self.MakeNeuralNetworkArchiveFullPath(Name, inEpochIndex)
+            os.makedirs(ModelFullPath, exist_ok=True)
             torch.save(Model.state_dict(), ModelFullPath)
             print("Save Model:" + ModelFullPath)
 
