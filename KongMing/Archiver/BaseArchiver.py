@@ -49,6 +49,8 @@ class BaseArchiver(object):
             if LeafFolders is None:
                 continue
 
+            LeafFolders.sort(key=lambda x: int(x), reverse=True)
+
             for SF in LeafFolders:
                 # 取最新的子文件夹
                 LatestLeafFolderPath = os.path.join(LatestSubFolderPath, SF)
