@@ -29,6 +29,8 @@ class DDPMModel(BaseModel) :
         b = self._SumParameters(self.DiffusionModel)
         print("Sum of Params:{:,} | Model Params:{:,} | Buffer Params:{:,}".format(m + b, m, b))
 
+        NewTrainer.CSVFolder= NewArchiver.CurrTrainModelArchiveRootFolderPath
+
     def Eval(self, *inArgs, **inKWArgs):
         if (super().Eval(*inArgs, **inKWArgs) == False) :
             return None

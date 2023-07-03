@@ -14,6 +14,8 @@ class BaseArchiver(object):
 
         self.FileNameManager = FileManagerWithNum(self.ModelArchiveRootFolderPath, ".pkl", 100, True)
 
+        self.CurrTrainModelArchiveRootFolderPath = self.FileNameManager.RootPath
+
         self.SaveEpochIndex             = -1
         self.NNModelDict                = {}
 

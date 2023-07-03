@@ -8,6 +8,8 @@ from .BaseTrainer import BaseTrainer
 
 from KongMing.Models.Zoo.EMA import EMA
 
+import pandas as pd
+
 class DDPMTrainer(BaseTrainer) :
     def __init__(self, 
             inNN : torch.nn.Module,
@@ -24,9 +26,12 @@ class DDPMTrainer(BaseTrainer) :
         self.EMA            = EMA(inNN, 0.999)
 
         self.EndBatchTrain.add(self.DDPMEndBatchTrain)
+        self.EndEpochTrain.add(self.DDPMEndEpochTrain)
 
         self.SumLoss        = 1
         self.LastBatch      = 1
+
+        self.LossData       = {"Epoch":[], "Batch":[], "Loss":[], "AvgLoss":[]}
 
 ###########################################################################################
 
@@ -79,6 +84,19 @@ class DDPMTrainer(BaseTrainer) :
                 self.SumLoss / (self.CurrBatchIndex + 1)
             )
         )
+        self.LossData["Epoch"].append(self.CurrEpochIndex)
+        self.LossData["Batch"].append(self.CurrBatchIndex)
+        self.LossData["Loss"].append(self.CurrBatchDDPMLoss)
+        self.LossData["AvgLoss"].append(self.SumLoss / (self.CurrBatchIndex + 1))
+
+
+    def DDPMEndEpochTrain(self, *inArgs, **inKWArgs) -> None:
+        df = pd.DataFrame(self.LossData)
+        df.to_csv("{}/loss.csv".format(self.CSVFolder), mode='a', index=False)
+        self.LossData["Epoch"].clear()
+        self.LossData["Batch"].clear()
+        self.LossData["Loss"].clear()
+        self.LossData["AvgLoss"].clear()
 
     def _Continue(self)->bool:
         AverageLoss = self.SumLoss / self.LastBatch
