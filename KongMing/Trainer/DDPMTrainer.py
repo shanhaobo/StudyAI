@@ -15,9 +15,10 @@ class DDPMTrainer(BaseTrainer) :
             inNN : torch.nn.Module,
             inDiffusionMode : torch.nn.Module,
             inLearningRate,
-            inTimesteps = 1000
+            inTimesteps = 1000,
+            inLogRootPath = "."
         ) -> None:
-        super().__init__(inLearningRate)
+        super().__init__(inLearningRate, inLogRootPath)
         self.NNModel        = inNN.to(self.Device)
         self.DiffusionMode  = inDiffusionMode.to(self.Device)
 
@@ -92,7 +93,7 @@ class DDPMTrainer(BaseTrainer) :
 
     def DDPMEndEpochTrain(self, *inArgs, **inKWArgs) -> None:
         df = pd.DataFrame(self.LossData)
-        df.to_csv("{}/loss.csv".format(self.CSVFolder), mode='a', index=False)
+        df.to_csv("{}/loss.csv".format(self.LogRootPath), mode='a', index=False)
         self.LossData["Epoch"].clear()
         self.LossData["Batch"].clear()
         self.LossData["Loss"].clear()

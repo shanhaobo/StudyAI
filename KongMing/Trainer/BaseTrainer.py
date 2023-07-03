@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from KongMing.Utils.Delegate import Delegate
 
 class BaseTrainer(abc.ABC):
-    def __init__(self, inLearningRate) -> None:
+    def __init__(self, inLearningRate, inLogRootPath) -> None:
         self.Device             = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(torch.cuda.get_device_name(self.Device.index))
         self.LearningRate       = inLearningRate
@@ -30,6 +30,8 @@ class BaseTrainer(abc.ABC):
 
         self.SoftExit           = False
         keyboard.add_hotkey('ctrl + x', self.__SoftExit)
+
+        self.LogRootPath        = inLogRootPath
 
     @staticmethod
     def _BackPropagate(inOptimizer : Optimizer, inLoss : Tensor) -> None:

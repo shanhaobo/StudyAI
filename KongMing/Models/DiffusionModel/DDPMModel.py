@@ -21,15 +21,21 @@ class DDPMModel(BaseModel) :
         self.NNModel =  UNet2D_WSR(inColorChanNum=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=(1, 2, 4))
         #self.NNModel = UNet2D_ConvNeXt(inColorChanNum=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=(1, 2, 4))
         self.DiffusionModel = DiffusionModel(inTimesteps=inTimesteps)
-        NewTrainer          = DDPMTrainer(self.NNModel, self.DiffusionModel, inLearningRate, inTimesteps=inTimesteps)
+
         NewArchiver         = DDPMArchiver(self.NNModel, self.DiffusionModel, inModeRootlFolderPath)
+
+        NewTrainer          = DDPMTrainer(
+                                self.NNModel,
+                                self.DiffusionModel,
+                                inLearningRate,
+                                inTimesteps=inTimesteps,
+                                inLogRootPath=NewArchiver.GetCurrTrainRootPath()
+                            )
         super().__init__(NewTrainer, NewArchiver)
 
         m = self._SumParameters(self.NNModel)
         b = self._SumParameters(self.DiffusionModel)
         print("Sum of Params:{:,} | Model Params:{:,} | Buffer Params:{:,}".format(m + b, m, b))
-
-        NewTrainer.CSVFolder= NewArchiver.CurrTrainModelArchiveRootFolderPath
 
     def Eval(self, *inArgs, **inKWArgs):
         if (super().Eval(*inArgs, **inKWArgs) == False) :

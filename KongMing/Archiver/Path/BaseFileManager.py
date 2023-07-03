@@ -11,7 +11,7 @@ class BaseFileManager() :
         self.NeedJoinTimestampDir   = inNeedTimestampDir
         self.TimeStampDirFormat     = "%Y%m%d%H%M%S"
 
-        self.RootPath               = self.RawRootPath
+        self.__RootPath             = None
 
     def MakeLeafDirName(self, **inKWArgs) -> str:
         pass
@@ -19,7 +19,7 @@ class BaseFileManager() :
     def MakeFileName(self, **inKWArgs) -> str:
         pass
 
-    #
+    ################
     def GetFilePathByTimestamp(self, inTimestamp:str,  **inKWArgs)->str:
         LeafDir = self.MakeLeafDirName(**inKWArgs)
         FileName = self.MakeFileName(**inKWArgs)
@@ -34,18 +34,26 @@ class BaseFileManager() :
 
     def MakeTimestampDirName(self)->str:
         return datetime.now().strftime(self.TimeStampDirFormat)
+    
+    def GetRootPath(self):
+        if self.__RootPath is None :
+            if self.NeedJoinTimestampDir : 
+                self.__RootPath = os.path.join(self.RawRootPath, self.MakeTimestampDirName())
+                os.makedirs(self.__RootPath, exist_ok=True)
+                self.NeedJoinTimestampDir = False
+            else:
+                self.__RootPath = self.RawRootPath
+
+        return self.__RootPath
 
     def MakeFileFullPath(self, **inKWArgs):
-        if self.NeedJoinTimestampDir:
-            self.RootPath = os.path.join(self.RawRootPath, self.MakeTimestampDirName())
-            os.makedirs(self.RootPath, exist_ok=True)
-            self.NeedJoinTimestampDir = False
+        RootPath = self.GetRootPath()
 
         LeafDirName = self.MakeLeafDirName(**inKWArgs)
         if not LeafDirName:
             return None
 
-        LeafDirFullPath = os.path.join(self.RootPath, LeafDirName)
+        LeafDirFullPath = os.path.join(RootPath, LeafDirName)
         os.makedirs(LeafDirFullPath, exist_ok=True)
 
         FileName = self.MakeFileName(**inKWArgs)
