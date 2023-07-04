@@ -127,7 +127,8 @@ class BaseFileManager() :
 
     def GetValidLatestTimestampDirPath(self) :
         LatestTimestampDirPath, LatestLeafFolderPath, ModelFiles = self.GetValidLatestTimestampDirInfo()
-        
+        if self.__RootPath is None :
+            self.__RootPath = LatestTimestampDirPath
         return LatestTimestampDirPath
         
     def GetFileFromValidLatestTimestampDirPath(self, **inKWArgs) :
