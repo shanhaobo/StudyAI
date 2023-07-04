@@ -26,7 +26,11 @@ class Executor :
             self.Model.Train(inDataLoader, 0, *inArgs, **inKWArgs)
 
     def Eval(self, *inArgs, **inKWArgs) :
-        Epoch = self.Args["Epoch"]
+        Epoch = self.Args.get("epoch")
+        if Epoch is None:
+            Epoch = -1
+        else:
+            Epoch = int(Epoch)
 
         return self.Model.Eval(Epoch, *inArgs, **inKWArgs)
 
@@ -37,7 +41,7 @@ class Executor :
             if bool(re.match(pattern, tmpi)):
                 key, value = tmpi.split("=")
                 key = key.replace("-", "")
-                self[key]=value
+                self.Args[key]=value
 
     def Load(self, *inArgs, **inKWArgs) :
         if self.Model.LoadLastest(*inArgs, **inKWArgs) :
