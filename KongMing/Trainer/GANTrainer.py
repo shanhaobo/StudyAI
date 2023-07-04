@@ -13,8 +13,9 @@ class GANTrainer(MultiNNTrainer):
             inDiscriminator : nn.Module,
             inGeneratorInputSize,
             inLearningRate = 1e-5,
+            inLogRootPath="."
         ) -> None:
-        super().__init__(inLearningRate)
+        super().__init__(inLearningRate, inLogRootPath)
         
         self.Generator                  = inGenerator.to(self.Device)
         self.Discriminator              = inDiscriminator.to(self.Device)

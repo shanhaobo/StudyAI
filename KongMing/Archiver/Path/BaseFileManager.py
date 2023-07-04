@@ -98,7 +98,7 @@ class BaseFileManager() :
     def TravelValidLatestTimestampDirInfo(self, ModelFilesFunc) :
         AllTimestampDirNames = self.GetAllTimestampDirNames()
         if len(AllTimestampDirNames) == 0:
-            return None
+            return None, None, None
         
         AllTimestampDirNames.sort(key=lambda x: int(x), reverse=True)
 
@@ -123,7 +123,7 @@ class BaseFileManager() :
 
                 return LatestTimestampDirPath, LatestLeafFolderPath, ModelFiles
 
-        return None
+        return None, None, None
 
     def GetValidLatestTimestampDirInfo(self) :
         

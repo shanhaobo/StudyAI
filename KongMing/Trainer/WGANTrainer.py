@@ -6,8 +6,15 @@ from torch.autograd import grad
 import torch.nn.functional as F
 
 class WGANTrainer(GANTrainer) :
-    def __init__(self, inGenerator: nn.Module, inDiscriminator: nn.Module, inGeneratorInputSize, inLearningRate=0.00001) -> None:
-        super().__init__(inGenerator, inDiscriminator, inGeneratorInputSize, inLearningRate)
+    def __init__(
+            self,
+            inGenerator: nn.Module,
+            inDiscriminator: nn.Module,
+            inGeneratorInputSize,
+            inLearningRate=0.00001,
+            inLogRootPath="."
+        ) -> None:
+        super().__init__(inGenerator, inDiscriminator, inGeneratorInputSize, inLearningRate, inLogRootPath)
 
     def _CreateOptimizer(self) -> None:
         self.OptimizerG = torch.optim.Adam(self.Generator.parameters(),     lr=self.LearningRate, betas=(0.5, 0.999))
