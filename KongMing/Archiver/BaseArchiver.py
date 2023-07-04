@@ -35,6 +35,9 @@ class BaseArchiver(object):
     def MakeNeuralNetworkArchiveFullPath(self, inNeuralNetworkName : str, inEpochIndex : int) -> str:
         return self.FileNameManager.MakeFileFullPathAndFileName(FileName = inNeuralNetworkName, Num = inEpochIndex)
     
+    def GetFileFromValidLatestTimestampDirPath(self, inNeuralNetworkName : str, inEpochIndex : int) -> str:
+        return self.FileNameManager.GetFileFromValidLatestTimestampDirPath(FileName = inNeuralNetworkName, Num = inEpochIndex)
+
     def GetLatestModelFolder(self) -> str :
         _, LatestLeafFolderPath, _ = self.FileNameManager.GetValidLatestTimestampDirInfo()
         
