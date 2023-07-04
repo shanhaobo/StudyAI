@@ -138,17 +138,17 @@ class BaseFileManager() :
     def GetFileFromValidLatestTimestampDirPath(self, **inKWArgs) :
         ValidPath = self.GetValidLatestTimestampDirPath()
         if ValidPath is None:
-            return None
+            return None, None
         
         LeafDirName = self.MakeLeafDirName(**inKWArgs)
         if LeafDirName is None:
-            return None
+            return None, None
 
         LeafDirFullPath = os.path.join(ValidPath, LeafDirName)
 
         FileName = self.MakeFileName(**inKWArgs)
-        if not FileName:
-            return None
+        if FileName is None:
+            return None, None
         
         if FileName.endswith(self.Extension) == False:
             FileName = FileName + self.Extension
@@ -159,25 +159,26 @@ class BaseFileManager() :
     def GetFilePathAndNameFromTimestampDirPathByEpoch(self, **inKWArgs) :
         LeafDirName = self.MakeLeafDirName(**inKWArgs)
         if LeafDirName is None:
-            return None
+            return None, None
         
         FileName = self.MakeFileName(**inKWArgs)
-        if not FileName:
-            return None
+        if FileName is None:
+            return None, None
         
         if FileName.endswith(self.Extension) == False:
             FileName = FileName + self.Extension
         
         AllTimestampDirNames = self.GetAllTimestampDirNames()
         if len(AllTimestampDirNames) == 0:
-            return None
+            return None, None
         
         AllTimestampDirNames.sort(key=lambda x: int(x), reverse=True)
 
         for DirName in AllTimestampDirNames:
-            ModelFile = os.path.join(self.RawRootPath, DirName, LeafDirName, FileName)
+            ModelFilePath = os.path.join(self.RawRootPath, DirName, LeafDirName)
+            ModelFile = os.path.join(ModelFilePath, FileName)
 
             if os.path.exists(ModelFile):
-                return ModelFile
+                return ModelFilePath, FileName
 
-        return None
+        return None, None
