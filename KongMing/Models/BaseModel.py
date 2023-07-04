@@ -30,12 +30,19 @@ class BaseModel(object):
             return False
         self.Trainer.CurrEpochIndex = EpochIndex
         return True
+    
+    def Load(self, inEpoch, *inArgs, **inKWArgs):
+        self.Archiver.Load(inEpoch, False)
         
     def IsExistModels(self, inForTrain : bool = True, *inArgs, **inKWArgs) -> bool:
         return self.Archiver.IsExistModel(inForTrain, *inArgs, **inKWArgs)
     
-    def Eval(self, *inArgs, **inKWArgs):
-        self.LoadLastest(False)
+    def Eval(self, inEpoch = -1, *inArgs, **inKWArgs):
+        if inEpoch < 0:
+            self.LoadLastest(*inArgs, **inKWArgs)
+        else:
+            self.Load(inEpoch)
+
 
     ###########################################################################################
 

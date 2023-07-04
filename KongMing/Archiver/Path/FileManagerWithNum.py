@@ -9,7 +9,7 @@ class FileManagerWithNum(BaseFileManager) :
 
     def MakeLeafDirName(self, **inKWArgs) -> str:
         Num = inKWArgs["Num"]
-        if not Num:
+        if Num is None:
             return None
         
         PreRange = (Num // self.Range) * self.Range
@@ -19,11 +19,11 @@ class FileManagerWithNum(BaseFileManager) :
 
     def MakeFileName(self, **inKWArgs) -> str:
         FileName = inKWArgs["FileName"]
-        if not FileName:
+        if FileName is None:
             return None
 
         Num = inKWArgs["Num"]
-        if not Num:
+        if Num is None:
             return None
         
         return "{}_{:0>6d}".format(FileName, Num)

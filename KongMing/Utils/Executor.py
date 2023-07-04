@@ -2,9 +2,14 @@ import sys
 from torch.utils.data import DataLoader
 from KongMing.Models.BaseModel import BaseModel
 
+import re
+
 class Executor :
     def __init__(self, inModel : BaseModel) -> None:
         self.Model = inModel
+        self.Args = {}
+
+        self.GetArgs()
 
     def Train(self, inDataLoader:DataLoader, *inArgs, **inKWArgs) :
         bIncTrain = False
@@ -21,7 +26,18 @@ class Executor :
             self.Model.Train(inDataLoader, 0, *inArgs, **inKWArgs)
 
     def Eval(self, *inArgs, **inKWArgs) :
-        return self.Model.Eval(*inArgs, **inKWArgs)
+        Epoch = self.Args["Epoch"]
+
+        return self.Model.Eval(Epoch, *inArgs, **inKWArgs)
+
+    def GetArgs(self):
+        for i in sys.argv :
+            tmpi = i.casefold()
+            pattern = r'^-[\w]+=[\w]+'
+            if bool(re.match(pattern, tmpi)):
+                key, value = tmpi.split("=")
+                key = key.replace("-", "")
+                self[key]=value
 
     def Load(self, *inArgs, **inKWArgs) :
         if self.Model.LoadLastest(*inArgs, **inKWArgs) :

@@ -93,7 +93,7 @@ class BaseArchiver(object):
             torch.save(Model.state_dict(), ModelFullPath)
             print("Save Model:" + ModelFullPath)
 
-    def Load(self, inForTrain : bool, inEpochIndex : int) -> None :
+    def Load(self, inEpochIndex : int = -1, inForTrain : bool = True) -> None :
         pass
 
     def LoadLastest(self, inForTrain : bool = True):
