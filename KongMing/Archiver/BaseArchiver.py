@@ -19,7 +19,7 @@ class BaseArchiver(object):
 
 ############################################################################
     def GetCurrTrainRootPath(self):
-        return self.FileNameManager.GetRootPath()
+        return self.FileNameManager.MakeAndGetRootPath()
 ############################################################################
 
     def IsExistModel(self, inForTrain : bool = True) -> bool:
@@ -32,38 +32,13 @@ class BaseArchiver(object):
 
 ############################################################################
 
-    def GetNeuralNetworkArchiveFullPath(self, inNeuralNetworkName : str, inEpochIndex : int) -> str:
-        return self.FileNameManager.GetFileFullPathAndFileName(FileName = inNeuralNetworkName, Num = inEpochIndex)
+    def MakeNeuralNetworkArchiveFullPath(self, inNeuralNetworkName : str, inEpochIndex : int) -> str:
+        return self.FileNameManager.MakeFileFullPathAndFileName(FileName = inNeuralNetworkName, Num = inEpochIndex)
     
     def GetLatestModelFolder(self) -> str :
-        AllTimestampDirNames = self.FileNameManager.GetAllTimestampDirNames()
-        if len(AllTimestampDirNames) == 0:
-            return None
+        _, LatestLeafFolderPath, _ = self.FileNameManager.GetValidLatestTimestampDirInfo()
         
-        AllTimestampDirNames.sort(key=lambda x: int(x), reverse=True)
-
-        for DirName in AllTimestampDirNames:
-            LatestSubFolderPath = os.path.join(self.FileNameManager.RawRootPath, DirName)
-            # 获取所有子文件夹
-            LeafFolders = self.FileNameManager.GetAllLeafDirNames(LatestSubFolderPath)
-            if LeafFolders is None:
-                continue
-
-            LeafFolders.sort(key=lambda x: int(x), reverse=True)
-
-            for SF in LeafFolders:
-                # 取最新的子文件夹
-                LatestLeafFolderPath = os.path.join(LatestSubFolderPath, SF)
-
-                # 使用 glob 以及文件名前缀来获取子文件夹下所有的 .pkl 文件
-                ModelFiles = os.listdir(LatestLeafFolderPath)
-
-                if not ModelFiles:
-                    continue
-
-                return LatestLeafFolderPath
-            
-        return None
+        return LatestLeafFolderPath
 
     def FindLatestModelFile(self, inModelName : str):
         LatestFolderPath = self.GetLatestModelFolder()
@@ -87,7 +62,7 @@ class BaseArchiver(object):
     
     def _Save(self, inEpochIndex : int) -> None:
         for Name, Model in self.NNModelDict.items():
-            ModelFolderPath, ModelFileName = self.GetNeuralNetworkArchiveFullPath(Name, inEpochIndex)
+            ModelFolderPath, ModelFileName = self.MakeNeuralNetworkArchiveFullPath(Name, inEpochIndex)
             os.makedirs(ModelFolderPath, exist_ok=True)
             ModelFullPath = os.path.join(ModelFolderPath, ModelFileName)
             torch.save(Model.state_dict(), ModelFullPath)
@@ -95,7 +70,7 @@ class BaseArchiver(object):
 
     def Load(self, inEpochIndex : int = -1, inForTrain : bool = True) -> None :
         for Name, _ in self.NNModelDict.items():
-            FilePath, FileName = self.GetNeuralNetworkArchiveFullPath(Name, inEpochIndex)
+            FilePath, FileName = self.GetFileFromValidLatestTimestampDirPath(Name, inEpochIndex)
             ModelFullPath = os.path.join(FilePath, FileName)
             self.NNModelDict[Name].load_state_dict(torch.load(ModelFullPath))
             print("Load Model:" + ModelFullPath)

@@ -35,7 +35,7 @@ class BaseFileManager() :
     def MakeTimestampDirName(self)->str:
         return datetime.now().strftime(self.TimeStampDirFormat)
     
-    def GetRootPath(self):
+    def MakeAndGetRootPath(self):
         if self.__RootPath is None :
             if self.NeedJoinTimestampDir : 
                 self.__RootPath = os.path.join(self.RawRootPath, self.MakeTimestampDirName())
@@ -46,7 +46,7 @@ class BaseFileManager() :
         return self.__RootPath
 
     def MakeFileFullPath(self, **inKWArgs):
-        RootPath = self.GetRootPath()
+        RootPath = self.MakeAndGetRootPath()
 
         LeafDirName = self.MakeLeafDirName(**inKWArgs)
         if not LeafDirName:
@@ -63,8 +63,8 @@ class BaseFileManager() :
         
         return os.path.join(LeafDirFullPath, FileName)
     
-    def GetFileFullPathAndFileName(self, **inKWArgs):
-        RootPath = self.GetRootPath()
+    def MakeFileFullPathAndFileName(self, **inKWArgs):
+        RootPath = self.MakeAndGetRootPath()
 
         LeafDirName = self.MakeLeafDirName(**inKWArgs)
         if not LeafDirName:
@@ -92,11 +92,60 @@ class BaseFileManager() :
                 pass
         return AllTimestampDirs
     
-    def GetLatestTimestampDirPath(self) :
+    def GetAllLeafDirNames(self, inPath = None) :
+        pass
+    
+    def GetValidLatestTimestampDirInfo(self) :
         AllTimestampDirNames = self.GetAllTimestampDirNames()
         if len(AllTimestampDirNames) == 0:
             return None
         
         AllTimestampDirNames.sort(key=lambda x: int(x), reverse=True)
 
-        return os.path.join(self.RawRootPath, AllTimestampDirNames[0])
+        for DirName in AllTimestampDirNames:
+            LatestTimestampDirPath = os.path.join(self.RawRootPath, DirName)
+            # 获取所有子文件夹
+            LeafFolders = self.GetAllLeafDirNames(LatestTimestampDirPath)
+            if LeafFolders is None:
+                continue
+
+            LeafFolders.sort(key=lambda x: int(x), reverse=True)
+
+            for SF in LeafFolders:
+                # 取最新的子文件夹
+                LatestLeafFolderPath = os.path.join(LatestTimestampDirPath, SF)
+
+                # 使用 glob 以及文件名前缀来获取子文件夹下所有的 .pkl 文件
+                ModelFiles = os.listdir(LatestLeafFolderPath)
+
+                if not ModelFiles:
+                    continue
+
+                return LatestTimestampDirPath, LatestLeafFolderPath, ModelFiles
+
+        return None
+
+    def GetValidLatestTimestampDirPath(self) :
+        LatestTimestampDirPath, LatestLeafFolderPath, ModelFiles = self.GetValidLatestTimestampDirInfo()
+        
+        return LatestTimestampDirPath
+        
+    def GetFileFromValidLatestTimestampDirPath(self, **inKWArgs) :
+        ValidPath = self.GetValidLatestTimestampDirPath()
+        if ValidPath is None:
+            return None
+        
+        LeafDirName = self.MakeLeafDirName(**inKWArgs)
+        if LeafDirName is None:
+            return None
+
+        LeafDirFullPath = os.path.join(ValidPath, LeafDirName)
+
+        FileName = self.MakeFileName(**inKWArgs)
+        if not FileName:
+            return None
+        
+        if FileName.endswith(self.Extension) == False:
+            FileName = FileName + self.Extension
+        
+        return LeafDirFullPath, FileName
