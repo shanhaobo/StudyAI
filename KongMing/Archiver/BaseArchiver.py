@@ -36,7 +36,7 @@ class BaseArchiver(object):
         return self.FileNameManager.MakeFileFullPathAndFileName(FileName = inNeuralNetworkName, Num = inEpochIndex)
     
     def GetFileFromValidLatestTimestampDirPath(self, inNeuralNetworkName : str, inEpochIndex : int) -> str:
-        return self.FileNameManager.GetFileFromValidLatestTimestampDirPath(FileName = inNeuralNetworkName, Num = inEpochIndex)
+        return self.FileNameManager.GetFilePathAndNameFromTimestampDirPathByEpoch(FileName = inNeuralNetworkName, Num = inEpochIndex)
 
     def GetLatestModelFolder(self) -> str :
         _, LatestLeafFolderPath, _ = self.FileNameManager.GetValidLatestTimestampDirInfo()

@@ -95,7 +95,7 @@ class BaseFileManager() :
     def GetAllLeafDirNames(self, inPath = None) :
         pass
     
-    def GetValidLatestTimestampDirInfo(self) :
+    def TravelValidLatestTimestampDirInfo(self, ModelFilesFunc) :
         AllTimestampDirNames = self.GetAllTimestampDirNames()
         if len(AllTimestampDirNames) == 0:
             return None
@@ -118,15 +118,19 @@ class BaseFileManager() :
                 # 使用 glob 以及文件名前缀来获取子文件夹下所有的 .pkl 文件
                 ModelFiles = os.listdir(LatestLeafFolderPath)
 
-                if not ModelFiles:
+                if ModelFilesFunc(ModelFiles):
                     continue
 
                 return LatestTimestampDirPath, LatestLeafFolderPath, ModelFiles
 
         return None
 
+    def GetValidLatestTimestampDirInfo(self) :
+        
+        return self.TravelValidLatestTimestampDirInfo(lambda files : files is None)
+
     def GetValidLatestTimestampDirPath(self) :
-        LatestTimestampDirPath, LatestLeafFolderPath, ModelFiles = self.GetValidLatestTimestampDirInfo()
+        LatestTimestampDirPath, _, _ = self.GetValidLatestTimestampDirInfo()
         if self.__RootPath is None :
             self.__RootPath = LatestTimestampDirPath
         return LatestTimestampDirPath
@@ -150,3 +154,30 @@ class BaseFileManager() :
             FileName = FileName + self.Extension
         
         return LeafDirFullPath, FileName
+    
+    
+    def GetFilePathAndNameFromTimestampDirPathByEpoch(self, **inKWArgs) :
+        LeafDirName = self.MakeLeafDirName(**inKWArgs)
+        if LeafDirName is None:
+            return None
+        
+        FileName = self.MakeFileName(**inKWArgs)
+        if not FileName:
+            return None
+        
+        if FileName.endswith(self.Extension) == False:
+            FileName = FileName + self.Extension
+        
+        AllTimestampDirNames = self.GetAllTimestampDirNames()
+        if len(AllTimestampDirNames) == 0:
+            return None
+        
+        AllTimestampDirNames.sort(key=lambda x: int(x), reverse=True)
+
+        for DirName in AllTimestampDirNames:
+            ModelFile = os.path.join(self.RawRootPath, DirName, LeafDirName, FileName)
+
+            if os.path.exists(ModelFile):
+                return ModelFile
+
+        return None
