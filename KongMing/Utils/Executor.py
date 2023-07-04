@@ -13,17 +13,27 @@ class Executor :
 
     def Train(self, inDataLoader:DataLoader, *inArgs, **inKWArgs) :
         bIncTrain = False
+        bForceNewTrain = False
         for i in sys.argv :
             tmpi = i.casefold()
             if (tmpi == "inctrain" or tmpi == "inc") :
                 bIncTrain = True
             elif (tmpi == "newtrain" or tmpi == "new") :
                 bIncTrain = False
+                bForceNewTrain = True
         
-        if bIncTrain :
-            self.Model.IncTrain(inDataLoader, 0, *inArgs, **inKWArgs)
-        else :
+        if bForceNewTrain is False:
+            Epoch = self.Args.get("epoch")
+            if Epoch is not None:
+                Epoch = int(Epoch)
+                bIncTrain = True
+
+        if bForceNewTrain or bIncTrain is False :
             self.Model.Train(inDataLoader, 0, *inArgs, **inKWArgs)
+        else :
+            if Epoch is None:
+                Epoch = -1
+            self.Model.IncTrain(inDataLoader, Epoch, *inArgs, **inKWArgs)
 
     def Eval(self, *inArgs, **inKWArgs) :
         Epoch = self.Args.get("epoch")

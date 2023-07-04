@@ -71,12 +71,16 @@ class BaseArchiver(object):
             torch.save(Model.state_dict(), ModelFullPath)
             print("Save Model:" + ModelFullPath)
 
-    def Load(self, inEpochIndex : int = -1, inForTrain : bool = True) -> None :
+    def Load(self, inEpochIndex : int = -1, inForTrain : bool = True):
         for Name, _ in self.NNModelDict.items():
             FilePath, FileName = self.GetFileFromValidLatestTimestampDirPath(Name, inEpochIndex)
+            if FilePath is None:
+                return False
             ModelFullPath = os.path.join(FilePath, FileName)
             self.NNModelDict[Name].load_state_dict(torch.load(ModelFullPath))
             print("Load Model:" + ModelFullPath)
+
+        return True
 
     def LoadLastest(self, inForTrain : bool = True):
         MaxEpochIndex = -1
