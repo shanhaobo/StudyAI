@@ -28,6 +28,7 @@ class BaseModel(object):
                 EpochIndex = 0
             else:
                 EpochIndex += 1
+
             self.Trainer.Train(inDataLoader, EpochIndex, *inArgs, **inKWArgs)
 
     def LoadLastest(self, *inArgs, **inKWArgs):
