@@ -67,32 +67,25 @@ class BaseTrainer(abc.ABC):
         self.EndEpochTrain(*inArgs, **inKWArgs)
 
 
-    def __DontOverride__Train(self, inDataLoader:DataLoader, inNumEpochs : int = 0, inStartEpochIndex : int = 0, *inArgs, **inKWArgs) -> None:
+    def __DontOverride__Train(self, inDataLoader:DataLoader, inStartEpochIndex : int = 0, *inArgs, **inKWArgs) -> None:
         # Begin Train
         # Create Optimizer & Loss Function
         self._CreateOptimizer()
         self._CreateLossFN()
         self.BeginTrain(*inArgs, **inKWArgs)
 
-        if inNumEpochs <= 0 :
-            self.CurrEpochIndex = inStartEpochIndex
-            while self._Continue():
-                self.__DontOverride__EpochTrain(inDataLoader, *inArgs, **inKWArgs)
-                self.CurrEpochIndex += 1
-                if self.SoftExit:
-                    break
-        else:
-            # For Each Epoch Train
-            for self.CurrEpochIndex in range(inStartEpochIndex, inNumEpochs) :
-                self.__DontOverride__EpochTrain(inDataLoader, *inArgs, **inKWArgs)
-                if self.SoftExit:
-                    break
+        self.CurrEpochIndex = inStartEpochIndex
+        while self._Continue():
+            self.__DontOverride__EpochTrain(inDataLoader, *inArgs, **inKWArgs)
+            self.CurrEpochIndex += 1
+            if self.SoftExit:
+                break
         
         # End Train
         self.EndTrain(*inArgs, **inKWArgs)
 
-    def Train(self, inDataLoader : DataLoader, inNumEpochs : int = 0, inStartEpochIndex : int = 0, *inArgs, **inKWArgs) -> None:
-        self.__DontOverride__Train(inDataLoader, inNumEpochs, inStartEpochIndex, *inArgs, **inKWArgs)
+    def Train(self, inDataLoader : DataLoader, inStartEpochIndex : int = 0, *inArgs, **inKWArgs) -> None:
+        self.__DontOverride__Train(inDataLoader, inStartEpochIndex, *inArgs, **inKWArgs)
 
     def _Continue(self)->bool:
         return True

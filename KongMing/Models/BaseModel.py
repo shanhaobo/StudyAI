@@ -19,10 +19,16 @@ class BaseModel(object):
         self.Trainer.Train(inDataLoader, inNumEpochs, 0, *inArgs, **inKWArgs)
 
     def IncTrain(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
-        EpochIndex = self.Archiver.LoadLastest(True)
-        if (EpochIndex < 0) : 
-            EpochIndex = 0
-        self.Trainer.Train(inDataLoader, inNumEpochs, EpochIndex, *inArgs, **inKWArgs)
+        if inNumEpochs > 0:
+            if self.Archiver.Load(inNumEpochs, True):
+                self.Trainer.Train(inDataLoader, inNumEpochs + 1, *inArgs, **inKWArgs)
+        else:
+            EpochIndex = self.Archiver.LoadLastest(True)
+            if (EpochIndex < 0) : 
+                EpochIndex = 0
+            else:
+                EpochIndex += 1
+            self.Trainer.Train(inDataLoader, EpochIndex, *inArgs, **inKWArgs)
 
     def LoadLastest(self, *inArgs, **inKWArgs):
         EpochIndex = self.Archiver.LoadLastest(False)
