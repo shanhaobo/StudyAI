@@ -72,6 +72,7 @@ class BaseArchiver(object):
             print("Save Model:" + ModelFullPath)
 
     def Load(self, inEpochIndex : int = -1, inForTrain : bool = True):
+
         for Name, _ in self.NNModelDict.items():
             FilePath, FileName = self.GetFileFromValidLatestTimestampDirPath(Name, inEpochIndex)
             if FilePath is None:

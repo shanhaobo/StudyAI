@@ -21,13 +21,11 @@ class BaseModel(object):
     def IncTrain(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
         if inNumEpochs > 0:
             if self.Archiver.Load(inNumEpochs, True):
-                self.Trainer.Train(inDataLoader, inNumEpochs + 1, *inArgs, **inKWArgs)
+                self.Trainer.Train(inDataLoader, inNumEpochs, *inArgs, **inKWArgs)
         else:
             EpochIndex = self.Archiver.LoadLastest(True)
             if (EpochIndex < 0) : 
                 EpochIndex = 0
-            else:
-                EpochIndex += 1
 
             self.Trainer.Train(inDataLoader, EpochIndex, *inArgs, **inKWArgs)
 

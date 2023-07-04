@@ -156,29 +156,36 @@ class BaseFileManager() :
         return LeafDirFullPath, FileName
     
     
-    def GetFilePathAndNameFromTimestampDirPathByEpoch(self, **inKWArgs) :
+    def GetFilePathAndNameFromTimestampDirPathByEpoch_Root(self, **inKWArgs) :
         LeafDirName = self.MakeLeafDirName(**inKWArgs)
         if LeafDirName is None:
-            return None, None
+            return None, None, None
         
         FileName = self.MakeFileName(**inKWArgs)
         if FileName is None:
-            return None, None
+            return None, None, None
         
         if FileName.endswith(self.Extension) == False:
             FileName = FileName + self.Extension
         
         AllTimestampDirNames = self.GetAllTimestampDirNames()
         if len(AllTimestampDirNames) == 0:
-            return None, None
+            return None, None, None
         
         AllTimestampDirNames.sort(key=lambda x: int(x), reverse=True)
 
         for DirName in AllTimestampDirNames:
-            ModelFilePath = os.path.join(self.RawRootPath, DirName, LeafDirName)
+            ModelTimestampFilePath = os.path.join(self.RawRootPath, DirName)
+            ModelFilePath = os.path.join(ModelTimestampFilePath, LeafDirName)
             ModelFile = os.path.join(ModelFilePath, FileName)
 
             if os.path.exists(ModelFile):
-                return ModelFilePath, FileName
+                return ModelTimestampFilePath, ModelFilePath, FileName
 
-        return None, None
+        return None, None, None
+
+    def GetFilePathAndNameFromTimestampDirPathByEpoch(self, **inKWArgs) :
+        RootPath, FilePath, FileName, = self.GetFilePathAndNameFromTimestampDirPathByEpoch_Root(**inKWArgs)
+        if self.__RootPath is None :
+            self.__RootPath = RootPath
+        return FilePath, FileName
