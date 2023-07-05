@@ -34,19 +34,20 @@ class GANModel(BaseModel):
 
         super().__init__(NewTrainer, NewArchiver)
 
+        g = self._SumParameters(inGenerator)
+        d = self._SumParameters(inDiscriminator)
+        print("Sum of Params:{:,} | Generator Params:{:,} | Discriminator Params:{:,}".format(g + d, g, d))
+
     ###########################################################################################
-
-    def Train(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
-        super().Train(inDataLoader, inNumEpochs, *inArgs, **inKWArgs)
-
-    def IncTrain(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
-        super().IncTrain(inDataLoader, inNumEpochs, *inArgs, **inKWArgs)
 
     def Eval(self, *inArgs, **inKWArgs):
         if (super().Eval(*inArgs, **inKWArgs) == False) :
             return None
+        
+        BatchSize = inKWArgs["inBatchSize"]
+
         self.Trainer.Generator.eval()
-        return self.Trainer.Generator(torch.randn((1, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
+        return self.Trainer.Generator(torch.randn((BatchSize, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
 
     ###########################################################################################
 

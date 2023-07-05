@@ -4,8 +4,11 @@ import torchvision
 from datetime import datetime
 
 from torchvision.utils import save_image
+###################################
 import os
-
+OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
+os.makedirs(OutputPath, exist_ok=True)
+###################################
 from KongMing.Models.DiffusionModel.DDPMModel import DDPMModel
 
 from KongMing.Utils.Executor import Executor
@@ -27,7 +30,7 @@ if __name__ == "__main__" :
         inColorChanNum= image_channel,
         inLearningRate=0.00001,
         inTimesteps=1000,
-        inModeRootlFolderPath="./output/005_DDPM/trained_models/"
+        inModeRootlFolderPath="{}/trained_models".format(OutputPath)
     )
     Exec = Executor(DDPM)
 
@@ -43,7 +46,7 @@ if __name__ == "__main__" :
             transforms.Normalize((-0.5,), (2.0,)),
             transforms.Lambda(lambda t : (t + 1) * 0.5)
         ])
-        Path = "output/005_DDPM/images"
+        Path = "{}/images".format(OutputPath)
         os.makedirs(Path, exist_ok=True)
         save_image(reverse_transform(GenImage), "{}/{}.png".format(Path, datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else:

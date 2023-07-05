@@ -39,8 +39,12 @@ class MNISTDataset(torch.utils.data.Dataset):
         return self.images[index]
 '''
 
+EmbeddingDim    = 64
+ImageDim        = 64
+ImageChannel    = 3
+
 if __name__ == "__main__" :
-    GAN = DCGANModel(128, 3, (128, 1, 1), inModeRootlFolderPath="{}/trained_models")
+    GAN = DCGANModel(EmbeddingDim, ImageChannel, (EmbeddingDim, 3, 3), inModelRootlFolderPath="{}/trained_models".format(OutputPath))
     Exec = Executor(GAN)
 
     if Exec.IsExistModel() and Exec.ReadyTrain() == False:
