@@ -10,7 +10,11 @@ from KongMing.Models.GANs.DCGANModel import DCGANModel
 from datetime import datetime
 
 from KongMing.Utils.Executor import Executor
-
+###################################
+import os
+OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
+os.makedirs(OutputPath, exist_ok=True)
+###################################
 '''
 # 定义数据集
 class MNISTDataset(torch.utils.data.Dataset):
@@ -36,7 +40,7 @@ class MNISTDataset(torch.utils.data.Dataset):
 '''
 
 if __name__ == "__main__" :
-    GAN = DCGANModel(128, 3, (128, 1, 1), inModeRootlFolderPath="./output/004_DCGAN/CF/trained_models")
+    GAN = DCGANModel(128, 3, (128, 1, 1), inModeRootlFolderPath="{}/trained_models")
     Exec = Executor(GAN)
 
     if Exec.IsExistModel() and Exec.ReadyTrain() == False:
@@ -47,7 +51,9 @@ if __name__ == "__main__" :
             transforms.Normalize((-0.5,), (2.0,)),
             transforms.Lambda(lambda t : (t + 1) * 0.5)
         ])
-        save_image(transform(GenImage), "./output/004_DCGAN/CF/images/{}.png".format(datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
+        ImagetFolderPath = "{}/images".format(OutputPath)
+        os.makedirs(ImagetFolderPath, exist_ok=True)
+        save_image(transform(GenImage), "{}/{}.png".format(ImagetFolderPath, datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else :
         #dataset = MNISTDataset()
         transform = transforms.Compose([
@@ -59,4 +65,4 @@ if __name__ == "__main__" :
         #dataset = datasets.ImageFolder(root='D:/__DevAI__/Datasets/cartoon_faces', transform=transform)
         dataset = datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
         dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
-        Exec.Train(dataloader, SaveModelInterval=1)
+        Exec.Train(dataloader, SaveModelInterval=10)
