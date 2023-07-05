@@ -16,19 +16,26 @@ class BaseArchiver(object):
 
         self.SaveEpochIndex             = -1
         self.NNModelDict                = {}
+        self.NNModelNameOnlyForEval     = []
 
 ############################################################################
     def GetCurrTrainRootPath(self):
         return self.FileNameManager.MakeAndGetRootPath()
 ############################################################################
 
-    def IsExistModel(self, inForTrain : bool = True) -> bool:
-        for Name, Model in self.NNModelDict.items():
+    def IsExistModel(self) -> bool:
+        for Name, _ in self.NNModelDict.items():
             Path, _ = self.FindLatestModelFile(Name) 
             if Path is None:
                 return False
             
         return True
+
+############################################################################
+
+    def Eval(self):
+        for Name in self.NNModelNameOnlyForEval:
+            del self.NNModelDict[Name]
 
 ############################################################################
 
@@ -71,8 +78,7 @@ class BaseArchiver(object):
             torch.save(Model.state_dict(), ModelFullPath)
             print("Save Model:" + ModelFullPath)
 
-    def Load(self, inEpochIndex : int = -1, inForTrain : bool = True):
-
+    def Load(self, inEpochIndex : int = -1):
         for Name, _ in self.NNModelDict.items():
             FilePath, FileName = self.GetFileFromValidLatestTimestampDirPath(Name, inEpochIndex)
             if FilePath is None:
@@ -83,7 +89,7 @@ class BaseArchiver(object):
 
         return True
 
-    def LoadLastest(self, inForTrain : bool = True):
+    def LoadLastest(self):
         MaxEpochIndex = -1
         for Name, _ in self.NNModelDict.items():
             EpochIndex = self.LoadLastestByModelName(Name)

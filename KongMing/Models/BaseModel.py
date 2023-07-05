@@ -39,10 +39,12 @@ class BaseModel(object):
     def Load(self, inEpoch, *inArgs, **inKWArgs):
         self.Archiver.Load(inEpoch, False)
         
-    def IsExistModels(self, inForTrain : bool = True, *inArgs, **inKWArgs) -> bool:
-        return self.Archiver.IsExistModel(inForTrain, *inArgs, **inKWArgs)
+    def IsExistModels(self) -> bool:
+        return self.Archiver.IsExistModel()
     
     def Eval(self, inEpoch = -1, *inArgs, **inKWArgs):
+        self.Archiver.Eval()
+
         if inEpoch < 0:
             self.LoadLastest(*inArgs, **inKWArgs)
         else:
