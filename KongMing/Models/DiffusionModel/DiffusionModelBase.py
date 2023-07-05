@@ -1,10 +1,12 @@
 import torch
 import torch.nn.functional as F
 
+from KongMing.Models.Zoo.EMA import EMA
+
 from .Utils import BetaSchedule
 
 class DiffusionModel(torch.nn.Module):
-    def __init__(self, inTimesteps) -> None:
+    def __init__(self, inTimesteps, inNNModule:torch.nn.Module) -> None:
         super().__init__()
 
         self.Timesteps             = inTimesteps
@@ -35,6 +37,8 @@ class DiffusionModel(torch.nn.Module):
         RegisterBufferF32("SqrtOneMinusAlphasCumprod",  SqrtOneMinusAlphasCumprod)
 
         RegisterBufferF32("PosteriorVariance",          PosteriorVariance)
+
+        self.EMA             = EMA(inNNModule, 0.999)
 
     @staticmethod
     def Extract(inData, inIndex, inShape):

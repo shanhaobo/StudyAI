@@ -6,8 +6,6 @@ import torch.nn.functional as F
 
 from .BaseTrainer import BaseTrainer
 
-from KongMing.Models.Zoo.EMA import EMA
-
 import pandas as pd
 
 class DDPMTrainer(BaseTrainer) :
@@ -23,8 +21,6 @@ class DDPMTrainer(BaseTrainer) :
         self.DiffusionMode  = inDiffusionMode.to(self.Device)
 
         self.Timesteps      = inTimesteps
-
-        self.EMA            = EMA(inNN, 0.999)
 
         self.EndBatchTrain.add(self.DDPMEndBatchTrain)
         self.EndEpochTrain.add(self.DDPMEndEpochTrain)
@@ -65,6 +61,7 @@ class DDPMTrainer(BaseTrainer) :
         loss = self.LossFN(Noise, PredictedNoise)
 
         self._BackPropagate(self.Optimizer, loss)
+        self.DiffusionMode.EMA.update_parameters(self.NNModel)
 
         self.CurrBatchDDPMLoss = loss.item()
 
