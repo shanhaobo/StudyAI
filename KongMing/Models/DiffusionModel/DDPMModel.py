@@ -43,7 +43,7 @@ class DDPMModel(BaseModel) :
         self.DiffusionModel.eval()
         self.NNModel.eval()
         return self.DiffusionModel.Sample(
-            self.NNModel,
+            self.DiffusionModel.EMA,
             inImageSize=inKWArgs["inImageSize"],
             inColorChanNum=inKWArgs["inColorChanNum"],
             inBatchSize=inKWArgs["inBatchSize"]
