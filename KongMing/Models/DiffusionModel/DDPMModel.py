@@ -41,7 +41,6 @@ class DDPMModel(BaseModel) :
         if (super().Eval(*inArgs, **inKWArgs) == False) :
             return None
         self.DiffusionModel.eval()
-        self.NNModel.eval()
         return self.DiffusionModel.Sample(
             self.DiffusionModel.EMA,
             inImageSize=inKWArgs["inImageSize"],

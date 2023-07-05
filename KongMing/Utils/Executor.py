@@ -59,7 +59,7 @@ class Executor :
         return False
     
     def IsExistModel(self) :
-        return self.Model.IsExistModels(True)
+        return self.Model.IsExistModels()
     
     def ReadyTrain(self) :
         for i in sys.argv :
