@@ -34,7 +34,7 @@ if __name__ == "__main__" :
     )
     Exec = Executor(DDPM)
 
-    if Exec.IsExistModel() and Exec.ReadyTrain() == False:
+    if (Exec.ForceTrain() == False) and Exec.IsExistModel():
         GenImage = Exec.Eval(
             inImageSize=image_size,
             inColorChanNum=image_channel,

@@ -47,7 +47,7 @@ if __name__ == "__main__" :
     GAN = DCGANModel(EmbeddingDim, ImageChannel, (EmbeddingDim, 3, 3), inModelRootlFolderPath="{}/trained_models".format(OutputPath))
     Exec = Executor(GAN)
 
-    if Exec.IsExistModel() and Exec.ReadyTrain() == False:
+    if (Exec.ForceTrain() == False) and Exec.IsExistModel():
         GenImage = Exec.Eval()
         print(GenImage.size())
         

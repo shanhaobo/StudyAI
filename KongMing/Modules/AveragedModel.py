@@ -47,3 +47,14 @@ class AveragedModel(Module):
                                                  self.n_averaged.to(device)))
         self.n_averaged += 1
 
+    def override_parameters(self, model):
+        self_param = (
+            itertools.chain(self.module.parameters(), self.module.buffers())
+            if self.use_buffers else self.parameters()
+        )
+        model_param = (
+            itertools.chain(model.parameters(), model.buffers())
+            if self.use_buffers else model.parameters()
+        )
+        for p_swa, p_model in zip(self_param, model_param):
+            p_model.copy_(p_swa.clone())

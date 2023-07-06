@@ -60,7 +60,6 @@ class DownsampleModule2D(nn.Module):
     def forward(self, inData):
         return self.Blocks(inData)
 
-
 class UpsampleModule2D(nn.Module):
     def __init__(self, inInputDim) -> None:
         super().__init__()
@@ -72,4 +71,3 @@ class UpsampleModule2D(nn.Module):
 
     def forward(self, inData):
         return self.Blocks(inData)
-
