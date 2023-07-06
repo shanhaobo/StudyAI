@@ -23,17 +23,17 @@ class DCGANModel(GANModel):
 
         # forward method
         def forward(self, input):
-            print(f"Generator:input({input.size()})")
+            #print(f"Generator:input({input.size()})")
             x = F.relu(self.deconv1_bn(self.deconv1(input)))
-            print(f"Generator:deconv1({x.size()})")
+            #print(f"Generator:deconv1({x.size()})")
             x = F.relu(self.deconv2_bn(self.deconv2(x)))
-            print(f"Generator:deconv2({x.size()})")
+            #print(f"Generator:deconv2({x.size()})")
             x = F.relu(self.deconv3_bn(self.deconv3(x)))
-            print(f"Generator:deconv3({x.size()})")
+            #print(f"Generator:deconv3({x.size()})")
             x = F.relu(self.deconv4_bn(self.deconv4(x)))
-            print(f"Generator:deconv4({x.size()})")
+            #print(f"Generator:deconv4({x.size()})")
             x = torch.tanh(self.deconv5(x))
-            print(f"Generator:deconv5({x.size()})")
+            #print(f"Generator:deconv5({x.size()})")
 
             return x
 

@@ -8,8 +8,9 @@ class Executor :
     def __init__(self, inModel : BaseModel) -> None:
         self.Model = inModel
 
+        self.ExecutorKVArgs = {}
+        self.ExecutorArgs = []
         self.KVArgs = {}
-        self.Args = []
         self.GetArgs()
         
         self.bForceNewTrain     = False
@@ -24,15 +25,15 @@ class Executor :
     def Train(self, inDataLoader:DataLoader, *inArgs, **inKWArgs) :
 
         if self.bForceNewTrain or self.bIncTrain is False :
-            self.Model.Train(inDataLoader, 0, self.EpochIterCount, *inArgs, **inKWArgs)
+            self.Model.Train(inDataLoader, 0, self.EpochIterCount, *inArgs, **{**inKWArgs, **self.KVArgs})
         else :
-            self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, *inArgs, **inKWArgs)
+            self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, *inArgs, **{**inKWArgs, **self.KVArgs})
 
     def Eval(self, *inArgs, **inKWArgs) :
-        return self.Model.Eval(self.StartEpochIndex, *inArgs, **inKWArgs)
+        return self.Model.Eval(self.StartEpochIndex, *inArgs, **{**inKWArgs, **self.KVArgs})
 
     def Load(self, *inArgs, **inKWArgs) :
-        return self.Model.LoadLastest(*inArgs, **inKWArgs)
+        return self.Model.LoadLastest(*inArgs, **{**inKWArgs, **self.KVArgs})
     
     def IsExistModel(self) :
         return self.Model.IsExistModels()
@@ -45,16 +46,20 @@ class Executor :
     def GetArgs(self):
         for i in sys.argv :
             tmpi = i.casefold()
-            pattern = r'^-[\w]+=[\w]+'
-            if bool(re.match(pattern, tmpi)):
+            Pattern = r'^[-]{1,2}[\w]+=[\w]+'
+            if bool(re.match(Pattern, tmpi)):
                 key, value = tmpi.split("=")
-                key = key.replace("-", "")
-                self.KVArgs[key]=value
+                if key.startswith("--"):
+                    key = key.replace("--", "")
+                    self.KVArgs[key]=value
+                else:
+                    key = key.replace("-", "")
+                    self.ExecutorKVArgs[key]=value
             else:
-                self.Args.append(tmpi)
+                self.ExecutorArgs.append(tmpi)
 
     def AnalyzeArgs(self):
-        for CurrArg in self.Args:
+        for CurrArg in self.ExecutorArgs:
             if (CurrArg == "newtrain" or CurrArg == "new") :
                 self.bForceNewTrain = True
             elif (CurrArg == "inctrain" or CurrArg == "inc"):
@@ -65,12 +70,12 @@ class Executor :
             else:
                 pass
 
-        StartEpochIndex = self.KVArgs.get("epoch")
+        StartEpochIndex = self.ExecutorKVArgs.get("epoch")
         if StartEpochIndex is not None:
             self.StartEpochIndex = int(StartEpochIndex)
             self.bIncTrain = True
 
-        EpochIterCount = self.KVArgs.get("epochitercount")
+        EpochIterCount = self.ExecutorKVArgs.get("epochitercount")
         if EpochIterCount is not None:
             self.EpochIterCount =  int(EpochIterCount)
 

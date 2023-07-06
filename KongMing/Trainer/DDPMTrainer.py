@@ -22,6 +22,8 @@ class DDPMTrainer(BaseTrainer) :
 
         self.Timesteps      = inTimesteps
 
+        self.BeginTrain.add(self.DDPMBeginTrain)
+
         self.EndBatchTrain.add(self.DDPMEndBatchTrain)
         self.EndEpochTrain.add(self.DDPMEndEpochTrain)
 
@@ -96,6 +98,11 @@ class DDPMTrainer(BaseTrainer) :
         self.LossData["Batch"].clear()
         self.LossData["Loss"].clear()
         self.LossData["AvgLoss"].clear()
+
+    def DDPMBeginTrain(self, *inArgs, **inKWArgs) -> None:
+        OverrideEMA = inKWArgs.get("ema_override")
+        if OverrideEMA is not None and OverrideEMA == "true":
+            self.DiffusionMode.EMA.override_parameters(self.NNModel)
 
     def _Continue(self)->bool:
         AverageLoss = self.SumLoss / self.LastBatch
