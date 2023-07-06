@@ -30,14 +30,14 @@ class BaseModel(object):
             self.Trainer.Train(inDataLoader, EpochIndex, *inArgs, **inKWArgs)
 
     def LoadLastest(self, *inArgs, **inKWArgs):
-        EpochIndex = self.Archiver.LoadLastest(False)
+        EpochIndex = self.Archiver.LoadLastest()
         if (EpochIndex <= 0) :
             return False
         self.Trainer.CurrEpochIndex = EpochIndex
         return True
     
     def Load(self, inEpoch, *inArgs, **inKWArgs):
-        self.Archiver.Load(inEpoch, False)
+        self.Archiver.Load(inEpoch)
         
     def IsExistModels(self) -> bool:
         return self.Archiver.IsExistModel()

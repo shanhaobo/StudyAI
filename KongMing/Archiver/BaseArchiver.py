@@ -16,7 +16,7 @@ class BaseArchiver(object):
 
         self.SaveEpochIndex             = -1
         self.NNModelDict                = {}
-        self.NNModelNameOnlyForEval     = []
+        self.NNModelNameOnlyForTrain     = []
 
 ############################################################################
     def GetCurrTrainRootPath(self):
@@ -34,7 +34,7 @@ class BaseArchiver(object):
 ############################################################################
 
     def Eval(self):
-        for Name in self.NNModelNameOnlyForEval:
+        for Name in self.NNModelNameOnlyForTrain:
             del self.NNModelDict[Name]
 
 ############################################################################

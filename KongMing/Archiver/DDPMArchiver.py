@@ -16,5 +16,5 @@ class DDPMArchiver(BaseArchiver):
         self.NNModelDict["NNModel"] = self.NNModel
         self.NNModelDict["DiffusionModel"] = self.DiffusionModel
 
-        self.NNModelNameOnlyForEval.append("DiffusionModel")
+        self.NNModelNameOnlyForTrain.append("NNModel")
         

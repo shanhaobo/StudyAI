@@ -17,4 +17,4 @@ class GANArchiver(MultiNNArchiver):
         self.NNModelDict["Generator"] = self.Generator
         self.NNModelDict["Discriminator"] = self.Discriminator
         
-        self.NNModelNameOnlyForEval.append("Generator")
+        self.NNModelNameOnlyForTrain.append("Discriminator")
