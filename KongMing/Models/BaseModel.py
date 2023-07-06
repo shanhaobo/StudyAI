@@ -15,19 +15,18 @@ class BaseModel(object):
         self.Trainer.EndTrain.add(self.__BMEndTrain)
 
     ###########################################################################################
-    def Train(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
-        self.Trainer.Train(inDataLoader, inNumEpochs, 0, *inArgs, **inKWArgs)
+    def Train(self, inDataLoader : DataLoader, inStartEpochNum : int = 0, inEpochIterCount : int = 0, *inArgs, **inKWArgs) -> None:
+        self.Trainer.Train(inDataLoader, inStartEpochNum, inEpochIterCount, *inArgs, **inKWArgs)
 
-    def IncTrain(self, inDataLoader : DataLoader, inNumEpochs : int = 0, *inArgs, **inKWArgs) -> None:
-        if inNumEpochs > 0:
-            if self.Archiver.Load(inNumEpochs, True):
-                self.Trainer.Train(inDataLoader, inNumEpochs, *inArgs, **inKWArgs)
+    def IncTrain(self, inDataLoader : DataLoader, inStartEpochNum : int = 0, inEpochIterCount : int = 0, *inArgs, **inKWArgs) -> None:
+        if inStartEpochNum > 0 and self.Archiver.Load(inStartEpochNum):
+            pass
         else:
-            EpochIndex = self.Archiver.LoadLastest(True)
-            if (EpochIndex < 0) : 
-                EpochIndex = 0
+            inStartEpochNum = self.Archiver.LoadLastest()
+            if (inStartEpochNum < 0) : 
+                inStartEpochNum = 0
 
-            self.Trainer.Train(inDataLoader, EpochIndex, *inArgs, **inKWArgs)
+        self.Trainer.Train(inDataLoader, inStartEpochNum, inEpochIterCount, *inArgs, **inKWArgs)
 
     def LoadLastest(self, *inArgs, **inKWArgs):
         EpochIndex = self.Archiver.LoadLastest()

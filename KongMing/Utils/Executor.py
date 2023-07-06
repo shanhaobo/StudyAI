@@ -23,17 +23,22 @@ class Executor :
                 bForceNewTrain = True
         
         if bForceNewTrain is False:
-            Epoch = self.Args.get("epoch")
-            if Epoch is not None:
-                Epoch = int(Epoch)
+            StartEpochIndex = self.Args.get("epoch")
+            if StartEpochIndex is not None:
+                StartEpochIndex = int(StartEpochIndex)
                 bIncTrain = True
 
+        EpochIterCount = 0
+        EICformArgs = self.Args.get("epochitercount")
+        if EICformArgs is not None:
+            EpochIterCount =  int(EICformArgs)
+
         if bForceNewTrain or bIncTrain is False :
-            self.Model.Train(inDataLoader, 0, *inArgs, **inKWArgs)
+            self.Model.Train(inDataLoader, 0, EpochIterCount, *inArgs, **inKWArgs)
         else :
-            if Epoch is None:
-                Epoch = -1
-            self.Model.IncTrain(inDataLoader, Epoch, *inArgs, **inKWArgs)
+            if StartEpochIndex is None:
+                StartEpochIndex = -1
+            self.Model.IncTrain(inDataLoader, StartEpochIndex, EpochIterCount, *inArgs, **inKWArgs)
 
     def Eval(self, *inArgs, **inKWArgs) :
         Epoch = self.Args.get("epoch")

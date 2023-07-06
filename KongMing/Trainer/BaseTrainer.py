@@ -28,6 +28,8 @@ class BaseTrainer(abc.ABC):
         self.CurrEpochIndex     = 0
         self.CurrBatchIndex     = 0
 
+        self.EndEpochIndex      = 0
+
         self.SoftExit           = False
         keyboard.add_hotkey('ctrl + x', self.__SoftExit)
 
@@ -67,7 +69,7 @@ class BaseTrainer(abc.ABC):
         self.EndEpochTrain(*inArgs, **inKWArgs)
 
 
-    def __DontOverride__Train(self, inDataLoader:DataLoader, inStartEpochIndex : int = 0, *inArgs, **inKWArgs) -> None:
+    def __DontOverride__Train(self, inDataLoader:DataLoader, inStartEpochIndex : int = 0, inEpochIterCount : int = 0, *inArgs, **inKWArgs) -> None:
         # Begin Train
         # Create Optimizer & Loss Function
         self._CreateOptimizer()
@@ -75,7 +77,8 @@ class BaseTrainer(abc.ABC):
         self.BeginTrain(*inArgs, **inKWArgs)
 
         self.CurrEpochIndex = inStartEpochIndex
-        while self._Continue():
+        self.EndEpochIndex = (inStartEpochIndex + inEpochIterCount) if (inEpochIterCount > 0) else 0
+        while self._Continue() and self.__Continue_EpochIterCount():
             self.__DontOverride__EpochTrain(inDataLoader, *inArgs, **inKWArgs)
             self.CurrEpochIndex += 1
             if self.SoftExit:
@@ -84,11 +87,17 @@ class BaseTrainer(abc.ABC):
         # End Train
         self.EndTrain(*inArgs, **inKWArgs)
 
-    def Train(self, inDataLoader : DataLoader, inStartEpochIndex : int = 0, *inArgs, **inKWArgs) -> None:
-        self.__DontOverride__Train(inDataLoader, inStartEpochIndex, *inArgs, **inKWArgs)
+    def Train(self, inDataLoader : DataLoader, inStartEpochIndex : int = 0, inEpochIterCount : int = 0, *inArgs, **inKWArgs) -> None:
+        self.__DontOverride__Train(inDataLoader, inStartEpochIndex, inEpochIterCount, *inArgs, **inKWArgs)
 
     def _Continue(self)->bool:
         return True
+    
+    def __Continue_EpochIterCount(self) -> bool:
+        if self.EndEpochIndex <= 0:
+            return True
+        
+        return self.CurrEpochIndex < self.EndEpochIndex
 
     def __SoftExit(self):
         print("Soft Exiting......................")
