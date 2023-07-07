@@ -69,7 +69,7 @@ class BaseTrainer(abc.ABC):
         self.EndEpochTrain(inArgs, inKVArgs)
 
 
-    def __DontOverride__Train(self, inDataLoader:DataLoader, inStartEpochIndex : int = 0, inEpochIterCount : int = 0, inArgs, inKVArgs) -> None:
+    def __DontOverride__Train(self, inDataLoader:DataLoader, inStartEpochIndex : int, inEpochIterCount : int, inArgs, inKVArgs) -> None:
         # Begin Train
         # Create Optimizer & Loss Function
         self._CreateOptimizer()
@@ -87,7 +87,7 @@ class BaseTrainer(abc.ABC):
         # End Train
         self.EndTrain(inArgs, inKVArgs)
 
-    def Train(self, inDataLoader : DataLoader, inStartEpochIndex : int = 0, inEpochIterCount : int = 0, inArgs, inKVArgs) -> None:
+    def Train(self, inDataLoader : DataLoader, inStartEpochIndex : int, inEpochIterCount : int, inArgs, inKVArgs) -> None:
         self.__DontOverride__Train(inDataLoader, inStartEpochIndex, inEpochIterCount, inArgs, inKVArgs)
 
     def _Continue(self)->bool:
