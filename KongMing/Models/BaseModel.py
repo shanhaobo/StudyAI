@@ -44,7 +44,7 @@ class BaseModel(object):
     def Eval(self, inEpoch = -1, *inArgs, **inKWArgs):
         self.Archiver.Eval()
 
-        if inEpoch < 0:
+        if inEpoch <= 0:
             self.LoadLastest(*inArgs, **inKWArgs)
         else:
             self.Load(inEpoch)
