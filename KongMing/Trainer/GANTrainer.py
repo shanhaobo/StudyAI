@@ -47,7 +47,7 @@ class GANTrainer(MultiNNTrainer):
         return self.LossFN(DiscriminatorScores, FakeLabels)
 
 
-    def _BatchTrain(self, inBatchData, inBatchLabel, *inArgs, **inKWArgs) :
+    def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
         # get BatchSize
         nBatchSize = inBatchData.size(0)
         
@@ -76,7 +76,7 @@ class GANTrainer(MultiNNTrainer):
 
 ###########################################################################################
 
-    def MyEndBatchTrain(self, *inArgs, **inKWArgs) -> None:
+    def MyEndBatchTrain(self, inArgs, inKVArgs) -> None:
         NowStr  = datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]")
         print(
             "{} | Epoch:{:0>4d} | Batch:{:0>6d} | DLoss:{:.8f} | GLoss:{:.8f}".

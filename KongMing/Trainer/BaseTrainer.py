@@ -50,45 +50,45 @@ class BaseTrainer(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _BatchTrain(self, inBatchData, inBatchLabel, *inArgs, **inKWArgs) :
+    def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
         pass
     
-    def __DontOverride__EpochTrain(self, inDataLoader:DataLoader, *inArgs, **inKWArgs) -> None:
+    def __DontOverride__EpochTrain(self, inDataLoader:DataLoader, inArgs, inKVArgs) -> None:
         # Begin Epoch Train 
         # call BeginEpochTrain
-        self.BeginEpochTrain(*inArgs, **inKWArgs)
+        self.BeginEpochTrain(inArgs, inKVArgs)
 
         # For Each Batch Train
         for self.CurrBatchIndex, (CurrBatchData, CurrBatchLabel) in enumerate(inDataLoader):
-            self.BeginBatchTrain(*inArgs, **inKWArgs)
-            self._BatchTrain(CurrBatchData, CurrBatchLabel, *inArgs, **inKWArgs)
-            self.EndBatchTrain(*inArgs, **inKWArgs)
+            self.BeginBatchTrain(inArgs, inKVArgs)
+            self._BatchTrain(CurrBatchData, CurrBatchLabel, inArgs, inKVArgs)
+            self.EndBatchTrain(inArgs, inKVArgs)
         
         # End Epoch Train
         # call EndEpochTrain
-        self.EndEpochTrain(*inArgs, **inKWArgs)
+        self.EndEpochTrain(inArgs, inKVArgs)
 
 
-    def __DontOverride__Train(self, inDataLoader:DataLoader, inStartEpochIndex : int = 0, inEpochIterCount : int = 0, *inArgs, **inKWArgs) -> None:
+    def __DontOverride__Train(self, inDataLoader:DataLoader, inStartEpochIndex : int = 0, inEpochIterCount : int = 0, inArgs, inKVArgs) -> None:
         # Begin Train
         # Create Optimizer & Loss Function
         self._CreateOptimizer()
         self._CreateLossFN()
-        self.BeginTrain(*inArgs, **inKWArgs)
+        self.BeginTrain(inArgs, inKVArgs)
 
         self.CurrEpochIndex = inStartEpochIndex
         self.EndEpochIndex = (inStartEpochIndex + inEpochIterCount) if (inEpochIterCount > 0) else 0
         while self._Continue() and self.__Continue_EpochIterCount():
-            self.__DontOverride__EpochTrain(inDataLoader, *inArgs, **inKWArgs)
+            self.__DontOverride__EpochTrain(inDataLoader, inArgs, inKVArgs)
             self.CurrEpochIndex += 1
             if self.SoftExit:
                 break
         
         # End Train
-        self.EndTrain(*inArgs, **inKWArgs)
+        self.EndTrain(inArgs, inKVArgs)
 
-    def Train(self, inDataLoader : DataLoader, inStartEpochIndex : int = 0, inEpochIterCount : int = 0, *inArgs, **inKWArgs) -> None:
-        self.__DontOverride__Train(inDataLoader, inStartEpochIndex, inEpochIterCount, *inArgs, **inKWArgs)
+    def Train(self, inDataLoader : DataLoader, inStartEpochIndex : int = 0, inEpochIterCount : int = 0, inArgs, inKVArgs) -> None:
+        self.__DontOverride__Train(inDataLoader, inStartEpochIndex, inEpochIterCount, inArgs, inKVArgs)
 
     def _Continue(self)->bool:
         return True

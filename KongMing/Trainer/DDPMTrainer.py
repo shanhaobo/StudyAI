@@ -48,7 +48,7 @@ class DDPMTrainer(BaseTrainer) :
             self.LossFN = F.smooth_l1_loss
         pass
 
-    def _BatchTrain(self, inBatchData, inBatchLabel, *inArgs, **inKWArgs) :
+    def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
         # get BatchSize
         nBatchSize          = inBatchData.size(0)
         RealData            = inBatchData.to(self.Device)
@@ -72,7 +72,7 @@ class DDPMTrainer(BaseTrainer) :
 
 ###########################################################################################
 
-    def DDPMEndBatchTrain(self, *inArgs, **inKWArgs) -> None:
+    def DDPMEndBatchTrain(self, inArgs, inKVArgs) -> None:
         NowStr  = datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]")
         print(
             "{} | Epoch:{:0>4d} | Batch:{:0>6d} | Loss:{:.8f} | AverageLoss:{:.8f}".
@@ -90,7 +90,7 @@ class DDPMTrainer(BaseTrainer) :
         self.LossData["AvgLoss"].append(self.SumLoss / (self.CurrBatchIndex + 1))
 
 
-    def DDPMEndEpochTrain(self, *inArgs, **inKWArgs) -> None:
+    def DDPMEndEpochTrain(self, inArgs, inKVArgs) -> None:
         df = pd.DataFrame(self.LossData)
         os.makedirs(self.LogRootPath, exist_ok=True)
         df.to_csv("{}/loss.csv".format(self.LogRootPath), mode='a', index=False)
@@ -99,7 +99,7 @@ class DDPMTrainer(BaseTrainer) :
         self.LossData["Loss"].clear()
         self.LossData["AvgLoss"].clear()
 
-    def DDPMBeginTrain(self, *inArgs, **inKWArgs) -> None:
+    def DDPMBeginTrain(self, inArgs, inKVArgs) -> None:
         OverrideEMA = inKWArgs.get("ema_override")
         if OverrideEMA is not None and OverrideEMA == "true":
             self.DiffusionMode.EMA.override_parameters(self.NNModel)

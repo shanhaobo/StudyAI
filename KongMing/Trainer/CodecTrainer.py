@@ -13,7 +13,7 @@ class CodecTrainer(MultiNNTrainer) :
         self.Encoder = inEncoder
         self.Decoder = inDecoder
 
-    def _BatchTrain(self, inBatchData, inBatchLabel, *inArgs, **inKWArgs) :
+    def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
         # get BatchSize
         nBatchSize = inBatchData.size(0)
         

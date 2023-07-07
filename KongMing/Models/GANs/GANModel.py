@@ -42,11 +42,11 @@ class GANModel(BaseModel):
 
     ###########################################################################################
 
-    def Eval(self, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None):
-        if (super().Eval(inArgs, inKWArgs) == False) :
+    def Eval(self, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
+        if (super().Eval(inEpoch, inArgs, inKVArgs) == False) :
             return None
         
-        BatchSize = inKWArgs["inBatchSize"]
+        BatchSize = inKVArgs["inBatchSize"]
 
         self.Trainer.Generator.eval()
         return self.Trainer.Generator(torch.randn((BatchSize, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))

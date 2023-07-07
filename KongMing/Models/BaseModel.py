@@ -24,10 +24,10 @@ class BaseModel(object):
         self.SaveInterval = 10
 
     ###########################################################################################
-    def Train(self, inDataLoader : DataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None) -> None:
-        self.Trainer.Train(inDataLoader, inStartEpochNum, inEpochIterCount, inArgs, inKWArgs)
+    def Train(self, inDataLoader : DataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
+        self.Trainer.Train(inDataLoader, inStartEpochNum, inEpochIterCount, inArgs, inKVArgs)
 
-    def IncTrain(self, inDataLoader : DataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None) -> None:
+    def IncTrain(self, inDataLoader : DataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
         if inStartEpochNum > 0 and self.Archiver.Load(inStartEpochNum):
             pass
         else:
@@ -35,26 +35,26 @@ class BaseModel(object):
             if (inStartEpochNum < 0) : 
                 inStartEpochNum = 0
 
-        self.Trainer.Train(inDataLoader, inStartEpochNum, inEpochIterCount, inArgs, inKWArgs)
+        self.Trainer.Train(inDataLoader, inStartEpochNum, inEpochIterCount, inArgs, inKVArgs)
 
-    def LoadLastest(self, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None):
+    def LoadLastest(self, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
         EpochIndex = self.Archiver.LoadLastest()
         if (EpochIndex <= 0) :
             return False
         self.Trainer.CurrEpochIndex = EpochIndex
         return True
     
-    def Load(self, inEpoch, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None):
+    def Load(self, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
         self.Archiver.Load(inEpoch)
         
     def IsExistModels(self) -> bool:
         return self.Archiver.IsExistModel()
     
-    def Eval(self, inEpoch, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None):
+    def Eval(self, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
         self.Archiver.Eval()
 
         if inEpoch <= 0:
-            self.LoadLastest(inArgs, inKWArgs)
+            self.LoadLastest(inArgs, inKVArgs)
         else:
             self.Load(inEpoch)
 
@@ -66,24 +66,24 @@ class BaseModel(object):
 
     ###########################################################################################
 
-    def __BMBeginTrain(self, *inArgs, **inKWArgs)->None:
+    def __BMBeginTrain(self, inArgs, inKVArgs)->None:
         print("Begin Training...")
-        SaveInterval = inKWArgs.get("saveinterval")
+        SaveInterval = inKVArgs.get("saveinterval")
         if SaveInterval is not None:
             self.SaveInterval = int(SaveInterval)
 
     ############################################
 
-    def __BMEndBatchTrain(self, *inArgs, **inKWArgs) -> None:
+    def __BMEndBatchTrain(self, inArgs, inKVArgs) -> None:
         pass
 
-    def __BMEndEpochTrain(self, *inArgs, **inKWArgs) -> None:
+    def __BMEndEpochTrain(self, inArgs, inKVArgs) -> None:
         if self.CurrEpochForceSave or ((self.Trainer.CurrEpochIndex + 1) % self.SaveInterval == 0):
             self.CurrEpochForceSave = False
             print("Epoch:{} Save Models".format(self.Trainer.CurrEpochIndex))
             self.Archiver.Save(self.Trainer.CurrEpochIndex)
 
-    def __BMEndTrain(self, *inArgs, **inKWArgs)->None:
+    def __BMEndTrain(self, inArgs, inKVArgs)->None:
         self.Archiver.Save(self.Trainer.CurrEpochIndex)
         print("End Train")
 

@@ -8,8 +8,8 @@ class ResNet(nn.Module):
         super().__init__()
         self.Func = inFunc
 
-    def forward(self, inData, *inArgs, **inKWArgs):
-        return self.Func(inData, *inArgs, **inKWArgs) + inData
+    def forward(self, inData, inArgs, inKVArgs):
+        return self.Func(inData, inArgs, inKVArgs) + inData
 
 # 
 class PreNorm(nn.Module):

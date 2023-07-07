@@ -12,7 +12,7 @@ class Executor :
         self.ExecutorKVArgs = CaseInsensitiveDict()
         self.ExecutorArgs = CaseInsensitiveList()
         self.KVArgs = CaseInsensitiveDict()
-        self.GetArgs()
+        self.__GetArgs()
         
         self.bForceNewTrain     = False
         self.bForceIncTrain     = False
@@ -21,19 +21,21 @@ class Executor :
 
         self.StartEpochIndex    = 0
         self.EpochIterCount     = 0
-        self.AnalyzeArgs()
+        self.__AnalyzeArgs()
 
-    def Train(self, inDataLoader:DataLoader, *inArgs, **inKWArgs) :
+###################################################################################################
+
+    def Train(self, inDataLoader:DataLoader, *inArgs, **inKVArgs) :
         if self.bForceNewTrain or self.bIncTrain is False :
-            self.Model.Train(inDataLoader, 0, self.EpochIterCount, CaseInsensitiveList(*inArgs), self.CombineKVArgs(**inKWArgs))
+            self.Model.Train(inDataLoader, 0, self.EpochIterCount, CaseInsensitiveList(*inArgs), self.__CombineKVArgs(**inKVArgs))
         else :
-            self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, CaseInsensitiveList(*inArgs), self.CombineKVArgs(**inKWArgs))
+            self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, CaseInsensitiveList(*inArgs), self.__CombineKVArgs(**inKVArgs))
 
-    def Eval(self, *inArgs, **inKWArgs) :
-        return self.Model.Eval(self.StartEpochIndex, CaseInsensitiveList(*inArgs), self.CombineKVArgs(**inKWArgs))
+    def Eval(self, *inArgs, **inKVArgs) :
+        return self.Model.Eval(self.StartEpochIndex, CaseInsensitiveList(*inArgs), self.__CombineKVArgs(**inKVArgs))
 
-    def Load(self, *inArgs, **inKWArgs) :
-        return self.Model.LoadLastest(CaseInsensitiveList(*inArgs), self.CombineKVArgs(**inKWArgs))
+    def Load(self, *inArgs, **inKVArgs) :
+        return self.Model.LoadLastest(CaseInsensitiveList(*inArgs), self.__CombineKVArgs(**inKVArgs))
     
     def IsExistModel(self) :
         return self.Model.IsExistModels()
@@ -43,7 +45,7 @@ class Executor :
 
 ###################################################################################################
 
-    def GetArgs(self):
+    def __GetArgs(self):
         for i in sys.argv :
             tmpi = i.casefold()
             Pattern = r'^[-]{1,2}[\w]+=[\w]+'
@@ -58,7 +60,7 @@ class Executor :
             else:
                 self.ExecutorArgs.append(tmpi)
 
-    def AnalyzeArgs(self):
+    def __AnalyzeArgs(self):
         for CurrArg in self.ExecutorArgs:
             if (CurrArg == "newtrain" or CurrArg == "new") :
                 self.bForceNewTrain = True
@@ -80,9 +82,9 @@ class Executor :
             self.EpochIterCount =  int(EpochIterCount)
 
 
-    def CombineKVArgs(self, **inKWArgs) :
+    def __CombineKVArgs(self, inKVArgs) :
         CombineDict = CaseInsensitiveDict(**self.KVArgs)
-        for key, value in inKWArgs.items():
+        for key, value in inKVArgs.items():
             kv = CombineDict.get(key)
             if kv is None:
                 CombineDict[key] = value

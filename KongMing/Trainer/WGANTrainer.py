@@ -44,7 +44,7 @@ class WGANTrainer(GANTrainer) :
         return 
 
     
-    def _BatchTrain(self, inBatchData, inBatchLabel, *inArgs, **inKWArgs) :
+    def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
         # get BatchSize
         nBatchSize = inBatchData.size(0)
         # Prepare Real and Fake Data

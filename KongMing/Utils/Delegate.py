@@ -2,9 +2,9 @@ class Delegate:
     def __init__(self):
         self.functions = []
 
-    def __call__(self, *inArgs, **inKWArgs) -> None:
+    def __call__(self, inArgs, inKVArgs) -> None:
         for func in self.functions:
-            func(*inArgs, **inKWArgs)
+            func(inArgs, inKVArgs)
 
     def add(self, func) -> None:
         self.functions.append(func)

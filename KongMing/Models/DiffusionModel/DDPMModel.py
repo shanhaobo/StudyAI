@@ -39,14 +39,13 @@ class DDPMModel(BaseModel) :
         b = self._SumParameters(self.DiffusionModel)
         print("Sum of Params:{:,} | Model Params:{:,} | Buffer Params:{:,}".format(m + b, m, b))
 
-    def Eval(self, inEpoch = -1, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None):
-        if (super().Eval(inEpoch, inArgs, inKWArgs) == False) :
+    def Eval(self, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
+        if (super().Eval(inEpoch, inArgs, inKVArgs) == False) :
             return None
         self.DiffusionModel.eval()
-        print(inKWArgs)
         return self.DiffusionModel.Sample(
             self.DiffusionModel.EMA,
-            inImageSize=inKWArgs["inImageSize"],
-            inColorChanNum=inKWArgs["inColorChanNum"],
-            inBatchSize=inKWArgs["inBatchSize"]
+            inImageSize=inKVArgs["inImageSize"],
+            inColorChanNum=inKVArgs["inColorChanNum"],
+            inBatchSize=inKVArgs["inBatchSize"]
         )
