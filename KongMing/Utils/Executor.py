@@ -27,15 +27,15 @@ class Executor :
 
     def Train(self, inDataLoader:DataLoader, *inArgs, **inKVArgs) :
         if self.bForceNewTrain or self.bIncTrain is False :
-            self.Model.Train(inDataLoader, 0, self.EpochIterCount, CaseInsensitiveList(*inArgs), self.__CombineKVArgs(**inKVArgs))
+            self.Model.Train(inDataLoader, 0, self.EpochIterCount, CaseInsensitiveList(*inArgs), self.__CombineKVArgs(inKVArgs))
         else :
-            self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, CaseInsensitiveList(*inArgs), self.__CombineKVArgs(**inKVArgs))
+            self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, CaseInsensitiveList(*inArgs), self.__CombineKVArgs(inKVArgs))
 
     def Eval(self, *inArgs, **inKVArgs) :
-        return self.Model.Eval(self.StartEpochIndex, CaseInsensitiveList(*inArgs), self.__CombineKVArgs(**inKVArgs))
+        return self.Model.Eval(self.StartEpochIndex, CaseInsensitiveList(*inArgs), self.__CombineKVArgs(inKVArgs))
 
     def Load(self, *inArgs, **inKVArgs) :
-        return self.Model.LoadLastest(CaseInsensitiveList(*inArgs), self.__CombineKVArgs(**inKVArgs))
+        return self.Model.LoadLastest(CaseInsensitiveList(*inArgs), self.__CombineKVArgs(inKVArgs))
     
     def IsExistModel(self) :
         return self.Model.IsExistModels()
