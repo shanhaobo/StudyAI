@@ -83,11 +83,9 @@ class Executor :
 
 
     def __CombineKVArgs(self, inKVArgs) :
-        CombineDict = CaseInsensitiveDict(**self.KVArgs)
-        for key, value in inKVArgs.items():
-            kv = CombineDict.get(key)
-            if kv is None:
-                CombineDict[key] = value
+        CombineDict = CaseInsensitiveDict(**inKVArgs)
+        for key, value in self.KVArgs.items():
+            CombineDict[key] = value
 
         return CombineDict
 
