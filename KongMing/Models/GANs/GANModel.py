@@ -9,6 +9,8 @@ from KongMing.Trainer.GANTrainer import GANTrainer
 from KongMing.Trainer.WGANTrainer import WGANTrainer
 from KongMing.Archiver.GANArchiver import GANArchiver
 
+from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
+
 class GANModel(BaseModel):
     def __init__(
             self,
@@ -40,8 +42,8 @@ class GANModel(BaseModel):
 
     ###########################################################################################
 
-    def Eval(self, *inArgs, **inKWArgs):
-        if (super().Eval(*inArgs, **inKWArgs) == False) :
+    def Eval(self, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None):
+        if (super().Eval(inArgs, inKWArgs) == False) :
             return None
         
         BatchSize = inKWArgs["inBatchSize"]

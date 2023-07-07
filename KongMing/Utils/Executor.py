@@ -2,7 +2,7 @@ import sys
 from torch.utils.data import DataLoader
 from KongMing.Models.BaseModel import BaseModel
 
-from .CaseInsensitiveDict import CaseInsensitiveDict
+from .CaseInsensitiveContainer import CaseInsensitiveDict, CaseInsensitiveList
 import re
 
 class Executor :
@@ -10,7 +10,7 @@ class Executor :
         self.Model = inModel
 
         self.ExecutorKVArgs = CaseInsensitiveDict()
-        self.ExecutorArgs = []
+        self.ExecutorArgs = CaseInsensitiveList()
         self.KVArgs = CaseInsensitiveDict()
         self.GetArgs()
         

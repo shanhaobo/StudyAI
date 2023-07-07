@@ -22,3 +22,11 @@ class CaseInsensitiveDict(defaultdict):
         if isinstance(s, str):
             return s.lower()
         return s
+
+
+class CaseInsensitiveList(list):
+    def __contains__(self, item):
+        return super(CaseInsensitiveList, self).__contains__(item.lower())
+
+    def append(self, item):
+        super(CaseInsensitiveList, self).append(item.lower())

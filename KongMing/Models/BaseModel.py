@@ -2,6 +2,8 @@ from torch.utils.data import DataLoader
 
 import keyboard
 
+from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
+
 from KongMing.Trainer.BaseTrainer import BaseTrainer
 from KongMing.Archiver.BaseArchiver import BaseArchiver
 
@@ -22,10 +24,10 @@ class BaseModel(object):
         self.SaveInterval = 10
 
     ###########################################################################################
-    def Train(self, inDataLoader : DataLoader, inStartEpochNum : int = 0, inEpochIterCount : int = 0, *inArgs, **inKWArgs) -> None:
-        self.Trainer.Train(inDataLoader, inStartEpochNum, inEpochIterCount, *inArgs, **inKWArgs)
+    def Train(self, inDataLoader : DataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None) -> None:
+        self.Trainer.Train(inDataLoader, inStartEpochNum, inEpochIterCount, inArgs, inKWArgs)
 
-    def IncTrain(self, inDataLoader : DataLoader, inStartEpochNum : int = 0, inEpochIterCount : int = 0, *inArgs, **inKWArgs) -> None:
+    def IncTrain(self, inDataLoader : DataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None) -> None:
         if inStartEpochNum > 0 and self.Archiver.Load(inStartEpochNum):
             pass
         else:
@@ -33,26 +35,26 @@ class BaseModel(object):
             if (inStartEpochNum < 0) : 
                 inStartEpochNum = 0
 
-        self.Trainer.Train(inDataLoader, inStartEpochNum, inEpochIterCount, *inArgs, **inKWArgs)
+        self.Trainer.Train(inDataLoader, inStartEpochNum, inEpochIterCount, inArgs, inKWArgs)
 
-    def LoadLastest(self, *inArgs, **inKWArgs):
+    def LoadLastest(self, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None):
         EpochIndex = self.Archiver.LoadLastest()
         if (EpochIndex <= 0) :
             return False
         self.Trainer.CurrEpochIndex = EpochIndex
         return True
     
-    def Load(self, inEpoch, *inArgs, **inKWArgs):
+    def Load(self, inEpoch, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None):
         self.Archiver.Load(inEpoch)
         
     def IsExistModels(self) -> bool:
         return self.Archiver.IsExistModel()
     
-    def Eval(self, inEpoch = -1, *inArgs, **inKWArgs):
+    def Eval(self, inEpoch = -1, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None):
         self.Archiver.Eval()
 
         if inEpoch <= 0:
-            self.LoadLastest(*inArgs, **inKWArgs)
+            self.LoadLastest(inArgs, inKWArgs)
         else:
             self.Load(inEpoch)
 
