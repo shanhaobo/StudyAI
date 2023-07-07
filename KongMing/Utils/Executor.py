@@ -25,15 +25,15 @@ class Executor :
 
     def Train(self, inDataLoader:DataLoader, *inArgs, **inKWArgs) :
         if self.bForceNewTrain or self.bIncTrain is False :
-            self.Model.Train(inDataLoader, 0, self.EpochIterCount, *inArgs, **self.CombineKVArgs(**inKWArgs))
+            self.Model.Train(inDataLoader, 0, self.EpochIterCount, CaseInsensitiveList(*inArgs), self.CombineKVArgs(**inKWArgs))
         else :
-            self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, *inArgs, **self.CombineKVArgs(**inKWArgs))
+            self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, CaseInsensitiveList(*inArgs), self.CombineKVArgs(**inKWArgs))
 
     def Eval(self, *inArgs, **inKWArgs) :
-        return self.Model.Eval(self.StartEpochIndex, *inArgs, **self.CombineKVArgs(**inKWArgs))
+        return self.Model.Eval(self.StartEpochIndex, CaseInsensitiveList(*inArgs), self.CombineKVArgs(**inKWArgs))
 
     def Load(self, *inArgs, **inKWArgs) :
-        return self.Model.LoadLastest(*inArgs, **self.CombineKVArgs(**inKWArgs))
+        return self.Model.LoadLastest(CaseInsensitiveList(*inArgs), self.CombineKVArgs(**inKWArgs))
     
     def IsExistModel(self) :
         return self.Model.IsExistModels()
@@ -81,10 +81,9 @@ class Executor :
 
 
     def CombineKVArgs(self, **inKWArgs) :
-        CombineDict = {**self.KVArgs}
+        CombineDict = CaseInsensitiveDict(**self.KVArgs)
         for key, value in inKWArgs.items():
-            kcf = key.casefold()
-            kv = CombineDict.get(kcf)
+            kv = CombineDict.get(key)
             if kv is None:
                 CombineDict[key] = value
 

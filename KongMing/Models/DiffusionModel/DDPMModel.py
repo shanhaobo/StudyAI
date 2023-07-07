@@ -39,8 +39,8 @@ class DDPMModel(BaseModel) :
         b = self._SumParameters(self.DiffusionModel)
         print("Sum of Params:{:,} | Model Params:{:,} | Buffer Params:{:,}".format(m + b, m, b))
 
-    def Eval(self, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None):
-        if (super().Eval(inArgs, inKWArgs) == False) :
+    def Eval(self, inEpoch = -1, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None):
+        if (super().Eval(inEpoch, inArgs, inKWArgs) == False) :
             return None
         self.DiffusionModel.eval()
         print(inKWArgs)

@@ -50,7 +50,7 @@ class BaseModel(object):
     def IsExistModels(self) -> bool:
         return self.Archiver.IsExistModel()
     
-    def Eval(self, inEpoch = -1, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None):
+    def Eval(self, inEpoch, inArgs : CaseInsensitiveList = None, inKWArgs : CaseInsensitiveDict = None):
         self.Archiver.Eval()
 
         if inEpoch <= 0:
