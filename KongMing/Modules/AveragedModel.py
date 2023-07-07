@@ -57,5 +57,16 @@ class AveragedModel(Module):
             if self.use_buffers else model.parameters()
         )
         for p_swa, p_model in zip(self_param, model_param):
-            with torch.no_grad():
-                p_model.data.copy_(p_swa.data)
+            device = p_model.device
+            p_swa_ = p_swa.detach().to(device)
+            p_model.detach().copy_(p_swa_)
+
+## ExponentialMovingAverage
+class EMA(AveragedModel):
+    def __init__(self, model, decay, device="cpu"):
+        super().__init__(model, device)
+        self.decay = decay
+        def ema_avg(avg_model_param, model_param, num_averaged):
+            return decay * avg_model_param + (1 - decay) * model_param
+
+        super().__init__(model, device, ema_avg, use_buffers=True)

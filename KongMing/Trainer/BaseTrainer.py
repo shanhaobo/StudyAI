@@ -75,9 +75,9 @@ class BaseTrainer(abc.ABC):
 
         self.CurrEpochIndex = inStartEpochIndex
         self.EndEpochIndex = (self.CurrEpochIndex + inEpochIterCount) if (inEpochIterCount > 0) else 0
-        while self._Continue() and self.__Continue_EpochIterCount():
+        while self.__Continue_EpochIterCount():
             self.__DontOverride__EpochTrain(inDataLoader, inArgs, inKVArgs)
-            if self.SoftExit:
+            if self.SoftExit or self._CheckEndEpoch():
                 break
             self.CurrEpochIndex += 1
 
@@ -89,8 +89,8 @@ class BaseTrainer(abc.ABC):
             inStartEpochIndex = 0
         self.__DontOverride__Train(inDataLoader, inStartEpochIndex, inEpochIterCount, inArgs, inKVArgs)
 
-    def _Continue(self)->bool:
-        return True
+    def _CheckEndEpoch(self)->bool:
+        return False
     
     def __Continue_EpochIterCount(self) -> bool:
         if self.EndEpochIndex <= 0:

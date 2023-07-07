@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from KongMing.Models.Zoo.EMA import EMA
+from KongMing.Modules.AveragedModel import EMA
 
 from .Utils import BetaSchedule
 

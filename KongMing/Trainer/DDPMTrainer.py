@@ -6,6 +6,8 @@ import torch.nn.functional as F
 
 from .BaseTrainer import BaseTrainer
 
+from KongMing.Utils.AveragedUtils import EMAValue
+
 import pandas as pd
 
 class DDPMTrainer(BaseTrainer) :
@@ -27,8 +29,7 @@ class DDPMTrainer(BaseTrainer) :
         self.EndBatchTrain.add(self.DDPMEndBatchTrain)
         self.EndEpochTrain.add(self.DDPMEndEpochTrain)
 
-        self.SumLoss        = 1
-        self.LastBatch      = 1
+        self.AverageLoss    = EMAValue(0.99)
 
         self.LossData       = {"Epoch":[], "Batch":[], "Loss":[], "AvgLoss":[]}
 
@@ -67,8 +68,7 @@ class DDPMTrainer(BaseTrainer) :
 
         self.CurrBatchDDPMLoss = loss.item()
 
-        self.SumLoss        += self.CurrBatchDDPMLoss
-        self.LastBatch      = self.CurrBatchIndex + 1
+        self.AverageLoss.AcceptNewValue(self.CurrBatchDDPMLoss)
 
 ###########################################################################################
 
@@ -81,13 +81,13 @@ class DDPMTrainer(BaseTrainer) :
                 self.CurrEpochIndex,
                 self.CurrBatchIndex,
                 self.CurrBatchDDPMLoss,
-                self.SumLoss / (self.CurrBatchIndex + 1)
+                self.AverageLoss.item()
             )
         )
         self.LossData["Epoch"].append(self.CurrEpochIndex)
         self.LossData["Batch"].append(self.CurrBatchIndex)
         self.LossData["Loss"].append(self.CurrBatchDDPMLoss)
-        self.LossData["AvgLoss"].append(self.SumLoss / (self.CurrBatchIndex + 1))
+        self.LossData["AvgLoss"].append(self.AverageLoss.item())
 
 
     def DDPMEndEpochTrain(self, inArgs, inKVArgs) -> None:
@@ -102,11 +102,9 @@ class DDPMTrainer(BaseTrainer) :
     def DDPMBeginTrain(self, inArgs, inKVArgs) -> None:
         OverrideEMA = inKVArgs.get("ema_override")
         if OverrideEMA is not None and OverrideEMA == "true":
+            print("EMA Override........")
             self.DiffusionMode.EMA.override_parameters(self.NNModel)
 
-    def _Continue(self)->bool:
-        AverageLoss = self.SumLoss / self.LastBatch
-        Result =  AverageLoss > 0.01
-        self.SumLoss = 0
-        return Result
+    def _CheckEndEpoch(self)->bool:
+        return self.AverageLoss.item() <= 0.01
 ###########################################################################################

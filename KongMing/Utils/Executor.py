@@ -1,6 +1,5 @@
 import sys
 from torch.utils.data import DataLoader
-from KongMing.Models.BaseModel import BaseModel
 
 from .CaseInsensitiveContainer import CaseInsensitiveDict, CaseInsensitiveList
 import re
@@ -10,7 +9,7 @@ import keyboard
 ###################################################################################################
 
 class Executor :
-    def __init__(self, inModel : BaseModel) -> None:
+    def __init__(self, inModel) -> None:
         self.Model = inModel
 
         self.ExecutorKVArgs = CaseInsensitiveDict()
