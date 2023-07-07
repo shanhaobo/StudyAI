@@ -85,7 +85,7 @@ class Executor :
             kcf = key.casefold()
             kv = CombineDict.get(kcf)
             if kv is None:
-                CombineDict[kcf] = value
+                CombineDict[key] = value
 
         return CombineDict
 
