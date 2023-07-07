@@ -78,7 +78,7 @@ class BaseArchiver(object):
             torch.save(Model.state_dict(), ModelFullPath)
             print("Save Model:" + ModelFullPath)
 
-    def Load(self, inEpochIndex : int = -1):
+    def Load(self, inEpochIndex : int):
         for Name, _ in self.NNModelDict.items():
             FilePath, FileName = self.GetFileFromValidLatestTimestampDirPath(Name, inEpochIndex)
             if FilePath is None:

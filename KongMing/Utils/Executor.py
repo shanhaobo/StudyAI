@@ -5,6 +5,10 @@ from KongMing.Models.BaseModel import BaseModel
 from .CaseInsensitiveContainer import CaseInsensitiveDict, CaseInsensitiveList
 import re
 
+import keyboard
+
+###################################################################################################
+
 class Executor :
     def __init__(self, inModel : BaseModel) -> None:
         self.Model = inModel
@@ -22,6 +26,9 @@ class Executor :
         self.StartEpochIndex    = 0
         self.EpochIterCount     = 0
         self.__AnalyzeArgs()
+
+        keyboard.add_hotkey('ctrl + s', self.__HotKeySave)
+        keyboard.add_hotkey('ctrl + x', self.__HotKeyExit)
 
 ###################################################################################################
 
@@ -74,7 +81,7 @@ class Executor :
 
         StartEpochIndex = self.ExecutorKVArgs.get("epoch")
         if StartEpochIndex is not None:
-            self.StartEpochIndex = int(StartEpochIndex)
+            self.StartEpochIndex = int(StartEpochIndex) + 1
             self.bIncTrain = True
 
         EpochIterCount = self.ExecutorKVArgs.get("epochitercount")
@@ -89,4 +96,11 @@ class Executor :
 
         return CombineDict
 
+###################################################################################################
+
+    def __HotKeySave(self):
+        self.Model.ForceSaveAtEndEpoch()
+
+    def __HotKeyExit(self):
+        self.Model.ForceExitAtEndEpoch()
 ###################################################################################################

@@ -1,8 +1,6 @@
 import abc
 import torch
 
-import keyboard
-
 from torch import Tensor
 from torch.optim.optimizer import Optimizer
 
@@ -31,7 +29,6 @@ class BaseTrainer(abc.ABC):
         self.EndEpochIndex      = 0
 
         self.SoftExit           = False
-        keyboard.add_hotkey('ctrl + x', self.__SoftExit)
 
         self.LogRootPath        = inLogRootPath
 
@@ -77,17 +74,19 @@ class BaseTrainer(abc.ABC):
         self.BeginTrain(inArgs, inKVArgs)
 
         self.CurrEpochIndex = inStartEpochIndex
-        self.EndEpochIndex = (inStartEpochIndex + inEpochIterCount) if (inEpochIterCount > 0) else 0
+        self.EndEpochIndex = (self.CurrEpochIndex + inEpochIterCount) if (inEpochIterCount > 0) else 0
         while self._Continue() and self.__Continue_EpochIterCount():
             self.__DontOverride__EpochTrain(inDataLoader, inArgs, inKVArgs)
-            self.CurrEpochIndex += 1
             if self.SoftExit:
                 break
-        
+            self.CurrEpochIndex += 1
+
         # End Train
         self.EndTrain(inArgs, inKVArgs)
 
     def Train(self, inDataLoader : DataLoader, inStartEpochIndex : int, inEpochIterCount : int, inArgs, inKVArgs) -> None:
+        if inStartEpochIndex < 0:
+            inStartEpochIndex = 0
         self.__DontOverride__Train(inDataLoader, inStartEpochIndex, inEpochIterCount, inArgs, inKVArgs)
 
     def _Continue(self)->bool:
@@ -98,7 +97,3 @@ class BaseTrainer(abc.ABC):
             return True
         
         return self.CurrEpochIndex < self.EndEpochIndex
-
-    def __SoftExit(self):
-        print("Soft Exiting......................")
-        self.SoftExit = True

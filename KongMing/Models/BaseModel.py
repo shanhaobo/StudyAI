@@ -9,19 +9,18 @@ from KongMing.Archiver.BaseArchiver import BaseArchiver
 
 class BaseModel(object):
     def __init__(self, inTrainer : BaseTrainer, inArchiver : BaseArchiver):
-        self.Trainer    = inTrainer
-        self.Archiver   = inArchiver
-        self.Device     = inTrainer.Device
+        self.Trainer        = inTrainer
+        self.Archiver       = inArchiver
+        self.Device         = inTrainer.Device
 
         self.Trainer.BeginTrain.add(self.__BMBeginTrain)
         self.Trainer.EndBatchTrain.add(self.__BMEndBatchTrain)
         self.Trainer.EndEpochTrain.add(self.__BMEndEpochTrain)
         self.Trainer.EndTrain.add(self.__BMEndTrain)
 
-        self.CurrEpochForceSave           = False
-        keyboard.add_hotkey('ctrl + s', self.__CurrEpochForceSave)
+        self.ForceSave      = False
 
-        self.SaveInterval = 10
+        self.SaveInterval   = 10
 
     ###########################################################################################
     def Train(self, inDataLoader : DataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
@@ -32,16 +31,14 @@ class BaseModel(object):
             pass
         else:
             inStartEpochNum = self.Archiver.LoadLastest()
-            if (inStartEpochNum < 0) : 
-                inStartEpochNum = 0
 
-        self.Trainer.Train(inDataLoader, inStartEpochNum, inEpochIterCount, inArgs, inKVArgs)
+        self.Trainer.Train(inDataLoader, inStartEpochNum + 1, inEpochIterCount, inArgs, inKVArgs)
 
     def LoadLastest(self, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
         EpochIndex = self.Archiver.LoadLastest()
         if (EpochIndex <= 0) :
             return False
-        self.Trainer.CurrEpochIndex = EpochIndex
+        self.Trainer.CurrEpochIndex = EpochIndex + 1
         return True
     
     def Load(self, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
@@ -78,17 +75,26 @@ class BaseModel(object):
         pass
 
     def __BMEndEpochTrain(self, inArgs, inKVArgs) -> None:
-        if self.CurrEpochForceSave or ((self.Trainer.CurrEpochIndex + 1) % self.SaveInterval == 0):
-            self.CurrEpochForceSave = False
-            print("Epoch:{} Save Models".format(self.Trainer.CurrEpochIndex))
+        if self.ForceSave or ((self.Trainer.CurrEpochIndex + 1) % self.SaveInterval == 0):
+            if self.ForceSave :
+                self.ForceSave = False
+                print("Epoch:{} Force Save Models".format(self.Trainer.CurrEpochIndex))
+            else:
+                print("Epoch:{} Save Models".format(self.Trainer.CurrEpochIndex))
             self.Archiver.Save(self.Trainer.CurrEpochIndex)
 
     def __BMEndTrain(self, inArgs, inKVArgs)->None:
         self.Archiver.Save(self.Trainer.CurrEpochIndex)
-        print("End Train")
+        print("End Train!!!")
 
     ###########################################################################################
 
-    def __CurrEpochForceSave(self) -> None:
-        print("Force Saveing.............")
-        self.CurrEpochForceSave = True
+    def ForceSaveAtEndEpoch(self) -> None:
+        print("Accept Force Save.............")
+        self.ForceSave = True
+
+    def ForceExitAtEndEpoch(self) -> None:
+        print("Accept Soft Exit.............")
+        self.Trainer.SoftExit = True
+
+    ###########################################################################################

@@ -61,6 +61,7 @@ if __name__ == "__main__" :
                 root="./data", train=True, transform=transform, download=True
             )
         else:
-            dataset = torchvision.datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
+            #dataset = torchvision.datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
+            dataset = torchvision.datasets.ImageFolder(root='D:/__DevAI__/Datasets/cartoon_faces', transform=transform)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         Exec.Train(dataloader, SaveInterval=10)
