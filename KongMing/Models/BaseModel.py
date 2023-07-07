@@ -1,5 +1,7 @@
 from torch.utils.data import DataLoader
 
+import keyboard
+
 from KongMing.Trainer.BaseTrainer import BaseTrainer
 from KongMing.Archiver.BaseArchiver import BaseArchiver
 
@@ -13,6 +15,11 @@ class BaseModel(object):
         self.Trainer.EndBatchTrain.add(self.__BMEndBatchTrain)
         self.Trainer.EndEpochTrain.add(self.__BMEndEpochTrain)
         self.Trainer.EndTrain.add(self.__BMEndTrain)
+
+        self.CurrEpochForceSave           = False
+        keyboard.add_hotkey('ctrl + s', self.__CurrEpochForceSave)
+
+        self.SaveInterval = 10
 
     ###########################################################################################
     def Train(self, inDataLoader : DataLoader, inStartEpochNum : int = 0, inEpochIterCount : int = 0, *inArgs, **inKWArgs) -> None:
@@ -59,6 +66,9 @@ class BaseModel(object):
 
     def __BMBeginTrain(self, *inArgs, **inKWArgs)->None:
         print("Begin Training...")
+        SaveInterval = inKWArgs.get("saveinterval")
+        if SaveInterval is not None:
+            self.SaveInterval = int(SaveInterval)
 
     ############################################
 
@@ -66,8 +76,8 @@ class BaseModel(object):
         pass
 
     def __BMEndEpochTrain(self, *inArgs, **inKWArgs) -> None:
-        interval = inKWArgs["SaveModelInterval"]
-        if (self.Trainer.CurrEpochIndex + 1) % interval == 0:
+        if self.CurrEpochForceSave or ((self.Trainer.CurrEpochIndex + 1) % self.SaveInterval == 0):
+            self.CurrEpochForceSave = False
             print("Epoch:{} Save Models".format(self.Trainer.CurrEpochIndex))
             self.Archiver.Save(self.Trainer.CurrEpochIndex)
 
@@ -76,3 +86,7 @@ class BaseModel(object):
         print("End Train")
 
     ###########################################################################################
+
+    def __CurrEpochForceSave(self) -> None:
+        print("Force Saveing.............")
+        self.CurrEpochForceSave = True

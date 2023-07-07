@@ -23,17 +23,16 @@ class Executor :
         self.AnalyzeArgs()
 
     def Train(self, inDataLoader:DataLoader, *inArgs, **inKWArgs) :
-
         if self.bForceNewTrain or self.bIncTrain is False :
-            self.Model.Train(inDataLoader, 0, self.EpochIterCount, *inArgs, **{**inKWArgs, **self.KVArgs})
+            self.Model.Train(inDataLoader, 0, self.EpochIterCount, *inArgs, **self.CombineKVArgs(**inKWArgs))
         else :
-            self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, *inArgs, **{**inKWArgs, **self.KVArgs})
+            self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, *inArgs, **self.CombineKVArgs(**inKWArgs))
 
     def Eval(self, *inArgs, **inKWArgs) :
-        return self.Model.Eval(self.StartEpochIndex, *inArgs, **{**inKWArgs, **self.KVArgs})
+        return self.Model.Eval(self.StartEpochIndex, *inArgs, **self.CombineKVArgs(**inKWArgs))
 
     def Load(self, *inArgs, **inKWArgs) :
-        return self.Model.LoadLastest(*inArgs, **{**inKWArgs, **self.KVArgs})
+        return self.Model.LoadLastest(*inArgs, **self.CombineKVArgs(**inKWArgs))
     
     def IsExistModel(self) :
         return self.Model.IsExistModels()
@@ -79,5 +78,15 @@ class Executor :
         if EpochIterCount is not None:
             self.EpochIterCount =  int(EpochIterCount)
 
+
+    def CombineKVArgs(self, **inKWArgs) :
+        CombineDict = {**self.KVArgs}
+        for key, value in inKWArgs:
+            kcf = key.casefold()
+            kv = CombineDict.get(kcf)
+            if kv is None:
+                CombineDict[kcf] = value
+
+        return CombineDict
 
 ###################################################################################################

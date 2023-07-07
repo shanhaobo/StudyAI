@@ -63,4 +63,4 @@ if __name__ == "__main__" :
         else:
             dataset = torchvision.datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-        Exec.Train(dataloader, SaveModelInterval=10)
+        Exec.Train(dataloader, SaveInterval=10)
