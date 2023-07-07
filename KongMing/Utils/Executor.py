@@ -2,15 +2,16 @@ import sys
 from torch.utils.data import DataLoader
 from KongMing.Models.BaseModel import BaseModel
 
+from .CaseInsensitiveDict import CaseInsensitiveDict
 import re
 
 class Executor :
     def __init__(self, inModel : BaseModel) -> None:
         self.Model = inModel
 
-        self.ExecutorKVArgs = {}
+        self.ExecutorKVArgs = CaseInsensitiveDict()
         self.ExecutorArgs = []
-        self.KVArgs = {}
+        self.KVArgs = CaseInsensitiveDict()
         self.GetArgs()
         
         self.bForceNewTrain     = False
