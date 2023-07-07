@@ -81,7 +81,7 @@ class Executor :
 
     def CombineKVArgs(self, **inKWArgs) :
         CombineDict = {**self.KVArgs}
-        for key, value in inKWArgs:
+        for key, value in inKWArgs.items():
             kcf = key.casefold()
             kv = CombineDict.get(kcf)
             if kv is None:
