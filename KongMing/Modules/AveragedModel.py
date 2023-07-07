@@ -57,4 +57,5 @@ class AveragedModel(Module):
             if self.use_buffers else model.parameters()
         )
         for p_swa, p_model in zip(self_param, model_param):
-            p_model.copy_(p_swa.clone())
+            with torch.no_grad():
+                p_model.data.copy_(p_swa.data)
