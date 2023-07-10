@@ -1,7 +1,5 @@
 from torch.utils.data import DataLoader
 
-import keyboard
-
 from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
 
 from KongMing.Trainer.BaseTrainer import BaseTrainer
@@ -23,15 +21,15 @@ class BaseModel(object):
         self.SaveInterval   = 10
 
     ###########################################################################################
-    def Train(self, inDataLoader : DataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
-        self.Trainer.Train(inDataLoader, inStartEpochNum, inEpochIterCount, inArgs, inKVArgs)
+
+    def Train(self, inDataLoader : DataLoader, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
+        self.Trainer.Train(inDataLoader, 0, inEpochIterCount, inArgs, inKVArgs)
 
     def IncTrain(self, inDataLoader : DataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
         if inStartEpochNum > 0 and self.Archiver.Load(inStartEpochNum):
             pass
         else:
             inStartEpochNum = self.Archiver.LoadLastest()
-
         self.Trainer.Train(inDataLoader, inStartEpochNum + 1, inEpochIterCount, inArgs, inKVArgs)
 
     def LoadLastest(self, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
@@ -49,12 +47,10 @@ class BaseModel(object):
     
     def Eval(self, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
         self.Archiver.Eval()
-
         if inEpoch <= 0:
             self.LoadLastest(inArgs, inKVArgs)
         else:
             self.Load(inEpoch)
-
 
     ###########################################################################################
 

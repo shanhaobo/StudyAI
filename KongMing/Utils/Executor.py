@@ -27,25 +27,34 @@ class Executor :
         self.EpochIterCount     = 0
         self.__AnalyzeArgs()
 
-        keyboard.add_hotkey('ctrl + s', self.__HotKeySave)
-        keyboard.add_hotkey('ctrl + x', self.__HotKeyExit)
-
 ###################################################################################################
 
     def Train(self, inDataLoader:DataLoader, *inArgsForML, **inKVArgsForML) :
+        ## Only for Train
+        keyboard.add_hotkey('ctrl + s', self.__HotKeySave)
+        keyboard.add_hotkey('ctrl + x', self.__HotKeyExit)
+        ##-----------------
         if self.bForceNewTrain or self.bIncTrain is False :
-            self.Model.Train(inDataLoader, 0, self.EpochIterCount, self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML))
+            self.Model.Train(inDataLoader, self.EpochIterCount, self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML))
         else :
             self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML))
-
+    
+    ##----------------------------------------##
+    
     def Eval(self, *inArgsForML, **inKVArgsForML) :
         return self.Model.Eval(self.StartEpochIndex, self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML))
-
+    
+    ##----------------------------------------##
+    
     def Load(self, *inArgsForML, **inKVArgsForML) :
         return self.Model.LoadLastest(self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML))
     
+    ##----------------------------------------##
+    
     def IsExistModel(self) :
         return self.Model.IsExistModels()
+    
+    ##----------------------------------------##
     
     def ForceTrain(self) :
         return self.bForceNewTrain or self.bForceIncTrain
@@ -87,7 +96,7 @@ class Executor :
 
         StartEpochIndex = self.KVArgsForExec.get("epoch")
         if StartEpochIndex is not None:
-            self.StartEpochIndex = int(StartEpochIndex) + 1
+            self.StartEpochIndex = int(StartEpochIndex)
             self.bIncTrain = True
 
         EpochIterCount = self.KVArgsForExec.get("epochitercount")
@@ -102,7 +111,7 @@ class Executor :
         return CombineDict
     
     def __CombineArgsForML(self, inArgs) :
-        CombineList = CaseInsensitiveList(**inArgs)
+        CombineList = CaseInsensitiveList(*inArgs)
         for value in self.ArgsForML:
             if value not in CombineList:
                 CombineList.append(value)
@@ -114,4 +123,5 @@ class Executor :
 
     def __HotKeyExit(self):
         self.Model.ForceExitAtEndEpoch()
+
 ###################################################################################################
