@@ -100,8 +100,7 @@ class DDPMTrainer(BaseTrainer) :
         self.LossData["AvgLoss"].clear()
 
     def DDPMBeginTrain(self, inArgs, inKVArgs) -> None:
-        OverrideEMA = inKVArgs.get("ema_override")
-        if OverrideEMA is not None and OverrideEMA == "true":
+        if "ema_override" in inArgs:
             print("EMA Override........")
             self.DiffusionMode.EMA.override_parameters(self.NNModel)
 

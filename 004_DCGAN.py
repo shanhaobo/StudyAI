@@ -14,6 +14,13 @@ from KongMing.Utils.Executor import Executor
 import os
 OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
 os.makedirs(OutputPath, exist_ok=True)
+###########
+DatasetPath = "data"
+if os.path.exists("D:/AI/") :
+    DatasetPath = "D:/AI/"
+elif os.path.exists("D:/__DevAI__/") :
+    DatasetPath = "D:/__DevAI__/"
+DatasetPath = os.path.join(DatasetPath, "Datasets")
 ###################################
 '''
 # 定义数据集

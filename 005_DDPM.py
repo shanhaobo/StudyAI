@@ -8,6 +8,7 @@ from torchvision.utils import save_image
 import os
 OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
 os.makedirs(OutputPath, exist_ok=True)
+###########
 DatasetPath = "data"
 if os.path.exists("D:/AI/") :
     DatasetPath = "D:/AI/"
@@ -66,7 +67,6 @@ if __name__ == "__main__" :
                 root="./data", train=True, transform=transform, download=True
             )
         else:
-            #dataset = torchvision.datasets.ImageFolder(root='{}/cartoon_faces'.format(DatasetPath), transform=transform)
             dataset = torchvision.datasets.ImageFolder(root='{}/cartoon_faces'.format(DatasetPath), transform=transform)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         Exec.Train(dataloader, SaveInterval=10)
