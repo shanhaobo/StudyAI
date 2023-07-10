@@ -39,7 +39,8 @@ if __name__ == "__main__" :
     Exec = Executor(GAN)
 
     if (Exec.ForceTrain() == False) and Exec.IsExistModel():
-        GenImage = Exec.Eval()
+        GenImage = Exec.Eval(inBatchSize=15)
+        
         print(GenImage.size())
         
         transform = transforms.Compose([
