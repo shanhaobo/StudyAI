@@ -116,6 +116,7 @@ class Executor :
             if value not in CombineList:
                 CombineList.append(value)
 
+        return CombineList
 ###################################################################################################
 
     def __HotKeySave(self):
