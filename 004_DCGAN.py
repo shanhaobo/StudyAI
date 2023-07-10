@@ -15,36 +15,20 @@ import os
 OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
 os.makedirs(OutputPath, exist_ok=True)
 ###########
-DatasetPath = "data"
+DatasetPath = None
 if os.path.exists("D:/AI/") :
     DatasetPath = "D:/AI/"
 elif os.path.exists("D:/__DevAI__/") :
     DatasetPath = "D:/__DevAI__/"
 DatasetPath = os.path.join(DatasetPath, "Datasets")
+
+import sys
+
 ###################################
-'''
-# 定义数据集
-class MNISTDataset(torch.utils.data.Dataset):
-    def __init__(self):
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5,), (0.5,))
-        ])
 
-        train_set = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+torch.set_printoptions(precision=10, sci_mode=False)
 
-        images = []
-        for i in range(len(train_set)):
-            image, _ = train_set[i]
-            images.append(image)
-        self.images = images
-
-    def __len__(self):
-        return len(self.images)
-    
-    def __getitem__(self, index):
-        return self.images[index]
-'''
+###################################
 
 EmbeddingDim    = 64
 ImageDim        = 64
@@ -66,14 +50,20 @@ if __name__ == "__main__" :
         os.makedirs(ImagetFolderPath, exist_ok=True)
         save_image(transform(GenImage), "{}/{}.png".format(ImagetFolderPath, datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else :
-        #dataset = MNISTDataset()
+        if DatasetPath is None:
+            sys.exit()
+
         transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Lambda(lambda t : (t * 2) - 1),
             transforms.Normalize((0.5,), (0.5,))
         ])
-        #dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
-        #dataset = datasets.ImageFolder(root='D:/__DevAI__/Datasets/cartoon_faces', transform=transform)
-        dataset = datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
+        if False :
+            dataset = torchvision.datasets.FashionMNIST(
+                root=DatasetPath, train=True, transform=transform, download=True
+            )
+        else:
+            dataset = datasets.ImageFolder(root='{}/cartoon_faces'.format(DatasetPath), transform=transform)
+        
         dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
-        Exec.Train(dataloader, SaveModelInterval=10)
+        Exec.Train(dataloader, SaveInterval=13)

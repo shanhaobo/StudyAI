@@ -4,6 +4,14 @@ import torchvision
 from datetime import datetime
 
 from torchvision.utils import save_image
+
+from KongMing.Models.DiffusionModel.DDPMModel import DDPMModel
+from KongMing.Utils.Executor import Executor
+
+from torchvision import transforms
+from torch.utils.data import DataLoader
+#from torchvision.transforms import Compose, ToTensor, Lambda, ToPILImage, CenterCrop, Resize
+
 ###################################
 import os
 OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
@@ -15,16 +23,14 @@ if os.path.exists("D:/AI/") :
 elif os.path.exists("D:/__DevAI__/") :
     DatasetPath = "D:/__DevAI__/"
 DatasetPath = os.path.join(DatasetPath, "Datasets")
-###################################
-from KongMing.Models.DiffusionModel.DDPMModel import DDPMModel
 
-from KongMing.Utils.Executor import Executor
+import sys
+
+###################################
 
 torch.set_printoptions(precision=10, sci_mode=False)
 
-from torchvision import transforms
-from torch.utils.data import DataLoader
-#from torchvision.transforms import Compose, ToTensor, Lambda, ToPILImage, CenterCrop, Resize
+###################################
 
 image_size = 64
 image_channel = 3
@@ -56,6 +62,9 @@ if __name__ == "__main__" :
         os.makedirs(Path, exist_ok=True)
         save_image(reverse_transform(GenImage), "{}/{}.png".format(Path, datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else:
+        if DatasetPath is None:
+            sys.exit()
+            
         transform = transforms.Compose([
             transforms.Resize(image_size),
             transforms.ToTensor(), # turn into Numpy array of shape HWC, divide by 255
@@ -64,9 +73,9 @@ if __name__ == "__main__" :
         ])
         if False :
             dataset = torchvision.datasets.FashionMNIST(
-                root="./data", train=True, transform=transform, download=True
+                root=DatasetPath, train=True, transform=transform, download=True
             )
         else:
             dataset = torchvision.datasets.ImageFolder(root='{}/cartoon_faces'.format(DatasetPath), transform=transform)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-        Exec.Train(dataloader, SaveInterval=10)
+        Exec.Train(dataloader, SaveInterval=13)

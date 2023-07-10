@@ -1,5 +1,4 @@
 from collections import UserDict, UserList
-from collections import UserDict
 
 ##################################################################################################
 
