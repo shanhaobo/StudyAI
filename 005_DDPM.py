@@ -8,13 +8,18 @@ from torchvision.utils import save_image
 import os
 OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
 os.makedirs(OutputPath, exist_ok=True)
+DatasetPath = "data"
+if os.path.exists("D:/AI/") :
+    DatasetPath = "D:/AI/"
+elif os.path.exists("D:/__DevAI__/") :
+    DatasetPath = "D:/__DevAI__/"
+DatasetPath = os.path.join(DatasetPath, "Datasets")
 ###################################
 from KongMing.Models.DiffusionModel.DDPMModel import DDPMModel
 
 from KongMing.Utils.Executor import Executor
 
 torch.set_printoptions(precision=10, sci_mode=False)
-
 
 from torchvision import transforms
 from torch.utils.data import DataLoader
@@ -61,7 +66,7 @@ if __name__ == "__main__" :
                 root="./data", train=True, transform=transform, download=True
             )
         else:
-            #dataset = torchvision.datasets.ImageFolder(root='D:/AI/Datasets/cartoon_faces', transform=transform)
-            dataset = torchvision.datasets.ImageFolder(root='D:/__DevAI__/Datasets/cartoon_faces', transform=transform)
+            #dataset = torchvision.datasets.ImageFolder(root='{}/cartoon_faces'.format(DatasetPath), transform=transform)
+            dataset = torchvision.datasets.ImageFolder(root='{}/cartoon_faces'.format(DatasetPath), transform=transform)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         Exec.Train(dataloader, SaveInterval=10)
