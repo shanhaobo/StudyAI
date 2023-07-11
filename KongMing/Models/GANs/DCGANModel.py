@@ -13,26 +13,20 @@ class DCGANModel(GANModel):
             super().__init__()
 
             InOutPairDims  =list(zip(inAllEmbeddingDims[1:], inAllEmbeddingDims[:-1]))
-            print(*InOutPairDims)
 
             self.InputModule = nn.Sequential(
                 nn.Conv2d(inAllEmbeddingDims[0], inAllEmbeddingDims[-1], kernel_size=4, stride=1, padding=0),
                 nn.BatchNorm2d(inAllEmbeddingDims[-1]),
                 nn.ReLU()
             )
-            print("{} : {}".format(inAllEmbeddingDims[0], inAllEmbeddingDims[-1]))
-
             self.ModuleList          = nn.ModuleList([])
             for InDim, OutDim in  reversed(InOutPairDims):
-                print("{} : {}".format(InDim, OutDim))
-
                 self.ModuleList.append(nn.Sequential(
                     nn.ConvTranspose2d(InDim, OutDim, kernel_size=4, stride=2, padding=1),
                     nn.BatchNorm2d(OutDim),
                     nn.ReLU()
                 ))
 
-            print("{} : {}".format(inAllEmbeddingDims[0], inColorChan))
             self.FinalModule = nn.Sequential(
                 nn.ConvTranspose2d(inAllEmbeddingDims[0], inColorChan, kernel_size=4, stride=2, padding=1),
                 nn.Tanh()

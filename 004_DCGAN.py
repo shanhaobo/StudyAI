@@ -30,7 +30,7 @@ torch.set_printoptions(precision=10, sci_mode=False)
 
 ###################################
 
-EmbeddingDim        = 64
+EmbeddingDim        = 128
 ImageDim            = 64
 ImageColorChan      = 3
 
