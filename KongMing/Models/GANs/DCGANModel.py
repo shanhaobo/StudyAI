@@ -52,7 +52,7 @@ class DCGANModel(GANModel):
             self.InputModule = nn.Sequential(
                 # kernel_size=4, stride=2, padding=1 变为输入大小的二分之一
                 nn.Conv2d(inColorChan, inAllEmbeddingDims[0], kernel_size=4, stride=2, padding=1),
-                nn.BatchNorm2d(OutDim),
+                nn.BatchNorm2d(inAllEmbeddingDims[0]),
                 nn.LeakyReLU(0.2),
                 nn.Upsample(scale_factor=2),
             )
