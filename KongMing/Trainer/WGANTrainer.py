@@ -25,12 +25,13 @@ class WGANTrainer(GANTrainer) :
         pass
 
     def __CalculateGradientPenalty(self, RealData, FakeData):
-        FakeData = F.interpolate(FakeData, size=(RealData.shape[2], RealData.shape[3]), mode='bilinear', align_corners=False)
-        alpha = torch.rand(RealData.size(0), 1, 1, 1).to(self.Device)
+        BatchSize, _, ImageHeight, ImageWidth = RealData.size()
+        FakeData = F.interpolate(FakeData, size=(ImageHeight, ImageWidth), mode='bilinear', align_corners=False)
+        alpha = torch.rand(BatchSize, 1, 1, 1, device=self.Device)
         interpolates = (alpha * RealData + ((1 - alpha) * FakeData)).requires_grad_(True)
         d_interpolates = self.Discriminator(interpolates)
         gradients = grad(outputs=d_interpolates, inputs=interpolates,
-                        grad_outputs=torch.ones(d_interpolates.size()).to(self.Device),
+                        grad_outputs=torch.ones(d_interpolates.size(), device=self.Device),
                         create_graph=True, retain_graph=True, only_inputs=True)[0]
         gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
         return gradient_penalty
@@ -62,7 +63,7 @@ class WGANTrainer(GANTrainer) :
         
         # Optimize Generator
         FakeScoresForGenerator      = self.Discriminator(FakeData)
-        GLoss                       = -torch.mean(FakeScoresForGenerator)
+        GLoss                       = torch.mean(FakeScoresForGenerator)
         self._BackPropagate(self.OptimizerG, GLoss)
 
         self.CurrBatchDiscriminatorLoss = DLoss.item()

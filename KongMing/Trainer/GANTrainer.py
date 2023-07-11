@@ -38,12 +38,12 @@ class GANTrainer(MultiNNTrainer):
 
     def _CalcLossForReal(self, inBatchData):
         DiscriminatorScores = self.Discriminator(inBatchData)
-        RealLabels = torch.ones(DiscriminatorScores.size()).to(self.Device)
+        RealLabels = torch.ones(DiscriminatorScores.size(), device=self.Device)
         return self.LossFN(DiscriminatorScores, RealLabels)
     
     def _CalcLossForFake(self, inBatchData):
         DiscriminatorScores = self.Discriminator(inBatchData)
-        FakeLabels = torch.zeros(DiscriminatorScores.size()).to(self.Device)
+        FakeLabels = torch.zeros(DiscriminatorScores.size(), device=self.Device)
         return self.LossFN(DiscriminatorScores, FakeLabels)
 
 
