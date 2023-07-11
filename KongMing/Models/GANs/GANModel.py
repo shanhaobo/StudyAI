@@ -21,7 +21,7 @@ class GANModel(BaseModel):
             inModelRootFolderPath = "."
         ) -> None:
         
-        NewTrainer = WGANTrainer(
+        NewTrainer = GANTrainer(
             inGenerator,
             inDiscriminator,
             inGeneratorSize,

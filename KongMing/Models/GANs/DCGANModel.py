@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 
-import torch.nn.functional as F
-
 from .GANModel import GANModel
 
 class DCGANModel(GANModel):
@@ -12,29 +10,28 @@ class DCGANModel(GANModel):
         def __init__(self, inColorChan, inAllEmbeddingDims):
             super().__init__()
 
-            InOutPairDims  =list(zip(inAllEmbeddingDims[1:], inAllEmbeddingDims[:-1]))
+            InOutPairDims = list(zip(inAllEmbeddingDims[1:], inAllEmbeddingDims[:-1]))
 
             self.InputModule = nn.Sequential(
                 nn.Conv2d(inAllEmbeddingDims[0], inAllEmbeddingDims[-1], kernel_size=4, stride=1, padding=0),
                 nn.BatchNorm2d(inAllEmbeddingDims[-1]),
                 nn.ReLU()
             )
-            self.ModuleList          = nn.ModuleList([])
-            for InDim, OutDim in  reversed(InOutPairDims):
+            self.ModuleList = nn.ModuleList([])
+            for InDim, OutDim in reversed(InOutPairDims):
                 self.ModuleList.append(nn.Sequential(
                     nn.ConvTranspose2d(InDim, OutDim, kernel_size=4, stride=2, padding=1),
                     nn.BatchNorm2d(OutDim),
                     nn.ReLU()
                 ))
-
             self.FinalModule = nn.Sequential(
                 nn.ConvTranspose2d(inAllEmbeddingDims[0], inColorChan, kernel_size=4, stride=2, padding=1),
                 nn.Tanh()
             )
 
         # forward method
-        def forward(self, input):
-            x = self.InputModule(input)
+        def forward(self, inData):
+            x = self.InputModule(inData)
             
             for Module in self.ModuleList:
                 x = Module(x)
@@ -48,13 +45,11 @@ class DCGANModel(GANModel):
             super().__init__()
 
             InOutPairDims  = list(zip(inAllEmbeddingDims[:-1], inAllEmbeddingDims[1:]))
-            print(*InOutPairDims)
 
             self.InputModule = nn.Sequential(
                 nn.Conv2d(inColorChan, inAllEmbeddingDims[0], kernel_size=4, stride=2, padding=1),
                 nn.LeakyReLU(0.2)
             )
-
             self.ModuleList          = nn.ModuleList([])
             for InDim, OutDim in InOutPairDims:
                 self.ModuleList.append(nn.Sequential(
@@ -62,7 +57,6 @@ class DCGANModel(GANModel):
                     nn.BatchNorm2d(OutDim),
                     nn.LeakyReLU(0.2)
                 ))
-
             self.FinalModule = nn.Sequential(
                 nn.Conv2d(inAllEmbeddingDims[-1], 1, kernel_size=1, stride=1, padding=0),
                 nn.Sigmoid()
