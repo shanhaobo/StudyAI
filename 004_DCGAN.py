@@ -31,7 +31,7 @@ torch.set_printoptions(precision=10, sci_mode=False)
 ###################################
 
 EmbeddingDim        = 128
-ImageSize           = 96
+ImageSize           = 64
 ImageColorChan      = 3
 
 if __name__ == "__main__" :
@@ -59,6 +59,7 @@ if __name__ == "__main__" :
             sys.exit()
 
         transform = transforms.Compose([
+            transforms.Resize(ImageSize),
             transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
             transforms.Normalize((0.5,), (0.5,))  # (0, 1) -> (-1, 1),
         ])
