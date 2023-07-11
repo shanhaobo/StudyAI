@@ -13,19 +13,22 @@ class DCGANModel(GANModel):
             InOutPairDims = list(zip(inAllEmbeddingDims[1:], inAllEmbeddingDims[:-1]))
 
             self.InputModule = nn.Sequential(
-                nn.Conv2d(inAllEmbeddingDims[0], inAllEmbeddingDims[-1], kernel_size=4, stride=1, padding=0),
+                nn.ConvTranspose2d(inAllEmbeddingDims[0], inAllEmbeddingDims[-1], kernel_size=4, stride=2, padding=1),
                 nn.BatchNorm2d(inAllEmbeddingDims[-1]),
-                nn.ReLU()
+                nn.LeakyReLU(0.2),
+                nn.AvgPool2d(2, stride=2),
             )
             self.ModuleList = nn.ModuleList([])
             for InDim, OutDim in reversed(InOutPairDims):
                 self.ModuleList.append(nn.Sequential(
                     nn.ConvTranspose2d(InDim, OutDim, kernel_size=4, stride=2, padding=1),
                     nn.BatchNorm2d(OutDim),
-                    nn.ReLU()
+                    nn.LeakyReLU(0.2),
+                    nn.AvgPool2d(2, stride=2),
                 ))
             self.FinalModule = nn.Sequential(
                 nn.ConvTranspose2d(inAllEmbeddingDims[0], inColorChan, kernel_size=4, stride=2, padding=1),
+                nn.AvgPool2d(2, stride=2),
                 nn.Tanh()
             )
 
@@ -47,18 +50,24 @@ class DCGANModel(GANModel):
             InOutPairDims  = list(zip(inAllEmbeddingDims[:-1], inAllEmbeddingDims[1:]))
 
             self.InputModule = nn.Sequential(
+                # kernel_size=4, stride=2, padding=1 变为输入大小的二分之一
                 nn.Conv2d(inColorChan, inAllEmbeddingDims[0], kernel_size=4, stride=2, padding=1),
-                nn.LeakyReLU(0.2)
+                nn.BatchNorm2d(OutDim),
+                nn.LeakyReLU(0.2),
+                nn.Upsample(scale_factor=2),
             )
             self.ModuleList          = nn.ModuleList([])
             for InDim, OutDim in InOutPairDims:
                 self.ModuleList.append(nn.Sequential(
+                    # kernel_size=4, stride=2, padding=1 变为输入大小的二分之一
                     nn.Conv2d(InDim, OutDim, kernel_size=4, stride=2, padding=1),
                     nn.BatchNorm2d(OutDim),
-                    nn.LeakyReLU(0.2)
+                    nn.LeakyReLU(0.2),
+                    nn.Upsample(scale_factor=2),
                 ))
             self.FinalModule = nn.Sequential(
-                nn.Conv2d(inAllEmbeddingDims[-1], 1, kernel_size=1, stride=1, padding=0),
+                # kernel_size=3, stride=1, padding=1 保持输入大小变
+                nn.Conv2d(inAllEmbeddingDims[-1], 1, kernel_size=3, stride=1, padding=1),
                 nn.Sigmoid()
             )
 

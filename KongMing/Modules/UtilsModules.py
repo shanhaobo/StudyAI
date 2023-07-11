@@ -53,8 +53,9 @@ class DownsampleModule2D(nn.Module):
         super().__init__()
 
         self.Blocks = nn.Sequential(
-            Rearrange("b c (h p1) (w p2) -> b (c p1 p2) h w", p1=2, p2=2),
-            nn.Conv2d(inInputDim * 4, inInputDim, 1),
+            #Rearrange("b c (h p1) (w p2) -> b (c p1 p2) h w", p1=2, p2=2),
+            nn.AvgPool2d(2, stride=2),
+            #nn.Conv2d(inInputDim, inInputDim, kernel_size=2, stride=2, padding=0),
         )
 
     def forward(self, inData):
@@ -66,7 +67,8 @@ class UpsampleModule2D(nn.Module):
 
         self.Blocks = nn.Sequential(
             nn.Upsample(scale_factor=2, mode="nearest"),
-            nn.Conv2d(inInputDim, inInputDim, 3, padding=1),
+            # kernel_size=3, stride=1, padding=1 保持输入大小变
+            #nn.Conv2d(inInputDim, inInputDim, kernel_size=3, stride=1, padding=1),
         )
 
     def forward(self, inData):

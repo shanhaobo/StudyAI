@@ -44,8 +44,8 @@ if __name__ == "__main__" :
         print(GenImage.size())
         
         transform = transforms.Compose([
-            transforms.Normalize((-0.5,), (2.0,)),
-            transforms.Lambda(lambda t : (t + 1) * 0.5)
+            transforms.Normalize((-1.0,), (2.0,)), #(-1, 1) -> (0, 1),
+            transforms.ToPILImage(), # turn into shape HWC, (0, 1) -> (0, 255)
         ])
         ImagetFolderPath = "{}/images".format(OutputPath)
         os.makedirs(ImagetFolderPath, exist_ok=True)
@@ -55,9 +55,8 @@ if __name__ == "__main__" :
             sys.exit()
 
         transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Lambda(lambda t : (t * 2) - 1),
-            transforms.Normalize((0.5,), (0.5,))
+            transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
+            transforms.Normalize((0.5,), (0.5,))  # (0, 1) -> (-1, 1),
         ])
         if False :
             dataset = torchvision.datasets.FashionMNIST(
