@@ -45,11 +45,10 @@ class WGANTrainer(GANTrainer) :
 
     
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
-        # get BatchSize
-        nBatchSize = inBatchData.size(0)
+        BatchSize, _, ImageHeight, ImageWidth = inBatchData.size()
         # Prepare Real and Fake Data
         RealData = inBatchData.to(self.Device)
-        FakeData = self.Generator(torch.randn((nBatchSize,) + self.GeneratorInputSize, device=self.Device))
+        FakeData = self.Generator(torch.randn((BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth), device=self.Device))
         #print("DataSize:{} {}".format(RealData.size(),FakeData.size()))
 
         # Calc Scores

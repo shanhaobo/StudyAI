@@ -47,7 +47,7 @@ class DCGANModel(GANModel):
         def __init__(self, inColorChan, inAllEmbeddingDims):
             super().__init__()
 
-            InOutPairDims  = list(zip(inAllEmbeddingDims[:-1], inAllEmbeddingDims[1:]))
+            InOutPairDims = list(zip(inAllEmbeddingDims[:-1], inAllEmbeddingDims[1:]))
 
             self.InputModule = nn.Sequential(
                 # kernel_size=4, stride=2, padding=1 变为输入大小的二分之一
@@ -56,7 +56,7 @@ class DCGANModel(GANModel):
                 nn.LeakyReLU(0.2),
                 nn.Upsample(scale_factor=2),
             )
-            self.ModuleList          = nn.ModuleList([])
+            self.ModuleList = nn.ModuleList([])
             for InDim, OutDim in InOutPairDims:
                 self.ModuleList.append(nn.Sequential(
                     # kernel_size=4, stride=2, padding=1 变为输入大小的二分之一
@@ -80,7 +80,7 @@ class DCGANModel(GANModel):
 
             return self.FinalModule(x)
 
-    def __init__(self, inColorChan, inGeneratorSize, inEmbeddingDim, inEmbedLvlCntORList, inLearningRate=0.00001, inModelRootlFolderPath=".") -> None:
+    def __init__(self, inColorChan, inEmbeddingDim, inEmbedLvlCntORList, inLearningRate=0.00001, inModelRootlFolderPath=".") -> None:
         
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
             AllEmbeddingDims = [inEmbeddingDim, *(inEmbeddingDim * i for i in inEmbedLvlCntORList)]
@@ -100,7 +100,7 @@ class DCGANModel(GANModel):
         super().__init__(
             self.Generator,
             self.Discriminator,
-            inGeneratorSize,
+            inEmbeddingDim,
             inLearningRate,
             inModelRootlFolderPath
         )

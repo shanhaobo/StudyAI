@@ -16,7 +16,7 @@ class GANModel(BaseModel):
             self,
             inGenerator : torch.nn.Module,
             inDiscriminator : torch.nn.Module,
-            inGeneratorSize,
+            inGeneratorEmbeddingDim,
             inLearningRate = 1e-5,
             inModelRootFolderPath = "."
         ) -> None:
@@ -24,7 +24,7 @@ class GANModel(BaseModel):
         NewTrainer = GANTrainer(
             inGenerator,
             inDiscriminator,
-            inGeneratorSize,
+            inGeneratorEmbeddingDim,
             inLearningRate
         )
 
@@ -35,6 +35,8 @@ class GANModel(BaseModel):
         )
 
         super().__init__(NewTrainer, NewArchiver)
+
+        self.GeneratorEmbeddingDim = inGeneratorEmbeddingDim
 
         g = self._SumParameters(inGenerator)
         d = self._SumParameters(inDiscriminator)
@@ -49,8 +51,10 @@ class GANModel(BaseModel):
         BatchSize = inKVArgs.get("inBatchSize")
         if (BatchSize is None) :
             BatchSize = 1
+        ImageSize=inKVArgs["inImageSize"]
+        ColorChanNum=inKVArgs["inColorChanNum"]
 
         self.Trainer.Generator.eval()
-        return self.Trainer.Generator(torch.randn((BatchSize, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
+        return self.Trainer.Generator(torch.randn((BatchSize, ColorChanNum, ImageSize, ImageSize)).to(self.Trainer.Device))
 
     ###########################################################################################

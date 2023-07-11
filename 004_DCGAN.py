@@ -31,15 +31,19 @@ torch.set_printoptions(precision=10, sci_mode=False)
 ###################################
 
 EmbeddingDim        = 128
-ImageDim            = 64
+ImageSize           = 96
 ImageColorChan      = 3
 
 if __name__ == "__main__" :
-    GAN = DCGANModel(ImageColorChan, (EmbeddingDim, 4, 4), EmbeddingDim, 4, inModelRootlFolderPath="{}/trained_models".format(OutputPath))
+    GAN = DCGANModel(ImageColorChan, EmbeddingDim, 3, inModelRootlFolderPath="{}/trained_models".format(OutputPath))
     Exec = Executor(GAN)
 
     if (Exec.ForceTrain() == False) and Exec.IsExistModel():
-        GenImage = Exec.Eval(inBatchSize=15)
+        GenImage = Exec.Eval(
+            inImageSize=ImageSize,
+            inColorChanNum=ImageColorChan,
+            inBatchSize=15
+        )
         
         print(GenImage.size())
         
@@ -65,5 +69,5 @@ if __name__ == "__main__" :
         else:
             dataset = datasets.ImageFolder(root='{}/cartoon_faces'.format(DatasetPath), transform=transform)
         
-        dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
+        dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
         Exec.Train(dataloader, SaveInterval=13)

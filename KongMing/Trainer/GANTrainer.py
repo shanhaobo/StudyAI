@@ -11,7 +11,7 @@ class GANTrainer(MultiNNTrainer):
             self,
             inGenerator : nn.Module,
             inDiscriminator : nn.Module,
-            inGeneratorInputSize,
+            inGeneratorEmbeddingDim,
             inLearningRate = 1e-5,
             inLogRootPath="."
         ) -> None:
@@ -20,7 +20,7 @@ class GANTrainer(MultiNNTrainer):
         self.Generator                  = inGenerator.to(self.Device)
         self.Discriminator              = inDiscriminator.to(self.Device)
 
-        self.GeneratorInputSize         = inGeneratorInputSize
+        self.GeneratorEmbeddingDim         = inGeneratorEmbeddingDim
 
         self.EndBatchTrain.add(self.MyEndBatchTrain)
 
@@ -48,12 +48,10 @@ class GANTrainer(MultiNNTrainer):
 
 
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
-        # get BatchSize
-        nBatchSize = inBatchData.size(0)
-        
+        BatchSize, _, ImageHeight, ImageWidth = inBatchData.size()
         # Prepare Real and Fake Data
         RealData = inBatchData.to(self.Device)
-        FakeData = self.Generator(torch.randn((nBatchSize,) + self.GeneratorInputSize, device=self.Device))
+        FakeData = self.Generator(torch.randn((BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth), device=self.Device))
 
         # Calc Score or Loss
         DLossReal = self._CalcLossForReal(RealData)

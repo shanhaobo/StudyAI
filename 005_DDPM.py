@@ -34,7 +34,6 @@ torch.set_printoptions(precision=10, sci_mode=False)
 
 image_size = 64
 image_channel = 3
-batch_size = 16
 EmbedDim = 32
 if __name__ == "__main__" :
     DDPM = DDPMModel(
@@ -76,5 +75,5 @@ if __name__ == "__main__" :
             )
         else:
             dataset = torchvision.datasets.ImageFolder(root='{}/cartoon_faces'.format(DatasetPath), transform=transform)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
         Exec.Train(dataloader, SaveInterval=13)
