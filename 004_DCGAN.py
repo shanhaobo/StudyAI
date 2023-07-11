@@ -30,12 +30,12 @@ torch.set_printoptions(precision=10, sci_mode=False)
 
 ###################################
 
-EmbeddingDim    = 64
-ImageDim        = 64
-ImageChannel    = 3
+EmbeddingDim        = 64
+ImageDim            = 64
+ImageColorChan      = 3
 
 if __name__ == "__main__" :
-    GAN = DCGANModel(EmbeddingDim, ImageChannel, (EmbeddingDim, 3, 3), inModelRootlFolderPath="{}/trained_models".format(OutputPath))
+    GAN = DCGANModel(ImageColorChan, (EmbeddingDim, 4, 4), EmbeddingDim, 4, inModelRootlFolderPath="{}/trained_models".format(OutputPath))
     Exec = Executor(GAN)
 
     if (Exec.ForceTrain() == False) and Exec.IsExistModel():

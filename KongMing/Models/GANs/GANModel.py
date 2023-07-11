@@ -46,11 +46,11 @@ class GANModel(BaseModel):
         if (super().Eval(inEpoch, inArgs, inKVArgs) == False) :
             return None
         
-        BatchSize = inKVArgs["inBatchSize"]
+        BatchSize = inKVArgs.get("inBatchSize")
+        if (BatchSize is None) :
+            BatchSize = 1
 
         self.Trainer.Generator.eval()
         return self.Trainer.Generator(torch.randn((BatchSize, ) + self.Trainer.GeneratorInputSize).to(self.Trainer.Device))
-
-    ###########################################################################################
 
     ###########################################################################################
