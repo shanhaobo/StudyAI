@@ -2,47 +2,52 @@ import torch
 import torch.nn as nn
 
 from .GANModel import GANModel
-from KongMing.Modules.UNets.UNet2D import UNet2D_GAN
+from KongMing.Modules.UNets.UNet2DBase import UNet2DBase
+
+class UNet2D_GAN_InitConv(nn.Module):
+    def __init__(self, inInputDim, inOutputDim) -> None:
+        super().__init__()
+
+        self.Blocks = nn.Sequential(
+            # kernel_size=5, stride=1, padding=2 保持大小不变
+            nn.Conv2d(inInputDim, inOutputDim, kernel_size=5, stride=1, padding=2),
+            nn.BatchNorm2d(inOutputDim),
+            nn.LeakyReLU(0.2, inplace=True)
+        )
+
+    def forward(self, inData):
+        return self.Blocks(inData)
+    
+class UNet2D_GAN_SampleConv(nn.Module):
+    def __init__(self, inInputDim, inOutputDim) -> None:
+        super().__init__()
+
+        self.Blocks = nn.Sequential(
+                # kernel_size=3, stride=1, padding=1 保持大小不变
+                nn.Conv2d(inInputDim, inOutputDim, kernel_size=3, stride=1, padding=1),
+                nn.BatchNorm2d(inOutputDim),
+                nn.LeakyReLU(0.2, inplace=True)
+            )
+
+    def forward(self, inData):
+        return self.Blocks(inData)
+
+class UNet2D_GAN(UNet2DBase) :
+    def __init__(self, inDim, inColorChanNum, inEmbeddingDim, inEmbedLvlCntORList) -> None:
+        super().__init__(
+            inDim,
+            inColorChanNum,
+            inEmbeddingDim,
+            inEmbedLvlCntORList,
+            UNet2D_GAN_InitConv,
+            UNet2D_GAN_SampleConv,
+            UNet2D_GAN_InitConv,
+            UNet2D_GAN_SampleConv,
+            UNet2D_GAN_InitConv
+        )
 
 class UNetGANModel(GANModel):
-    # G(z)
-    class InnerGenerator(nn.Module):
-        # initializers
-        def __init__(self, inColorChan, inAllEmbeddingDims):
-            super().__init__()
-
-            InOutPairDims = list(zip(inAllEmbeddingDims[1:], inAllEmbeddingDims[:-1]))
-
-            self.InputModule = nn.Sequential(
-                nn.ConvTranspose2d(inAllEmbeddingDims[0], inAllEmbeddingDims[-1], kernel_size=4, stride=2, padding=1),
-                nn.BatchNorm2d(inAllEmbeddingDims[-1]),
-                nn.LeakyReLU(0.2, inplace=True),
-                nn.AvgPool2d(2, stride=2),
-            )
-            self.ModuleList = nn.ModuleList([])
-            for InDim, OutDim in reversed(InOutPairDims):
-                self.ModuleList.append(nn.Sequential(
-                    nn.ConvTranspose2d(InDim, OutDim, kernel_size=4, stride=2, padding=1),
-                    nn.BatchNorm2d(OutDim),
-                    nn.LeakyReLU(0.2, inplace=True),
-                    nn.AvgPool2d(2, stride=2),
-                ))
-            self.FinalModule = nn.Sequential(
-                nn.ConvTranspose2d(inAllEmbeddingDims[0], inColorChan, kernel_size=4, stride=2, padding=1),
-                nn.AvgPool2d(2, stride=2),
-                nn.Tanh()
-            )
-
-        # forward method
-        def forward(self, inData):
-            x = self.InputModule(inData)
-            
-            for Module in self.ModuleList:
-                x = Module(x)
-
-            return self.FinalModule(x)
-
-
+    
     class InnerDiscriminator(nn.Module):
         # initializers
         def __init__(self, inColorChan, inAllEmbeddingDims):

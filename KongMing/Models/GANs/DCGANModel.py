@@ -101,5 +101,5 @@ class DCGANModel(GANModel):
             inEmbeddingDim,
             inWTrainer=True,
             inLearningRate = inLearningRate,
-            inModelRootlFolderPath=inModelRootFolderPath
+            inModelRootFolderPath=inModelRootFolderPath
         )
