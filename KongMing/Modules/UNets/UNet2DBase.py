@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from einops import rearrange
 
-from ..UtilsModules import DoubleLinearModule, DownsampleModule2D, UpsampleModule2D
+from ..UtilsModules import DoubleLinearModule, DownsampleModule2D, DownsampleModule2D_PixelShuffle, UpsampleModule2D
 
 ######################################################################################
 ######################################################################################
@@ -125,7 +125,7 @@ class UNet2DBaseWithExtData(nn.Module):
         self.DSEncoderList          = nn.ModuleList([])
         for (InDim, OutDim) in InOutPairDims:
             self.DSEncoderList.append(nn.ModuleList([
-                DownsampleModule2D(InDim),
+                DownsampleModule2D_PixelShuffle(InDim),
                 DoubleLinearModule(ExtDataDim, InDim),
                 inDNSPLEncoderType(InDim, OutDim)
             ]))
