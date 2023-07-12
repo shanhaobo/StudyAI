@@ -49,7 +49,7 @@ if __name__ == "__main__" :
         
         transform = transforms.Compose([
             transforms.Normalize((-1.0,), (2.0,)), #(-1, 1) -> (0, 1),
-            transforms.ToPILImage(), # turn into shape HWC, (0, 1) -> (0, 255)
+            #transforms.ToPILImage(), # turn into shape HWC, (0, 1) -> (0, 255)
         ])
         ImagetFolderPath = "{}/images".format(OutputPath)
         os.makedirs(ImagetFolderPath, exist_ok=True)
