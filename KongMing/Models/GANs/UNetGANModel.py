@@ -4,6 +4,8 @@ import torch.nn as nn
 from .GANModel import GANModel
 from KongMing.Modules.UNets.UNet2DBase import UNet2DBase
 
+#########################################################################
+
 class UNet2D_GAN_InitConv(nn.Module):
     def __init__(self, inInputDim, inOutputDim) -> None:
         super().__init__()
@@ -32,6 +34,8 @@ class UNet2D_GAN_SampleConv(nn.Module):
     def forward(self, inData):
         return self.Blocks(inData)
 
+#########################################################################
+
 class UNet2D_GAN(UNet2DBase) :
     def __init__(self, inDim, inColorChanNum, inEmbeddingDim, inEmbedLvlCntORList) -> None:
         super().__init__(
@@ -45,6 +49,8 @@ class UNet2D_GAN(UNet2DBase) :
             UNet2D_GAN_SampleConv,
             UNet2D_GAN_InitConv
         )
+
+#########################################################################
 
 class UNetGANModel(GANModel):
     
@@ -111,3 +117,5 @@ class UNetGANModel(GANModel):
             inLearningRate = inLearningRate,
             inModelRootFolderPath=inModelRootFolderPath
         )
+
+#########################################################################
