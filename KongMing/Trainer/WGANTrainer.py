@@ -24,21 +24,31 @@ class WGANTrainer(GANTrainer) :
     def _CreateLossFN(self) -> None:
         pass
 
+    # 计算梯度惩罚
     def __CalculateGradientPenalty(self, RealData, FakeData):
         BatchSize, _, ImageHeight, ImageWidth = RealData.size()
+
+        # 将数据插值成与RealData的尺寸一致, 这里其实可以不做,因为我已经做了
         FakeData = F.interpolate(FakeData, size=(ImageHeight, ImageWidth), mode='bilinear', align_corners=False)
-        alpha = torch.rand(BatchSize, 1, 1, 1, device=self.Device)
-        interpolates = (alpha * RealData + ((1 - alpha) * FakeData)).requires_grad_(True)
-        d_interpolates = self.Discriminator(interpolates)
-        gradients = grad(outputs=d_interpolates, inputs=interpolates,
-                        grad_outputs=torch.ones(d_interpolates.size(), device=self.Device),
+        # *size (Batch, 1, 1, 1)
+        Alpha = torch.rand(BatchSize, 1, 1, 1, device=self.Device)
+        # 计算插值
+        Interpolates = (Alpha * RealData + ((1 - Alpha) * FakeData)).requires_grad_(True)
+        # 计数插值分数
+        InterpolatesScores = self.Discriminator(Interpolates)
+        # 计算InterpolatesScores对Interpolates的梯度
+        Gradients = grad(outputs=InterpolatesScores, inputs=Interpolates,
+                        grad_outputs=torch.ones(InterpolatesScores.size(), device=self.Device),
                         create_graph=True, retain_graph=True, only_inputs=True)[0]
-        gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
-        return gradient_penalty
+        # 计算梯度惩罚
+        GradientPenalty = ((Gradients.norm(2, dim=1) - 1) ** 2).mean()
+
+        return GradientPenalty
     
     def _CalcDiscriminatorLoss(self, RealData, RealScores, FakeData, FakeScores):
         # Calc W Loss
         GradientPenalty = self.__CalculateGradientPenalty(RealData, FakeData.detach())
+
         return -(torch.mean(RealScores) - torch.mean(FakeScores)) + GradientPenalty
     
     def _CalcGeneratorLoss(self):
@@ -63,7 +73,7 @@ class WGANTrainer(GANTrainer) :
         
         # Optimize Generator
         FakeScoresForGenerator      = self.Discriminator(FakeData)
-        GLoss                       = torch.mean(FakeScoresForGenerator)
+        GLoss                       = -torch.mean(FakeScoresForGenerator)
         self._BackPropagate(self.OptimizerG, GLoss)
 
         self.CurrBatchDiscriminatorLoss = DLoss.item()
