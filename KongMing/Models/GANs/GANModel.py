@@ -17,16 +17,25 @@ class GANModel(BaseModel):
             inGenerator : torch.nn.Module,
             inDiscriminator : torch.nn.Module,
             inGeneratorEmbeddingDim,
+            inWTrainer = True,
             inLearningRate = 1e-5,
             inModelRootFolderPath = "."
         ) -> None:
         
-        NewTrainer = WGANTrainer(
-            inGenerator,
-            inDiscriminator,
-            inGeneratorEmbeddingDim,
-            inLearningRate
-        )
+        if inWTrainer :
+            NewTrainer = WGANTrainer(
+                inGenerator,
+                inDiscriminator,
+                inGeneratorEmbeddingDim,
+                inLearningRate
+            )
+        else:
+            NewTrainer = GANTrainer(
+                inGenerator,
+                inDiscriminator,
+                inGeneratorEmbeddingDim,
+                inLearningRate
+            )
 
         NewArchiver = GANArchiver(
             inGenerator,

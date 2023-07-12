@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from .GANModel import GANModel
 
-class DCGANModel(GANModel):
+class UNetGANModel(GANModel):
     # G(z)
     class InnerGenerator(nn.Module):
         # initializers
@@ -85,12 +85,12 @@ class DCGANModel(GANModel):
         else:
             AllEmbeddingDims = [*(inEmbeddingDim * (2 ** i) for i in range(0, inEmbedLvlCntORList))]
 
-        self.Generator = DCGANModel.InnerGenerator(
+        self.Generator = UNetGANModel.InnerGenerator(
             inColorChan=inColorChan,
             inAllEmbeddingDims=AllEmbeddingDims
         )
 
-        self.Discriminator = DCGANModel.InnerDiscriminator(
+        self.Discriminator = UNetGANModel.InnerDiscriminator(
             inColorChan=inColorChan,
             inAllEmbeddingDims=AllEmbeddingDims
         )
@@ -101,5 +101,5 @@ class DCGANModel(GANModel):
             inEmbeddingDim,
             inWTrainer=True,
             inLearningRate = inLearningRate,
-            inModelRootlFolderPath=inModelRootFolderPath
+            inModelRootFolderPath=inModelRootFolderPath
         )

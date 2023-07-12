@@ -1,4 +1,5 @@
 from . import (
     GANModel,
-    DCGANModel
+    DCGANModel,
+    UNetGANModel
 )
