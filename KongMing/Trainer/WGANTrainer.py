@@ -51,12 +51,17 @@ class WGANTrainer(GANTrainer) :
 
         return -(torch.mean(RealScores) - torch.mean(FakeScores)) + GradientPenalty
     
-    def _CalcGeneratorLoss(self):
-        return 
+    def _CalcGeneratorLoss(self, FakeData):
+        FakeScoresForGenerator      = self.Discriminator(FakeData)
+        return -torch.mean(FakeScoresForGenerator) 
 
     
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
         BatchSize, _, ImageHeight, ImageWidth = inBatchData.size()
+
+        self._BeginBackPropagate(self.OptimizerD)
+        self._BeginBackPropagate(self.OptimizerG)
+
         # Prepare Real and Fake Data
         RealData = inBatchData.to(self.Device)
         FakeData = self.Generator(torch.randn((BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth), device=self.Device))
@@ -69,12 +74,11 @@ class WGANTrainer(GANTrainer) :
         # Calc W Loss
         DLoss                       = self._CalcDiscriminatorLoss(RealData, RealScores, FakeData, FakeScoresForDiscriminator)
         # Optimize Discriminator
-        self._BackPropagate(self.OptimizerD, DLoss)
+        self._EndBackPropagate(self.OptimizerD, DLoss)
         
         # Optimize Generator
-        FakeScoresForGenerator      = self.Discriminator(FakeData)
-        GLoss                       = -torch.mean(FakeScoresForGenerator)
-        self._BackPropagate(self.OptimizerG, GLoss)
+        GLoss                       = self._CalcGeneratorLoss(FakeData)
+        self._EndBackPropagate(self.OptimizerG, GLoss)
 
         self.CurrBatchDiscriminatorLoss = DLoss.item()
         self.CurrBatchGeneratorLoss     = GLoss.item()
