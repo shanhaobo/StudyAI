@@ -8,6 +8,18 @@ from torch.utils.data import DataLoader
 
 from KongMing.Utils.Delegate import Delegate
 
+from torch.utils.tensorboard import SummaryWriter
+
+def tensorboard_trace_handler(trace_data):
+    # 创建一个 TensorBoard 的 SummaryWriter
+    writer = SummaryWriter()
+
+    # 将分析结果写入 TensorBoard
+    writer.add_trace(trace_data)
+
+    # 关闭 SummaryWriter
+    writer.close()
+
 class BaseTrainer(abc.ABC):
     def __init__(self, inLearningRate, inLogRootPath) -> None:
         self.Device             = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -64,11 +76,20 @@ class BaseTrainer(abc.ABC):
         # call BeginEpochTrain
         self.BeginEpochTrain(inArgs, inKVArgs)
 
-        # For Each Batch Train
-        for self.CurrBatchIndex, (CurrBatchData, CurrBatchLabel) in enumerate(inDataLoader):
-            self.BeginBatchTrain(inArgs, inKVArgs)
-            self._BatchTrain(CurrBatchData, CurrBatchLabel, inArgs, inKVArgs)
-            self.EndBatchTrain(inArgs, inKVArgs)
+        with torch.profiler.profile(
+            schedule=torch.profiler.schedule(
+                wait=2,
+                warmup=2,
+                active=6,
+                repeat=1),
+            on_trace_ready=tensorboard_trace_handler,
+            with_trace=True
+        ) as profiler:
+            # For Each Batch Train
+            for self.CurrBatchIndex, (CurrBatchData, CurrBatchLabel) in enumerate(inDataLoader):
+                self.BeginBatchTrain(inArgs, inKVArgs)
+                self._BatchTrain(CurrBatchData, CurrBatchLabel, inArgs, inKVArgs)
+                self.EndBatchTrain(inArgs, inKVArgs)
         
         # End Epoch Train
         # call EndEpochTrain
