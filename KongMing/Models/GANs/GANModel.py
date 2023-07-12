@@ -55,6 +55,6 @@ class GANModel(BaseModel):
         ColorChanNum=inKVArgs["inColorChanNum"]
 
         self.Trainer.Generator.eval()
-        return self.Trainer.Generator(torch.randn((BatchSize, ColorChanNum, ImageSize, ImageSize)).to(self.Trainer.Device))
+        return self.Trainer.Generator(torch.randn((BatchSize, self.GeneratorEmbeddingDim, ImageSize, ImageSize)).to(self.Trainer.Device))
 
     ###########################################################################################

@@ -38,6 +38,15 @@ class BaseTrainer(abc.ABC):
         inLoss.backward()
         inOptimizer.step()
     
+    @staticmethod
+    def _BeginBackPropagate(inOptimizer : Optimizer) -> None:
+        inOptimizer.zero_grad()
+    
+    @staticmethod
+    def _EndBackPropagate(inOptimizer : Optimizer, inLoss : Tensor) -> None:
+        inLoss.backward()
+        inOptimizer.step()
+    
     @abc.abstractmethod
     def _CreateOptimizer(self) -> None:
         pass

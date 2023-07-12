@@ -58,12 +58,13 @@ class DDPMTrainer(BaseTrainer) :
         TimeEmbedding       = torch.randint(0, self.Timesteps, (nBatchSize,), device=self.Device).long()
         RealDataWithNoise   = self.DiffusionMode.Q_Sample(inXStart = RealData, inT = TimeEmbedding, inNoise = Noise)
 
+        self._BeginBackPropagate(self.Optimizer)
         PredictedNoise      = self.NNModel(RealDataWithNoise, TimeEmbedding)
 
         #loss = self.LossFN(PredictedNoise, RealData)
         loss = self.LossFN(Noise, PredictedNoise)
 
-        self._BackPropagate(self.Optimizer, loss)
+        self._EndBackPropagate(self.Optimizer, loss)
         self.DiffusionMode.EMA.update_parameters(self.NNModel)
 
         self.CurrBatchDDPMLoss = loss.item()

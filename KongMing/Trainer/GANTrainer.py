@@ -51,6 +51,10 @@ class GANTrainer(MultiNNTrainer):
         BatchSize, _, ImageHeight, ImageWidth = inBatchData.size()
         # Prepare Real and Fake Data
         RealData = inBatchData.to(self.Device)
+
+        self._BeginBackPropagate(self.OptimizerD)
+        self._BeginBackPropagate(self.OptimizerG)
+        
         FakeData = self.Generator(torch.randn((BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth), device=self.Device))
 
         # Calc Score or Loss
@@ -61,11 +65,11 @@ class GANTrainer(MultiNNTrainer):
         DLoss = (DLossReal + DLossFake) * 0.5
 
         # Optimize Discriminator
-        self._BackPropagate(self.OptimizerD, DLoss)
+        self._EndBackPropagate(self.OptimizerD, DLoss)
         
         # Optimize Generator
         GLoss = self._CalcLossForReal(FakeData) 
-        self._BackPropagate(self.OptimizerG, GLoss)
+        self._EndBackPropagate(self.OptimizerG, GLoss)
 
         self.CurrBatchDiscriminatorLoss = DLoss.item()
         self.CurrBatchGeneratorLoss     = GLoss.item()
