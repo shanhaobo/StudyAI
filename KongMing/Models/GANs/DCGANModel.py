@@ -53,8 +53,7 @@ class DCGANModel(GANModel):
                 # kernel_size=4, stride=2, padding=1 变为输入大小的二分之一
                 nn.Conv2d(inColorChan, inAllEmbeddingDims[0], kernel_size=4, stride=2, padding=1),
                 nn.BatchNorm2d(inAllEmbeddingDims[0]),
-                nn.LeakyReLU(0.2),
-                nn.Upsample(scale_factor=2),
+                nn.LeakyReLU(0.2)
             )
             self.ModuleList = nn.ModuleList([])
             for InDim, OutDim in InOutPairDims:
@@ -62,8 +61,7 @@ class DCGANModel(GANModel):
                     # kernel_size=4, stride=2, padding=1 变为输入大小的二分之一
                     nn.Conv2d(InDim, OutDim, kernel_size=4, stride=2, padding=1),
                     nn.BatchNorm2d(OutDim),
-                    nn.LeakyReLU(0.2),
-                    nn.Upsample(scale_factor=2),
+                    nn.LeakyReLU(0.2)
                 ))
             self.FinalModule = nn.Sequential(
                 # kernel_size=3, stride=1, padding=1 保持输入大小变
@@ -83,9 +81,9 @@ class DCGANModel(GANModel):
     def __init__(self, inColorChan, inEmbeddingDim, inEmbedLvlCntORList, inLearningRate=0.00001, inModelRootlFolderPath=".") -> None:
         
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
-            AllEmbeddingDims = [inEmbeddingDim, *(inEmbeddingDim * i for i in inEmbedLvlCntORList)]
+            AllEmbeddingDims = [*(inEmbeddingDim * i for i in inEmbedLvlCntORList)]
         else:
-            AllEmbeddingDims = [inEmbeddingDim, *(inEmbeddingDim * (2 ** i) for i in range(1, inEmbedLvlCntORList + 1))]
+            AllEmbeddingDims = [*(inEmbeddingDim * (2 ** i) for i in range(0, inEmbedLvlCntORList))]
 
         self.Generator = DCGANModel.InnerGenerator(
             inColorChan=inColorChan,
