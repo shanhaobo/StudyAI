@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from .GANModel import GANModel
+from KongMing.Modules.UNets.UNet2D import UNet2D_GAN
 
 class UNetGANModel(GANModel):
     # G(z)
@@ -85,9 +86,11 @@ class UNetGANModel(GANModel):
         else:
             AllEmbeddingDims = [*(inEmbeddingDim * (2 ** i) for i in range(0, inEmbedLvlCntORList))]
 
-        self.Generator = UNetGANModel.InnerGenerator(
-            inColorChan=inColorChan,
-            inAllEmbeddingDims=AllEmbeddingDims
+        self.Generator = UNet2D_GAN(
+            inEmbeddingDim,
+            inColorChanNum=inColorChan,
+            inEmbeddingDim=inEmbeddingDim,
+            inEmbedLvlCntORList=inEmbedLvlCntORList
         )
 
         self.Discriminator = UNetGANModel.InnerDiscriminator(

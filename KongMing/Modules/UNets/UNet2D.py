@@ -2,7 +2,7 @@ from einops import rearrange
 
 import torch.nn as nn
 
-from .UNet2DBase import UNet2DBaseWithExtData
+from .UNet2DBase import UNet2DBaseWithExtData, UNet2DBase
 from ..PositionEmbedding import SinusoidalPositionEmbedding
 from ..UtilsModules import DoubleLinearModuleTO4D, DoubleLinearModule, ResNet, PreNorm
 from ..Attention2D import MultiHeadAttention2D, MultiHeadLinearAttn2D
@@ -13,7 +13,8 @@ class UNet2D_InitConv(nn.Module):
     def __init__(self, inInputDim, inOutputDim) -> None:
         super().__init__()
 
-        self.Blocks = nn.Conv2d(inInputDim, inOutputDim, 7, padding=3)
+        # kernel_size=7, stride=1, padding=3 保持大小不变
+        self.Blocks = nn.Conv2d(inInputDim, inOutputDim, kernel_size=7, stride=1, padding=3)
 
     def forward(self, inData):
         return self.Blocks(inData)
@@ -22,7 +23,8 @@ class CU2_ConvNeXtBlock(nn.Module):
     def __init__(self, dim, dim_out, mult=2):
         super().__init__()
 
-        self.ds_conv = nn.Conv2d(dim, dim, 7, padding=3, groups=dim)
+        # kernel_size=7, stride=1, padding=3 保持大小不变
+        self.ds_conv = nn.Conv2d(dim, dim, kernel_size=7, stride=1, padding=3, groups=dim)
 
         self.net = nn.Sequential(
             nn.GroupNorm(1, dim),
@@ -231,4 +233,49 @@ class UNet2D_WSR(UNet2DBaseWithExtData) :
             WSB_FinalConv,
             SinusoidalPositionEmbedding,
             inExtDataDim
+        )
+
+########################################################################
+########################################################################
+
+class UNet2D_GAN_InitConv(nn.Module):
+    def __init__(self, inInputDim, inOutputDim) -> None:
+        super().__init__()
+
+        self.Blocks = nn.Sequential(
+            # kernel_size=5, stride=1, padding=2 保持大小不变
+            nn.Conv2d(inInputDim, inOutputDim, kernel_size=5, stride=1, padding=2),
+            nn.BatchNorm2d(inOutputDim),
+            nn.LeakyReLU(0.2, inplace=True)
+        )
+
+    def forward(self, inData):
+        return self.Blocks(inData)
+    
+class UNet2D_GAN_SampleConv(nn.Module):
+    def __init__(self, inInputDim, inOutputDim) -> None:
+        super().__init__()
+
+        self.Blocks = nn.Sequential(
+                # kernel_size=3, stride=1, padding=1 保持大小不变
+                nn.Conv2d(inInputDim, inOutputDim, kernel_size=3, stride=1, padding=1),
+                nn.BatchNorm2d(inOutputDim),
+                nn.LeakyReLU(0.2, inplace=True)
+            )
+
+    def forward(self, inData):
+        return self.Blocks(inData)
+
+class UNet2D_GAN(UNet2DBase) :
+    def __init__(self, inDim, inColorChanNum, inEmbeddingDim, inEmbedLvlCntORList) -> None:
+        super().__init__(
+            inDim,
+            inColorChanNum,
+            inEmbeddingDim,
+            inEmbedLvlCntORList,
+            UNet2D_GAN_InitConv,
+            UNet2D_GAN_SampleConv,
+            UNet2D_GAN_InitConv,
+            UNet2D_GAN_SampleConv,
+            UNet2D_GAN_InitConv
         )

@@ -54,7 +54,7 @@ class UNet2DBase(nn.Module):
         for OutDim, InDim  in reversed(InOutPairDims):
             self.USDecoderList.append(nn.ModuleList([
                 inUPSPLDecoderType(InDim * 2, OutDim),
-                nn.Upsample(scale_factor=2, mode="billinear")
+                UpsampleModule2D(OutDim)
             ]))
 
         # 5 -> output
