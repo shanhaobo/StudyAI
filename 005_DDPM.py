@@ -55,7 +55,7 @@ if __name__ == "__main__" :
         
         reverse_transform = transforms.Compose([
             transforms.Normalize((-1.0,), (2.0,)), #(-1, 1) -> (0, 1),
-            transforms.ToPILImage(), # turn into shape HWC, (0, 1) -> (0, 255)
+            #transforms.ToPILImage(), # turn into shape HWC, (0, 1) -> (0, 255)
         ])
         Path = "{}/images".format(OutputPath)
         os.makedirs(Path, exist_ok=True)
