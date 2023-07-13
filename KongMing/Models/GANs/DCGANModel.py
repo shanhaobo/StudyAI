@@ -3,9 +3,11 @@ import torch.nn as nn
 
 from .GANModel import GANModel
 
+from KongMing.Modules.BaseNNModule import BaseNNModule
+
 class DCGANModel(GANModel):
     # G(z)
-    class InnerGenerator(nn.Module):
+    class InnerGenerator(BaseNNModule):
         # initializers
         def __init__(self, inColorChan, inAllEmbeddingDims):
             super().__init__()
@@ -41,8 +43,7 @@ class DCGANModel(GANModel):
 
             return self.FinalModule(x)
 
-
-    class InnerDiscriminator(nn.Module):
+    class InnerDiscriminator(BaseNNModule):
         # initializers
         def __init__(self, inColorChan, inAllEmbeddingDims):
             super().__init__()

@@ -52,6 +52,9 @@ class GANTrainer(MultiNNTrainer):
         # Prepare Real and Fake Data
         RealData = inBatchData.to(self.Device)
 
+        with zip(self.Generator, self.Discriminator) as (G, D):
+            pass
+
         self._BeginBackPropagate(self.OptimizerD)
         self._BeginBackPropagate(self.OptimizerG)
         

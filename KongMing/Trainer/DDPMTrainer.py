@@ -92,5 +92,6 @@ class DDPMTrainer(BaseTrainer) :
             self.DiffusionMode.EMA.override_parameters(self.NNModel)
 
     def _CheckEndEpoch(self)->bool:
-        return self.AverageLoss.item() <= 0.01
+        _, AvgLoss = self.NNModel.GetLoss()
+        return AvgLoss <= 0.01
 ###########################################################################################
