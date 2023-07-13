@@ -6,8 +6,6 @@ import torch.nn.functional as F
 
 from .BaseTrainer import BaseTrainer
 
-from KongMing.Utils.AveragedUtils import EMAValue
-
 from KongMing.Modules.BaseNNModule import BaseNNModule
 
 import pandas as pd
@@ -54,7 +52,8 @@ class DDPMTrainer(BaseTrainer) :
             RealDataWithNoise   = self.DiffusionMode.Q_Sample(inXStart = RealData, inT = TimeEmbedding, inNoise = Noise)
 
             PredictedNoise      = Model(RealDataWithNoise, TimeEmbedding)
-            Model.ApplyLoss(Noise, PredictedNoise)
+            
+            Model.ApplyCalcLoss(Noise, PredictedNoise)
 
 ###########################################################################################
 

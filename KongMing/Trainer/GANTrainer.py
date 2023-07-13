@@ -6,11 +6,13 @@ from datetime import datetime
 
 from .MultiNNTrainer import MultiNNTrainer
 
+from KongMing.Modules.BaseNNModule import BaseNNModule
+
 class GANTrainer(MultiNNTrainer):
     def __init__(
             self,
-            inGenerator : nn.Module,
-            inDiscriminator : nn.Module,
+            inGenerator : BaseNNModule,
+            inDiscriminator : BaseNNModule,
             inGeneratorEmbeddingDim,
             inLearningRate = 1e-5,
             inLogRootPath="."
@@ -28,71 +30,55 @@ class GANTrainer(MultiNNTrainer):
 
 
     def _CreateOptimizer(self) -> None:
-        self.OptimizerG = optim.Adam(self.Generator.parameters(),     lr=self.LearningRate, betas=(0.5, 0.999))
-        self.OptimizerD = optim.Adam(self.Discriminator.parameters(), lr=self.LearningRate, betas=(0.5, 0.999))
-        pass
+        #self.OptimizerG = optim.Adam(self.Generator.parameters(),     lr=self.LearningRate, betas=(0.5, 0.999))
+        #self.OptimizerD = optim.Adam(self.Discriminator.parameters(), lr=self.LearningRate, betas=(0.5, 0.999))
+        self.Generator.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
+        self.Discriminator.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
 
     def _CreateLossFN(self) -> None:
-        self.LossFN     = nn.BCELoss().to(self.Device)
-        pass
-
-    def _CalcLossForReal(self, inBatchData):
-        DiscriminatorScores = self.Discriminator(inBatchData)
-        RealLabels = torch.ones(DiscriminatorScores.size(), device=self.Device)
-        return self.LossFN(DiscriminatorScores, RealLabels)
-    
-    def _CalcLossForFake(self, inBatchData):
-        DiscriminatorScores = self.Discriminator(inBatchData)
-        FakeLabels = torch.zeros(DiscriminatorScores.size(), device=self.Device)
-        return self.LossFN(DiscriminatorScores, FakeLabels)
-
+        #self.LossFN     = nn.BCELoss().to(self.Device)
+        self.Generator.ApplyLossFunc(nn.BCELoss().to(self.Device))
+        self.Discriminator.ApplyLossFunc(nn.BCELoss().to(self.Device))
 
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
+
         BatchSize, _, ImageHeight, ImageWidth = inBatchData.size()
         # Prepare Real and Fake Data
         RealData = inBatchData.to(self.Device)
 
-        with zip(self.Generator, self.Discriminator) as (G, D):
-            pass
+        with self.Generator as G, self.Discriminator as D:
+            
+            FakeData = self.Generator(torch.randn((BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth), device=self.Device))
+            
+            DiscriminatorScores = self.Discriminator(RealData)
+            RealLabels = torch.ones(DiscriminatorScores.size(), device=self.Device)
+            DLossReal = D.CalcLoss(DiscriminatorScores, RealLabels)
 
-        self._BeginBackPropagate(self.OptimizerD)
-        self._BeginBackPropagate(self.OptimizerG)
-        
-        FakeData = self.Generator(torch.randn((BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth), device=self.Device))
+            DiscriminatorScores = self.Discriminator(FakeData.detach())
+            FakeLabels = torch.zeros(DiscriminatorScores.size(), device=self.Device)
+            DLossFake = D.CalcLoss(DiscriminatorScores, FakeLabels)
 
-        # Calc Score or Loss
-        DLossReal = self._CalcLossForReal(RealData)
-        # detach() do not effect Generator
-        DLossFake = self._CalcLossForFake(FakeData.detach())
+            D.ApplyLoss((DLossReal + DLossFake) * 0.5)
 
-        DLoss = (DLossReal + DLossFake) * 0.5
+            DiscriminatorScores = self.Discriminator(FakeData)
+            RealLabels = torch.ones(DiscriminatorScores.size(), device=self.Device)
+            G.ApplyCalcLoss(DiscriminatorScores, RealLabels)
 
-        # Optimize Discriminator
-        self._EndBackPropagate(self.OptimizerD, DLoss)
-        
-        # Optimize Generator
-        GLoss = self._CalcLossForReal(FakeData) 
-        self._EndBackPropagate(self.OptimizerG, GLoss)
-
-        self.CurrBatchDiscriminatorLoss = DLoss.item()
-        self.CurrBatchGeneratorLoss     = GLoss.item()
-
-        pass
 
 ###########################################################################################
 
     def MyEndBatchTrain(self, inArgs, inKVArgs) -> None:
-        NowStr  = datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]")
+        DLoss, _ = self.Discriminator.GetLoss()
+        GLoss, _ = self.Generator.GetLoss()
         print(
             "{} | Epoch:{:0>4d} | Batch:{:0>4d} | DLoss:{:.8f} | GLoss:{:.8f}".
             format(
-                NowStr,
+                datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]"),
                 self.CurrEpochIndex,
                 self.CurrBatchIndex,
-                self.CurrBatchDiscriminatorLoss,
-                self.CurrBatchGeneratorLoss
+                DLoss,
+                GLoss
             )
         )
-        pass
 
 ###########################################################################################

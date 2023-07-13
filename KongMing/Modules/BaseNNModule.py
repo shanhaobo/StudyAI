@@ -36,7 +36,14 @@ class BaseNNModule(torch.nn.Module):
         else:
             raise TypeError
 
-    def ApplyLoss(self, inInput: torch.Tensor, inTarget: torch.Tensor, **inKVArgs):
+    def ApplyLoss(self, inLoss: torch.Tensor):
+        self._Loss = inLoss
+        self._AvgLoss.AcceptNewValue(self._Loss.item())
+
+    def CalcLoss(self, inInput: torch.Tensor, inTarget: torch.Tensor, **inKVArgs):
+        return self._LossFunction(inInput, inTarget, **inKVArgs)
+    
+    def ApplyCalcLoss(self, inInput: torch.Tensor, inTarget: torch.Tensor = None, **inKVArgs):
         self._Loss = self._LossFunction(inInput, inTarget, **inKVArgs)
         self._AvgLoss.AcceptNewValue(self._Loss.item())
 
