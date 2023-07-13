@@ -57,31 +57,24 @@ class WGANTrainer(GANTrainer) :
 
     
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
-        BatchSize, _, ImageHeight, ImageWidth = inBatchData.size()
 
-        self._BeginBackPropagate(self.OptimizerD)
-        self._BeginBackPropagate(self.OptimizerG)
+        BatchSize, _, ImageHeight, ImageWidth = inBatchData.size()
 
         # Prepare Real and Fake Data
         RealData = inBatchData.to(self.Device)
-        FakeData = self.Generator(torch.randn((BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth), device=self.Device))
-        #print("DataSize:{} {}".format(RealData.size(),FakeData.size()))
 
-        # Calc Scores
-        RealScores                  = self.Discriminator(RealData)
-        FakeScoresForDiscriminator  = self.Discriminator(FakeData.detach())
+        with self.Generator as G, self.Discriminator as D:
+            FakeData = self.Generator(torch.randn((BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth), device=self.Device))
+            #print("DataSize:{} {}".format(RealData.size(),FakeData.size()))
 
-        # Calc W Loss
-        DLoss                       = self._CalcDiscriminatorLoss(RealData, RealScores, FakeData, FakeScoresForDiscriminator)
-        # Optimize Discriminator
-        self._EndBackPropagate(self.OptimizerD, DLoss)
+            # Calc Scores
+            RealScores                  = self.Discriminator(RealData)
+            FakeScoresForDiscriminator  = self.Discriminator(FakeData.detach())
+
+            # Calc W Loss
+            DLoss                       = self._CalcDiscriminatorLoss(RealData, RealScores, FakeData, FakeScoresForDiscriminator)
+            D.AcceptLoss(DLoss)
         
-        # Optimize Generator
-        GLoss                       = self._CalcGeneratorLoss(FakeData)
-        self._EndBackPropagate(self.OptimizerG, GLoss)
-
-        self.CurrBatchDiscriminatorLoss = DLoss.item()
-        self.CurrBatchGeneratorLoss     = GLoss.item()
-
-        pass
+            GLoss                       = self._CalcGeneratorLoss(FakeData)
+            G.AcceptLoss(GLoss)
 

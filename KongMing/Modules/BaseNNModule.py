@@ -34,16 +34,16 @@ class BaseNNModule(torch.nn.Module):
         elif inspect.isfunction(inLossFunc) or inspect.ismethod(inLossFunc):
             self._LossFunction = inLossFunc
         else:
-            raise TypeError
+            self._LossFunction = inLossFunc
 
-    def ApplyLoss(self, inLoss: torch.Tensor):
+    def AcceptLoss(self, inLoss: torch.Tensor):
         self._Loss = inLoss
         self._AvgLoss.AcceptNewValue(self._Loss.item())
 
     def CalcLoss(self, inInput: torch.Tensor, inTarget: torch.Tensor, **inKVArgs):
         return self._LossFunction(inInput, inTarget, **inKVArgs)
     
-    def ApplyCalcLoss(self, inInput: torch.Tensor, inTarget: torch.Tensor = None, **inKVArgs):
+    def CalcAndAcceptLoss(self, inInput: torch.Tensor, inTarget: torch.Tensor = None, **inKVArgs):
         self._Loss = self._LossFunction(inInput, inTarget, **inKVArgs)
         self._AvgLoss.AcceptNewValue(self._Loss.item())
 

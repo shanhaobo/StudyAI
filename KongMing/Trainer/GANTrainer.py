@@ -30,39 +30,32 @@ class GANTrainer(MultiNNTrainer):
 
 
     def _CreateOptimizer(self) -> None:
-        #self.OptimizerG = optim.Adam(self.Generator.parameters(),     lr=self.LearningRate, betas=(0.5, 0.999))
-        #self.OptimizerD = optim.Adam(self.Discriminator.parameters(), lr=self.LearningRate, betas=(0.5, 0.999))
         self.Generator.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
         self.Discriminator.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
 
     def _CreateLossFN(self) -> None:
-        #self.LossFN     = nn.BCELoss().to(self.Device)
         self.Generator.ApplyLossFunc(nn.BCELoss().to(self.Device))
         self.Discriminator.ApplyLossFunc(nn.BCELoss().to(self.Device))
 
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
 
         BatchSize, _, ImageHeight, ImageWidth = inBatchData.size()
+
         # Prepare Real and Fake Data
         RealData = inBatchData.to(self.Device)
 
         with self.Generator as G, self.Discriminator as D:
-            
             FakeData = self.Generator(torch.randn((BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth), device=self.Device))
-            
             DiscriminatorScores = self.Discriminator(RealData)
             RealLabels = torch.ones(DiscriminatorScores.size(), device=self.Device)
             DLossReal = D.CalcLoss(DiscriminatorScores, RealLabels)
-
             DiscriminatorScores = self.Discriminator(FakeData.detach())
             FakeLabels = torch.zeros(DiscriminatorScores.size(), device=self.Device)
             DLossFake = D.CalcLoss(DiscriminatorScores, FakeLabels)
-
-            D.ApplyLoss((DLossReal + DLossFake) * 0.5)
-
+            D.AcceptLoss((DLossReal + DLossFake) * 0.5)
             DiscriminatorScores = self.Discriminator(FakeData)
             RealLabels = torch.ones(DiscriminatorScores.size(), device=self.Device)
-            G.ApplyCalcLoss(DiscriminatorScores, RealLabels)
+            G.CalcAndAcceptLoss(DiscriminatorScores, RealLabels)
 
 
 ###########################################################################################

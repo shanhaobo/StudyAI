@@ -53,7 +53,7 @@ class DDPMTrainer(BaseTrainer) :
 
             PredictedNoise      = Model(RealDataWithNoise, TimeEmbedding)
             
-            Model.ApplyCalcLoss(Noise, PredictedNoise)
+            Model.CalcAndAcceptLoss(Noise, PredictedNoise)
 
 ###########################################################################################
 
