@@ -1,4 +1,5 @@
 import torch
+import torchvision
 from torch.utils.data import DataLoader
 
 import torchvision.datasets as datasets
@@ -30,9 +31,9 @@ torch.set_printoptions(precision=10, sci_mode=False)
 
 ###################################
 
-EmbeddingDim        = 128
+EmbeddingDim        = 32
 ImageSize           = 64
-ImageColorChan      = 3
+ImageColorChan      = 1
 
 if __name__ == "__main__" :
     GAN = DCGANModel(ImageColorChan, EmbeddingDim, 3, inModelRootFolderPath="{}/trained_models".format(OutputPath))
@@ -63,12 +64,12 @@ if __name__ == "__main__" :
             transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
             transforms.Normalize((0.5,), (0.5,))  # (0, 1) -> (-1, 1),
         ])
-        if False :
+        if True :
             dataset = torchvision.datasets.FashionMNIST(
                 root=DatasetPath, train=True, transform=transform, download=True
             )
         else:
             dataset = datasets.ImageFolder(root='{}/cartoon_faces'.format(DatasetPath), transform=transform)
         
-        dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
+        dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
         Exec.Train(dataloader, SaveInterval=13)
