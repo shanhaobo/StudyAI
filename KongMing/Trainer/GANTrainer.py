@@ -81,7 +81,7 @@ class GANTrainer(MultiNNTrainer):
     def MyEndBatchTrain(self, inArgs, inKVArgs) -> None:
         NowStr  = datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]")
         print(
-            "{} | Epoch:{:0>4d} | Batch:{:0>6d} | DLoss:{:.8f} | GLoss:{:.8f}".
+            "{} | Epoch:{:0>4d} | Batch:{:0>4d} | DLoss:{:.8f} | GLoss:{:.8f}".
             format(
                 NowStr,
                 self.CurrEpochIndex,
