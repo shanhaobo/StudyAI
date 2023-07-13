@@ -8,12 +8,14 @@ from .BaseTrainer import BaseTrainer
 
 from KongMing.Utils.AveragedUtils import EMAValue
 
+from KongMing.Modules.BaseNNModule import BaseNNModule
+
 import pandas as pd
 
 class DDPMTrainer(BaseTrainer) :
     def __init__(self, 
-            inNN : torch.nn.Module,
-            inDiffusionMode : torch.nn.Module,
+            inNN : BaseNNModule,
+            inDiffusionMode : BaseNNModule,
             inLearningRate,
             inTimesteps = 1000,
             inLogRootPath = "."
@@ -29,72 +31,56 @@ class DDPMTrainer(BaseTrainer) :
         self.EndBatchTrain.add(self.DDPMEndBatchTrain)
         self.EndEpochTrain.add(self.DDPMEndEpochTrain)
 
-        self.AverageLoss    = EMAValue(0.99)
-
         self.LossData       = {"Epoch":[], "Batch":[], "Loss":[], "AvgLoss":[]}
 
 ###########################################################################################
 
     def _CreateOptimizer(self) -> None:
-        self.Optimizer = torch.optim.Adam(self.NNModel.parameters(),     lr=self.LearningRate, betas=(0.5, 0.999))
-        pass
+        #self.Optimizer = torch.optim.Adam(self.NNModel.parameters(),     lr=self.LearningRate, betas=(0.5, 0.999))
+        self.NNModel.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
 
     def _CreateLossFN(self) -> None:
-        LossType = "huber"
-        if LossType == "L1":
-            self.LossFN = F.l1_loss
-        elif LossType == "L2":
-            self.LossFN = F.mse_loss
-        else:
-            self.LossFN = F.smooth_l1_loss
-        pass
+        self.NNModel.ApplyLossFunc(F.smooth_l1_loss)
 
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
         # get BatchSize
         nBatchSize          = inBatchData.size(0)
         RealData            = inBatchData.to(self.Device)
-        Noise               = torch.randn_like(RealData)
 
-        TimeEmbedding       = torch.randint(0, self.Timesteps, (nBatchSize,), device=self.Device).long()
-        RealDataWithNoise   = self.DiffusionMode.Q_Sample(inXStart = RealData, inT = TimeEmbedding, inNoise = Noise)
+        with self.NNModel as Model:
+            Noise               = torch.randn_like(RealData)
 
-        self._BeginBackPropagate(self.Optimizer)
-        PredictedNoise      = self.NNModel(RealDataWithNoise, TimeEmbedding)
+            TimeEmbedding       = torch.randint(0, self.Timesteps, (nBatchSize,), device=self.Device).long()
+            RealDataWithNoise   = self.DiffusionMode.Q_Sample(inXStart = RealData, inT = TimeEmbedding, inNoise = Noise)
 
-        #loss = self.LossFN(PredictedNoise, RealData)
-        loss = self.LossFN(Noise, PredictedNoise)
-
-        self._EndBackPropagate(self.Optimizer, loss)
-        self.DiffusionMode.EMA.update_parameters(self.NNModel)
-
-        self.CurrBatchDDPMLoss = loss.item()
-
-        self.AverageLoss.AcceptNewValue(self.CurrBatchDDPMLoss)
+            PredictedNoise      = Model(RealDataWithNoise, TimeEmbedding)
+            Model.ApplyLoss(Noise, PredictedNoise)
 
 ###########################################################################################
 
     def DDPMEndBatchTrain(self, inArgs, inKVArgs) -> None:
-        NowStr  = datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]")
+        Loss, AvgLoss = self.NNModel.GetLoss()
+        
         print(
             "{} | Epoch:{:0>4d} | Batch:{:0>4d} | Loss:{:.8f} | AverageLoss:{:.8f}".
             format(
-                NowStr,
+                datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]"),
                 self.CurrEpochIndex,
                 self.CurrBatchIndex,
-                self.CurrBatchDDPMLoss,
-                self.AverageLoss.item()
+                Loss,
+                AvgLoss
             )
         )
         self.LossData["Epoch"].append(self.CurrEpochIndex)
         self.LossData["Batch"].append(self.CurrBatchIndex)
-        self.LossData["Loss"].append(self.CurrBatchDDPMLoss)
-        self.LossData["AvgLoss"].append(self.AverageLoss.item())
+        self.LossData["Loss"].append(Loss)
+        self.LossData["AvgLoss"].append(AvgLoss)
 
 
     def DDPMEndEpochTrain(self, inArgs, inKVArgs) -> None:
         df = pd.DataFrame(self.LossData)
         os.makedirs(self.LogRootPath, exist_ok=True)
-        df.to_csv("{}/loss.csv".format(self.LogRootPath), mode='a', index=False)
+        df.to_csv("{}/loss.csv".format(self.LogRootPath), mode='a', index=False, header=False)
         self.LossData["Epoch"].clear()
         self.LossData["Batch"].clear()
         self.LossData["Loss"].clear()

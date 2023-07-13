@@ -11,9 +11,9 @@ class AveragedModel(Module):
     If no averaging function is provided, the default is to compute
     equally-weighted average of the weights.
     """
-    def __init__(self, model, device=None, avg_fn=None, use_buffers=False):
+    def __init__(self, inModel, device=None, avg_fn=None, use_buffers=False):
         super(AveragedModel, self).__init__()
-        self.module = deepcopy(model)
+        self.module = deepcopy(inModel)
         if device is not None:
             self.module = self.module.to(device)
         self.register_buffer('n_averaged',
@@ -28,14 +28,14 @@ class AveragedModel(Module):
     def forward(self, *args, **kwargs):
         return self.module(*args, **kwargs)
 
-    def update_parameters(self, model):
+    def update_parameters(self, inModel):
         self_param = (
             itertools.chain(self.module.parameters(), self.module.buffers())
             if self.use_buffers else self.parameters()
         )
         model_param = (
-            itertools.chain(model.parameters(), model.buffers())
-            if self.use_buffers else model.parameters()
+            itertools.chain(inModel.parameters(), inModel.buffers())
+            if self.use_buffers else inModel.parameters()
         )
         for p_swa, p_model in zip(self_param, model_param):
             device = p_swa.device
@@ -47,14 +47,14 @@ class AveragedModel(Module):
                                                  self.n_averaged.to(device)))
         self.n_averaged += 1
 
-    def override_parameters(self, model):
+    def override_parameters(self, inModel):
         self_param = (
             itertools.chain(self.module.parameters(), self.module.buffers())
             if self.use_buffers else self.parameters()
         )
         model_param = (
-            itertools.chain(model.parameters(), model.buffers())
-            if self.use_buffers else model.parameters()
+            itertools.chain(inModel.parameters(), inModel.buffers())
+            if self.use_buffers else inModel.parameters()
         )
         for p_swa, p_model in zip(self_param, model_param):
             device = p_model.device
@@ -63,10 +63,10 @@ class AveragedModel(Module):
 
 ## ExponentialMovingAverage
 class EMA(AveragedModel):
-    def __init__(self, model, decay, device="cpu"):
-        super().__init__(model, device)
-        self.decay = decay
+    def __init__(self, inModel, inDecay, device="cpu"):
+        super().__init__(inModel, device)
+        self.decay = inDecay
         def ema_avg(avg_model_param, model_param, num_averaged):
-            return decay * avg_model_param + (1 - decay) * model_param
+            return inDecay * avg_model_param + (1 - inDecay) * model_param
 
-        super().__init__(model, device, ema_avg, use_buffers=True)
+        super().__init__(inModel, device, ema_avg, use_buffers=True)

@@ -3,9 +3,11 @@ import torch.nn.functional as F
 
 from KongMing.Modules.AveragedModel import EMA
 
+from KongMing.Modules.BaseNNModule import BaseNNModule
+
 from .Utils import BetaSchedule
 
-class DiffusionModel(torch.nn.Module):
+class DiffusionModel(BaseNNModule):
     def __init__(self, inTimesteps, inNNModule:torch.nn.Module) -> None:
         super().__init__()
 
@@ -38,7 +40,7 @@ class DiffusionModel(torch.nn.Module):
 
         RegisterBufferF32("PosteriorVariance",          PosteriorVariance)
 
-        self.EMA             = EMA(inNNModule, 0.999)
+        self.ApplyEMA(inNNModule, 0.999)
 
     @staticmethod
     def Extract(inData, inIndex, inShape):

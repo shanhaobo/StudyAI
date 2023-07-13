@@ -9,6 +9,27 @@ from torch.utils.data import DataLoader
 from KongMing.Utils.Delegate import Delegate
 
 class BaseTrainer(abc.ABC):
+
+    #####
+
+    class Backpropagate():
+        def __init__(self, inOptimizer : Optimizer) -> None:
+            self.Optimizer = inOptimizer
+            self.Loss = None
+
+        def Apply(self, inLoss : Tensor) -> None:
+            self.Loss = inLoss
+
+        def __enter__(self):
+            self.Optimizer.zero_grad()
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback) -> None:
+            self.Loss.backward()
+            self.Optimizer.step()
+
+    #####
+
     def __init__(self, inLearningRate, inLogRootPath) -> None:
         self.Device             = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(torch.cuda.get_device_name(self.Device.index))

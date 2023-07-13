@@ -6,11 +6,13 @@ from ..UtilsModules import DoubleLinearModule
 from ..Resampling.Up import UpConv_2 as Upsample_Two
 from ..Resampling.Down import PixelShuffle_2 as Downsample_Half
 
+from ..BaseNNModule import BaseNNModule
+
 ######################################################################################
 ######################################################################################
 ######################################################################################
 
-class UNet2DBase(nn.Module):
+class UNet2DBase(BaseNNModule):
     def __init__(
             self,
             inInputDim,
@@ -25,12 +27,10 @@ class UNet2DBase(nn.Module):
         ) -> None:
         super().__init__()
 
-        self.EmbeddingDim           = inEmbeddingDim
-
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
-            AllEmbeddingDims        = [*(self.EmbeddingDim * i for i in inEmbedLvlCntORList)]
+            AllEmbeddingDims        = [*(inEmbeddingDim * i for i in inEmbedLvlCntORList)]
         else:
-            AllEmbeddingDims        = [*(self.EmbeddingDim * (2 ** i) for i in range(0, inEmbedLvlCntORList))]
+            AllEmbeddingDims        = [*(inEmbeddingDim * (2 ** i) for i in range(0, inEmbedLvlCntORList))]
 
         # AllDims = (1, 3, 6, 12, 24, 48, 96) 
         # list(zip(AllDims[:-1], AllDims[1:])) -> ((1, 3, 6, 12, 24, 48), (3, 6, 12, 24, 48, 96))
@@ -76,7 +76,7 @@ class UNet2DBase(nn.Module):
 
         # 3
         X = self.MidMLM(X)
-        
+
         # 4
         for Decoder, UpSample in self.USDecoderList:
             # dim=1 是除Batch后的一个维度,这个维度很可能是EmbedDim
@@ -91,7 +91,7 @@ class UNet2DBase(nn.Module):
 ######################################################################################
 ######################################################################################
 
-class UNet2DBaseWithExtData(nn.Module):
+class UNet2DBaseWithExtData(BaseNNModule):
     def __init__(
             self,
             inInputDim,
@@ -111,16 +111,16 @@ class UNet2DBaseWithExtData(nn.Module):
         ExtDataDim                  = inExtDataDim if inExtDataDim is not None else inEmbeddingDim
 
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
-            AllDims                 = [*(inEmbeddingDim * i for i in inEmbedLvlCntORList)]
+            AllEmbeddingDims        = [*(inEmbeddingDim * i for i in inEmbedLvlCntORList)]
         else:
-            AllDims                 = [*(inEmbeddingDim * (2 ** i) for i in range(0, inEmbedLvlCntORList))]
+            AllEmbeddingDims        = [*(inEmbeddingDim * (2 ** i) for i in range(0, inEmbedLvlCntORList))]
 
         # AllDims = (1, 3, 6, 12, 24, 48, 96) 
         # list(zip(AllDims[:-1], AllDims[1:])) -> ((1, 3, 6, 12, 24, 48), (3, 6, 12, 24, 48, 96))
-        InOutPairDims               = list(zip(AllDims[:-1], AllDims[1:]))
+        InOutPairDims               = list(zip(AllEmbeddingDims[:-1], AllEmbeddingDims[1:]))
 
         # 1 -> input
-        self.InputModule            = inInputModuleType(inInputDim, AllDims[0])
+        self.InputModule            = inInputModuleType(inInputDim, AllEmbeddingDims[0])
 
         # 2 -> downsample
         self.DSEncoderList          = nn.ModuleList([])
@@ -132,8 +132,8 @@ class UNet2DBaseWithExtData(nn.Module):
             ]))
 
         # 3 -> Mid
-        self.MidExtDataProc         = DoubleLinearModule(ExtDataDim, AllDims[-1])
-        self.MidMLM                 = inMidMLMType(AllDims[-1], AllDims[-1])
+        self.MidExtDataProc         = DoubleLinearModule(ExtDataDim, AllEmbeddingDims[-1])
+        self.MidMLM                 = inMidMLMType(AllEmbeddingDims[-1], AllEmbeddingDims[-1])
 
         # 4 -> upsample
         self.USDecoderList          = nn.ModuleList([])
@@ -146,7 +146,7 @@ class UNet2DBaseWithExtData(nn.Module):
             ]))
 
         # 5 -> output
-        self.OutputModule           = inOutputModuleType(AllDims[0], inOutputDim)
+        self.OutputModule           = inOutputModuleType(AllEmbeddingDims[0], inOutputDim)
 
         ### ExtData
         self.ExtDataModule          = inExtDataModuleType(ExtDataDim)
