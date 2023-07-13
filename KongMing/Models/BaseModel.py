@@ -26,7 +26,7 @@ class BaseModel(object):
         self.Trainer.Train(inDataLoader, 0, inEpochIterCount, inArgs, inKVArgs)
 
     def IncTrain(self, inDataLoader : DataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
-        if inStartEpochNum > 0 and self.Archiver.Load(inStartEpochNum):
+        if inStartEpochNum >= 0 and self.Archiver.Load(inStartEpochNum):
             pass
         else:
             inStartEpochNum = self.Archiver.LoadLastest()

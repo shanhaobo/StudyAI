@@ -50,14 +50,11 @@ class BaseNNModule(torch.nn.Module):
     def GetLoss(self):
         return self._Loss.item(), self._AvgLoss.item()
 
-    def ApplyEMA(self, inModule : Optional['BaseNNModule'], inDecay):
+    def ApplyEMA(self, inDecay, inModule : Optional['BaseNNModule'] = None):
+        if inModule is None:
+            inModule = self
         self.EMA = EMAModle(inModule, inDecay)
         inModule.EMAHolder = self.EMA
-
-    def state_dict(self, *args, destination=None, prefix='', keep_vars=False):
-        sd = super().state_dict(*args, destination, prefix, keep_vars)
-        sd.pop('EMAHolder')
-        return sd
 
     def __enter__(self):
         self._Optimizer.zero_grad()
