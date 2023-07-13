@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
 
-from einops import rearrange
+from ..UtilsModules import DoubleLinearModule
 
-from ..UtilsModules import DoubleLinearModule, DownsampleModule2D, DownsampleModule2D_PixelShuffle, UpsampleModule2D
+from ..Resampling.Up import UpConv_2 as Upsample_Two
+from ..Resampling.Down import PixelShuffle_2 as Downsample_Half
 
 ######################################################################################
 ######################################################################################
@@ -24,41 +25,41 @@ class UNet2DBase(nn.Module):
         ) -> None:
         super().__init__()
 
-        self.EmbedDim               = inEmbeddingDim
+        self.EmbeddingDim           = inEmbeddingDim
 
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
-            AllDims                 = [*(self.EmbedDim * i for i in inEmbedLvlCntORList)]
+            AllEmbeddingDims        = [*(self.EmbeddingDim * i for i in inEmbedLvlCntORList)]
         else:
-            AllDims                 = [*(self.EmbedDim * (2 ** i) for i in range(0, inEmbedLvlCntORList))]
+            AllEmbeddingDims        = [*(self.EmbeddingDim * (2 ** i) for i in range(0, inEmbedLvlCntORList))]
 
         # AllDims = (1, 3, 6, 12, 24, 48, 96) 
         # list(zip(AllDims[:-1], AllDims[1:])) -> ((1, 3, 6, 12, 24, 48), (3, 6, 12, 24, 48, 96))
-        InOutPairDims               = list(zip(AllDims[:-1], AllDims[1:]))
+        InOutPairDims               = list(zip(AllEmbeddingDims[:-1], AllEmbeddingDims[1:]))
 
         # 1 -> input
-        self.InputModule            = inInputModuleType(inInputDim, AllDims[0])
+        self.InputModule            = inInputModuleType(inInputDim, AllEmbeddingDims[0])
 
         # 2 -> downsample
         self.DSEncoderList          = nn.ModuleList([])
         for InDim, OutDim in InOutPairDims:
             self.DSEncoderList.append(nn.ModuleList([
-                nn.MaxPool2d(2),
+                Downsample_Half(InDim),
                 inDNSPLEncoderType(InDim, OutDim)
             ]))
 
         # 3 -> Mid
-        self.MidMLM                 = inMidMLMType(AllDims[-1], AllDims[-1])
+        self.MidMLM                 = inMidMLMType(AllEmbeddingDims[-1], AllEmbeddingDims[-1])
 
         # 4 -> upsample
         self.USDecoderList          = nn.ModuleList([])
-        for OutDim, InDim  in reversed(InOutPairDims):
+        for OutDim, InDim in reversed(InOutPairDims):
             self.USDecoderList.append(nn.ModuleList([
                 inUPSPLDecoderType(InDim * 2, OutDim),
-                UpsampleModule2D(OutDim)
+                Upsample_Two(OutDim)
             ]))
 
         # 5 -> output
-        self.OutputModule           = inOutputModuleType(AllDims[0], inOutputDim)
+        self.OutputModule           = inOutputModuleType(AllEmbeddingDims[0], inOutputDim)
 
     def forward(self, inData):
 
@@ -125,7 +126,7 @@ class UNet2DBaseWithExtData(nn.Module):
         self.DSEncoderList          = nn.ModuleList([])
         for (InDim, OutDim) in InOutPairDims:
             self.DSEncoderList.append(nn.ModuleList([
-                DownsampleModule2D_PixelShuffle(InDim),
+                Downsample_Half(InDim),
                 DoubleLinearModule(ExtDataDim, InDim),
                 inDNSPLEncoderType(InDim, OutDim)
             ]))
@@ -141,7 +142,7 @@ class UNet2DBaseWithExtData(nn.Module):
                 ## 因为需要cat 所以InDim需要 * 2
                 DoubleLinearModule(ExtDataDim, InDim * 2),
                 inUPSPLDecoderType(InDim * 2, OutDim),
-                UpsampleModule2D(OutDim)
+                Upsample_Two(OutDim)
             ]))
 
         # 5 -> output

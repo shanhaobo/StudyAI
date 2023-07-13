@@ -2,8 +2,10 @@ from torch import nn
 
 from einops.layers.torch import Rearrange
 
+########################################
+
 class Avg_2(nn.Module):
-    def __init__(self, inInputDim) -> None:
+    def __init__(self) -> None:
         super().__init__()
 
         self.Blocks = nn.AvgPool2d(2, stride=2)
@@ -11,8 +13,10 @@ class Avg_2(nn.Module):
     def forward(self, inData):
         return self.Blocks(inData)
 
+########################################
+
 class Max_2(nn.Module):
-    def __init__(self, inInputDim) -> None:
+    def __init__(self) -> None:
         super().__init__()
 
         self.Blocks = nn.MaxPool2d(2, stride=2)
@@ -20,18 +24,26 @@ class Max_2(nn.Module):
     def forward(self, inData):
         return self.Blocks(inData)
 
-class PixelShuffle_2(nn.Module):
-    def __init__(self, inInputDim) -> None:
+########################################
+
+class PixelShuffle(nn.Module):
+    def __init__(self, inInputDim, inMultiple : int) -> None:
         super().__init__()
 
         self.Blocks = nn.Sequential(
-            Rearrange("b c (h p1) (w p2) -> b (c p1 p2) h w", p1=2, p2=2),
+            Rearrange("b c (h p1) (w p2) -> b (c p1 p2) h w", p1 = inMultiple, p2 = inMultiple),
             # stride = 1 : kernel_size = 2 * padding + 1  -> 保持不变
-            nn.Conv2d(inInputDim * 4, inInputDim, kernel_size=1, stride=1, padding=0),
+            nn.Conv2d(inInputDim * inMultiple * inMultiple, inInputDim, kernel_size=1, stride=1, padding=0),
         )
 
     def forward(self, inData):
         return self.Blocks(inData)
+
+class PixelShuffle_2(PixelShuffle):
+    def __init__(self, inInputDim) -> None:
+        super().__init__(inInputDim, 2)
+
+########################################
 
 class Conv_2(nn.Module):
     def __init__(self, inInputDim) -> None:
@@ -42,3 +54,5 @@ class Conv_2(nn.Module):
 
     def forward(self, inData):
         return self.Blocks(inData)
+
+########################################
