@@ -4,6 +4,8 @@ import torch.optim as optim
 
 from datetime import datetime
 
+import torch.nn.functional as F
+
 from .MultiNNTrainer import MultiNNTrainer
 
 from KongMing.Modules.BaseNNModule import BaseNNModule
@@ -34,8 +36,8 @@ class GANTrainer(MultiNNTrainer):
         self.Discriminator.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
 
     def _CreateLossFN(self) -> None:
-        self.Generator.ApplyLossFunc(nn.BCELoss().to(self.Device))
-        self.Discriminator.ApplyLossFunc(nn.BCELoss().to(self.Device))
+        self.Generator.ApplyLossFunc(F.binary_cross_entropy)
+        self.Discriminator.ApplyLossFunc(F.binary_cross_entropy)
 
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
 
@@ -46,17 +48,20 @@ class GANTrainer(MultiNNTrainer):
 
         with self.Generator as G, self.Discriminator as D:
             FakeData = self.Generator(torch.randn((BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth), device=self.Device))
+
             DiscriminatorScores = self.Discriminator(RealData)
             RealLabels = torch.ones(DiscriminatorScores.size(), device=self.Device)
             DLossReal = D.CalcLoss(DiscriminatorScores, RealLabels)
+
             DiscriminatorScores = self.Discriminator(FakeData.detach())
             FakeLabels = torch.zeros(DiscriminatorScores.size(), device=self.Device)
             DLossFake = D.CalcLoss(DiscriminatorScores, FakeLabels)
+
             D.AcceptLoss((DLossReal + DLossFake) * 0.5)
             DiscriminatorScores = self.Discriminator(FakeData)
             RealLabels = torch.ones(DiscriminatorScores.size(), device=self.Device)
-            G.CalcAndAcceptLoss(DiscriminatorScores, RealLabels)
 
+            G.CalcAndAcceptLoss(DiscriminatorScores, RealLabels)
 
 ###########################################################################################
 

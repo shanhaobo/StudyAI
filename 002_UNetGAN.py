@@ -1,4 +1,5 @@
 import torch
+import torchvision
 from torch.utils.data import DataLoader
 
 import torchvision.datasets as datasets
@@ -30,7 +31,7 @@ torch.set_printoptions(precision=10, sci_mode=False)
 
 ###################################
 
-EmbeddingDim        = 128
+EmbeddingDim        = 32
 ImageSize           = 64
 ImageColorChan      = 3
 
@@ -70,5 +71,5 @@ if __name__ == "__main__" :
         else:
             dataset = datasets.ImageFolder(root='{}/cartoon_faces'.format(DatasetPath), transform=transform)
         
-        dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
+        dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
         Exec.Train(dataloader, SaveInterval=13)

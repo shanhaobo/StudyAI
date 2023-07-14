@@ -4,6 +4,8 @@ import torch.nn as nn
 from .GANModel import GANModel
 from KongMing.Modules.UNets.UNet2DBase import UNet2DBase
 
+from KongMing.Modules.BaseNNModule import BaseNNModule
+
 #########################################################################
 
 class UNet2D_GAN_InitConv(nn.Module):
@@ -54,7 +56,7 @@ class UNet2D_GAN(UNet2DBase) :
 
 class UNetGANModel(GANModel):
     
-    class InnerDiscriminator(nn.Module):
+    class InnerDiscriminator(BaseNNModule):
         # initializers
         def __init__(self, inColorChan, inAllEmbeddingDims):
             super().__init__()

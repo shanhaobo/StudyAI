@@ -17,9 +17,8 @@ class WGANTrainer(GANTrainer) :
         super().__init__(inGenerator, inDiscriminator, inGeneratorInputSize, inLearningRate, inLogRootPath)
 
     def _CreateOptimizer(self) -> None:
-        self.OptimizerG = torch.optim.RMSprop(self.Generator.parameters(),     lr=self.LearningRate)
-        self.OptimizerD = torch.optim.RMSprop(self.Discriminator.parameters(), lr=self.LearningRate)
-        pass
+        self.Generator.ApplyOptimizer(torch.optim.RMSprop, self.LearningRate)
+        self.Discriminator.ApplyOptimizer(torch.optim.RMSprop, self.LearningRate)
 
     def _CreateLossFN(self) -> None:
         pass
