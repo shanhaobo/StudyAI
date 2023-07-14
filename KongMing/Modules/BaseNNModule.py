@@ -66,7 +66,7 @@ class BaseNNModule(torch.nn.Module):
             TargetModule = self
 
         self.EMA = EMAModle(TargetModule, inDecay)
-        
+
         BaseNNModule.EMAHolder = self.EMA
         BaseNNModule.EMATargeModule = TargetModule
 
@@ -75,7 +75,14 @@ class BaseNNModule(torch.nn.Module):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
-        self._Loss.backward()
+        if self._Loss is not None:
+            self._Loss.backward()
+        else:
+            # 如果这里错误, 先屏蔽,看看哪里报错了
+            # 因为这里不应该为Non
+            raise RuntimeError
+        
         self._Optimizer.step()
-        if ((self.EMAHolder is not None) and (self.EMATargeModule == self)):
-            self.EMAHolder.update_parameters(self)
+
+        if ((BaseNNModule.EMAHolder is not None) and (BaseNNModule.EMATargeModule == self)):
+            BaseNNModule.EMAHolder.update_parameters(BaseNNModule.EMATargeModule)

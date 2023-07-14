@@ -24,20 +24,22 @@ class AveragedModel(Module):
                     (model_parameter - averaged_model_parameter) / (num_averaged + 1)
         self.avg_fn = avg_fn
         self.use_buffers = use_buffers
-
+        
     def forward(self, *args, **kwargs):
         return self.module(*args, **kwargs)
 
     def update_parameters(self, inModel):
         self_param = (
-            itertools.chain(self.module.parameters(), self.module.buffers())
-            if self.use_buffers else self.parameters()
+            itertools.chain(self.module.named_parameters(), self.module.named_buffers())
+            if self.use_buffers else self.named_parameters()
         )
         model_param = (
-            itertools.chain(inModel.parameters(), inModel.buffers())
-            if self.use_buffers else inModel.parameters()
+            itertools.chain(inModel.named_parameters(), inModel.named_buffers())
+            if self.use_buffers else inModel.named_parameters()
         )
-        for p_swa, p_model in zip(self_param, model_param):
+        model_param_dict = {name: param for name, param in model_param}
+        for (swan, p_swa) in self_param:
+            p_model = model_param_dict[swan]
             device = p_swa.device
             p_model_ = p_model.detach().to(device)
             if self.n_averaged == 0:
