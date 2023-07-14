@@ -1,13 +1,13 @@
 import torch
 import torch.nn as nn
 
-from .GANModelFactory import GANModel
+from .GANModelFactory import GANModelFactory
 
-from KongMing.Models.BaseNNModule import BaseNNModule
+from KongMing.Models.BaseNNModel import BaseNNModel
 
-class DCGANModel(GANModel):
+class DCGANModelFactory(GANModelFactory):
     # G(z)
-    class InnerGenerator(BaseNNModule):
+    class InnerGenerator(BaseNNModel):
         # initializers
         def __init__(self, inColorChan, inAllEmbeddingDims):
             super().__init__()
@@ -43,7 +43,7 @@ class DCGANModel(GANModel):
 
             return self.FinalModule(x)
 
-    class InnerDiscriminator(BaseNNModule):
+    class InnerDiscriminator(BaseNNModel):
         # initializers
         def __init__(self, inColorChan, inAllEmbeddingDims):
             super().__init__()
@@ -86,12 +86,12 @@ class DCGANModel(GANModel):
         else:
             AllEmbeddingDims = [*(inEmbeddingDim * (2 ** i) for i in range(0, inEmbedLvlCntORList))]
 
-        self.Generator = DCGANModel.InnerGenerator(
+        self.Generator = DCGANModelFactory.InnerGenerator(
             inColorChan=inColorChan,
             inAllEmbeddingDims=AllEmbeddingDims
         )
 
-        self.Discriminator = DCGANModel.InnerDiscriminator(
+        self.Discriminator = DCGANModelFactory.InnerDiscriminator(
             inColorChan=inColorChan,
             inAllEmbeddingDims=AllEmbeddingDims
         )

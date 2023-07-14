@@ -6,7 +6,7 @@ import torchvision.datasets as datasets
 from torchvision.transforms import transforms
 from torchvision.utils import save_image
 
-from KongMing.ModelFactory.GANs.UNetGANModel import UNetGANModel
+from KongMing.ModelFactory.GANs.UNetGANModel import UNetGANModelFactory
 
 from datetime import datetime
 
@@ -36,7 +36,7 @@ ImageSize           = 64
 ImageColorChan      = 1
 
 if __name__ == "__main__" :
-    GAN = UNetGANModel(ImageColorChan, EmbeddingDim, 3, inModelRootFolderPath="{}/trained_models".format(OutputPath))
+    GAN = UNetGANModelFactory(ImageColorChan, EmbeddingDim, 3, inModelRootFolderPath="{}/trained_models".format(OutputPath))
     Exec = Executor(GAN)
 
     if (Exec.ForceTrain() == False) and Exec.IsExistModel():

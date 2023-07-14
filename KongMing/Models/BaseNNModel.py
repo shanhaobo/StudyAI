@@ -8,7 +8,7 @@ from ..Modules.AveragedModel import EMA as EMAModle
 
 from typing import Optional
 
-class BaseNNModule(torch.nn.Module):
+class BaseNNModel(torch.nn.Module):
 
     EMAHolder : EMAModle                = None
     EMATargeModule : torch.nn.Module    = None
@@ -60,15 +60,15 @@ class BaseNNModule(torch.nn.Module):
     def GetLossValue(self):
         return self._Loss.item(), self._AvgLoss.item()
 
-    def ApplyEMA(self, inDecay, inModule : Optional['BaseNNModule'] = None):
+    def ApplyEMA(self, inDecay, inModule : Optional['BaseNNModel'] = None):
         TargetModule = inModule
         if TargetModule is None:
             TargetModule = self
 
         self.EMA = EMAModle(TargetModule, inDecay)
 
-        BaseNNModule.EMAHolder = self.EMA
-        BaseNNModule.EMATargeModule = TargetModule
+        BaseNNModel.EMAHolder = self.EMA
+        BaseNNModel.EMATargeModule = TargetModule
 
     def __enter__(self):
         self._Optimizer.zero_grad()
@@ -84,5 +84,5 @@ class BaseNNModule(torch.nn.Module):
         
         self._Optimizer.step()
 
-        if ((BaseNNModule.EMAHolder is not None) and (BaseNNModule.EMATargeModule == self)):
-            BaseNNModule.EMAHolder.update_parameters(BaseNNModule.EMATargeModule)
+        if ((BaseNNModel.EMAHolder is not None) and (BaseNNModel.EMATargeModule == self)):
+            BaseNNModel.EMAHolder.update_parameters(BaseNNModel.EMATargeModule)

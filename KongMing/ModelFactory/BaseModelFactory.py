@@ -5,7 +5,7 @@ from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseIns
 from KongMing.Trainer.BaseTrainer import BaseTrainer
 from KongMing.Archiver.BaseArchiver import BaseArchiver
 
-class BaseModel(object):
+class BaseModelFactory(object):
     def __init__(self, inTrainer : BaseTrainer, inArchiver : BaseArchiver):
         self.Trainer        = inTrainer
         self.Archiver       = inArchiver

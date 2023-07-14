@@ -6,14 +6,14 @@ import torch.nn.functional as F
 
 from .BaseTrainer import BaseTrainer
 
-from KongMing.Models.BaseNNModule import BaseNNModule
+from KongMing.Models.BaseNNModel import BaseNNModel
 
 import pandas as pd
 
 class DDPMTrainer(BaseTrainer) :
     def __init__(self, 
-            inNN : BaseNNModule,
-            inDiffusionMode : BaseNNModule,
+            inNN : BaseNNModel,
+            inDiffusionMode : BaseNNModel,
             inLearningRate,
             inTimesteps = 1000,
             inLogRootPath = "."

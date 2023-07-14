@@ -1,6 +1,6 @@
 import torch
 
-from KongMing.ModelFactory.BaseModelFactory import BaseModel
+from KongMing.ModelFactory.BaseModelFactory import BaseModelFactory
 
 from KongMing.Trainer.GANTrainer import GANTrainer
 from KongMing.Trainer.WGANTrainer import WGANTrainer
@@ -8,7 +8,7 @@ from KongMing.Archiver.GANArchiver import GANArchiver
 
 from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
 
-class GANModel(BaseModel):
+class GANModelFactory(BaseModelFactory):
     def __init__(
             self,
             inGenerator : torch.nn.Module,

@@ -1,5 +1,5 @@
 
-from KongMing.ModelFactory.BaseModelFactory import BaseModel
+from KongMing.ModelFactory.BaseModelFactory import BaseModelFactory
 
 from KongMing.Archiver.DDPMArchiver import DDPMArchiver
 from KongMing.Trainer.DDPMTrainer import DDPMTrainer
@@ -11,7 +11,7 @@ from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseIns
 
 from .DiffusionModelBase import DiffusionModel
 
-class DDPMModel(BaseModel) :
+class DDPMModelFactory(BaseModelFactory) :
     def __init__(
             self,
             inEmbeddingDim,

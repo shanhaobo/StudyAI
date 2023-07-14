@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
 
-from .GANModelFactory import GANModel
-from KongMing.Modules.UNets.UNet2DBase import UNet2DBase
+from .GANModelFactory import GANModelFactory
+from KongMing.Models.UNets.UNet2DBase import UNet2DBase
 
-from KongMing.Models.BaseNNModule import BaseNNModule
+from KongMing.Models.BaseNNModel import BaseNNModel
 
 #########################################################################
 
@@ -69,9 +69,9 @@ class UNet2D_GAN(UNet2DBase) :
 
 #########################################################################
 
-class UNetGANModel(GANModel):
+class UNetGANModelFactory(GANModelFactory):
     
-    class InnerDiscriminator(BaseNNModule):
+    class InnerDiscriminator(BaseNNModel):
         # initializers
         def __init__(self, inColorChan, inAllEmbeddingDims):
             super().__init__()
@@ -123,7 +123,7 @@ class UNetGANModel(GANModel):
 
         self.Generator.ApplyEMA(0.999)
 
-        self.Discriminator = UNetGANModel.InnerDiscriminator(
+        self.Discriminator = UNetGANModelFactory.InnerDiscriminator(
             inColorChan=inColorChan,
             inAllEmbeddingDims=AllEmbeddingDims
         )

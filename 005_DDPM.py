@@ -5,7 +5,7 @@ from datetime import datetime
 
 from torchvision.utils import save_image
 
-from KongMing.ModelFactory.DiffusionModel.DDPMModelFactory import DDPMModel
+from KongMing.ModelFactory.DiffusionModel.DDPMModelFactory import DDPMModelFactory
 from KongMing.Utils.Executor import Executor
 
 from torchvision import transforms
@@ -36,7 +36,7 @@ image_size = 64
 image_channel = 1
 EmbedDim = 32
 if __name__ == "__main__" :
-    DDPM = DDPMModel(
+    DDPM = DDPMModelFactory(
         inEmbeddingDim=EmbedDim,
         inColorChanNum= image_channel,
         inLearningRate=0.00001,

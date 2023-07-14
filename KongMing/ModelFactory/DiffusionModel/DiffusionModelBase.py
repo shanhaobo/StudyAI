@@ -3,11 +3,11 @@ import torch.nn.functional as F
 
 from KongMing.Modules.AveragedModel import EMA
 
-from KongMing.Models.BaseNNModule import BaseNNModule
+from KongMing.Models.BaseNNModel import BaseNNModel
 
 from .Utils import BetaSchedule
 
-class DiffusionModel(BaseNNModule):
+class DiffusionModel(BaseNNModel):
     def __init__(self, inTimesteps, inNNModule:torch.nn.Module) -> None:
         super().__init__()
 

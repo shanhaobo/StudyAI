@@ -1,18 +1,18 @@
 import torch
 import torch.nn as nn
 
-from ..UtilsModules import DoubleLinearModule
+from KongMing.Modules.UtilsModules import DoubleLinearModule
 
-from ..Resampling.Up import UpConv_2 as Upsample_Two
-from ..Resampling.Down import PixelShuffle_2 as Downsample_Half
+from KongMing.Modules.Resampling.Up import UpConv_2 as Upsample_Two
+from KongMing.Modules.Resampling.Down import PixelShuffle_2 as Downsample_Half
 
-from ...Models.BaseNNModule import BaseNNModule
+from ..BaseNNModel import BaseNNModel
 
 ######################################################################################
 ######################################################################################
 ######################################################################################
 
-class UNet2DBase(BaseNNModule):
+class UNet2DBase(BaseNNModel):
     def __init__(
             self,
             inInputDim,
@@ -91,7 +91,7 @@ class UNet2DBase(BaseNNModule):
 ######################################################################################
 ######################################################################################
 
-class UNet2DBaseWithExtData(BaseNNModule):
+class UNet2DBaseWithExtData(BaseNNModel):
     def __init__(
             self,
             inInputDim,

@@ -8,13 +8,13 @@ import torch.nn.functional as F
 
 from .MultiNNTrainer import MultiNNTrainer
 
-from KongMing.Models.BaseNNModule import BaseNNModule
+from KongMing.Models.BaseNNModel import BaseNNModel
 
 class GANTrainer(MultiNNTrainer):
     def __init__(
             self,
-            inGenerator : BaseNNModule,
-            inDiscriminator : BaseNNModule,
+            inGenerator : BaseNNModel,
+            inDiscriminator : BaseNNModel,
             inGeneratorEmbeddingDim,
             inLearningRate = 1e-5,
             inLogRootPath="."
