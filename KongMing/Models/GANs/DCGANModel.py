@@ -80,7 +80,7 @@ class DCGANModel(GANModel):
             return self.FinalModule(x)
 
     def __init__(self, inColorChan, inEmbeddingDim, inEmbedLvlCntORList, inLearningRate=0.00001, inModelRootFolderPath=".") -> None:
-        torch.autograd.set_detect_anomaly(True)
+
         if isinstance(inEmbedLvlCntORList, tuple) or isinstance(inEmbedLvlCntORList, list):
             AllEmbeddingDims = [*(inEmbeddingDim * i for i in inEmbedLvlCntORList)]
         else:
