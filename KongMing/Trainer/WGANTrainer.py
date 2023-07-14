@@ -54,7 +54,6 @@ class WGANTrainer(GANTrainer) :
         FakeScoresForGenerator      = self.Discriminator(FakeData)
         return -torch.mean(FakeScoresForGenerator) 
 
-    
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
 
         BatchSize, _, ImageHeight, ImageWidth = inBatchData.size()
@@ -62,18 +61,21 @@ class WGANTrainer(GANTrainer) :
         # Prepare Real and Fake Data
         RealData = inBatchData.to(self.Device)
 
-        with self.Generator as G, self.Discriminator as D:
-            FakeData = self.Generator(torch.randn((BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth), device=self.Device))
-            #print("DataSize:{} {}".format(RealData.size(),FakeData.size()))
+        with self.Discriminator as D:
+            with self.Generator as G:
+                FakeData = self.Generator(
+                    torch.randn(
+                        (BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth),
+                        device=self.Device
+                    )
+                )
+                GLoss    = self._CalcGeneratorLoss(FakeData)
+                G.AcceptLoss(GLoss)
 
             # Calc Scores
-            RealScores                  = self.Discriminator(RealData)
-            FakeScoresForDiscriminator  = self.Discriminator(FakeData.detach())
+            RealScores  = self.Discriminator(RealData)
+            FakeScores  = self.Discriminator(FakeData.detach())
 
             # Calc W Loss
-            DLoss                       = self._CalcDiscriminatorLoss(RealData, RealScores, FakeData, FakeScoresForDiscriminator)
+            DLoss       = self._CalcDiscriminatorLoss(RealData, RealScores, FakeData, FakeScores)
             D.AcceptLoss(DLoss)
-        
-            GLoss                       = self._CalcGeneratorLoss(FakeData)
-            G.AcceptLoss(GLoss)
-

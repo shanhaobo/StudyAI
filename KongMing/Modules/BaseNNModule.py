@@ -9,18 +9,17 @@ from .AveragedModel import EMA as EMAModle
 from typing import Optional
 
 class BaseNNModule(torch.nn.Module):
-    
-    _Optimizer : torch.optim.Optimizer  = None
-
-    _LossFunction                       = None
-    _Loss : torch.Tensor                = None
-    _AvgLoss : EMAValue                 = EMAValue(0.99)
-    
-    EMA : EMAModle                      = None
-    EMAHolder : EMAModle                = None
-
+    EMAHolder : EMAModle               = None
     def __init__(self) -> None:
         super().__init__()
+
+        self._Optimizer : torch.optim.Optimizer = None
+
+        self._LossFunction                      = None
+        self._Loss                            = None
+        self._AvgLoss : EMAValue                = EMAValue(0.99)
+    
+        self.EMA : EMAModle                     = None
 
     def ApplyOptimizer(self, inOptimizerType, inLearningRate, **inKVArgs):
         if inspect.isclass(inOptimizerType):
