@@ -6,7 +6,7 @@ import torchvision.datasets as datasets
 from torchvision.transforms import transforms
 from torchvision.utils import save_image
 
-from KongMing.ModelFactory.GANs.DCGANModel import DCGANModelFactory
+from KongMing.ModelFactory.GANs.DCGANModelFactory import DCGANModelFactory
 
 from datetime import datetime
 
