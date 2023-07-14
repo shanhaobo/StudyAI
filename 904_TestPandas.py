@@ -6,6 +6,17 @@ os.makedirs(OutputPath, exist_ok=True)
 
 import torch
 
-Alpha = torch.rand(128, 2, 3, 4, out=None)
-print(Alpha.size())
+class Lo():
+    LoFN = None
+    def ApplyBCE(self, inBCE):
+        self.LoFN = inBCE
+
+
+l = Lo()
+
+l.ApplyBCE(torch.nn.BCELoss().to("cuda"))
+
+if l.LoFN is None:
+    print("error")
+
 

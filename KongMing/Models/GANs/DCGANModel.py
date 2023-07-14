@@ -100,7 +100,7 @@ class DCGANModel(GANModel):
             self.Generator,
             self.Discriminator,
             inEmbeddingDim,
-            inWTrainer=True,
+            inWTrainer=False,
             inLearningRate = inLearningRate,
             inModelRootFolderPath=inModelRootFolderPath
         )

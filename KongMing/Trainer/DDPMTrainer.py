@@ -58,7 +58,7 @@ class DDPMTrainer(BaseTrainer) :
 ###########################################################################################
 
     def DDPMEndBatchTrain(self, inArgs, inKVArgs) -> None:
-        Loss, AvgLoss = self.NNModel.GetLoss()
+        Loss, AvgLoss = self.NNModel.GetLossValue()
         
         print(
             "{} | Epoch:{:0>4d} | Batch:{:0>4d} | Loss:{:.8f} | AverageLoss:{:.8f}".
@@ -91,6 +91,6 @@ class DDPMTrainer(BaseTrainer) :
             self.DiffusionMode.EMA.override_parameters(self.NNModel)
 
     def _CheckEndEpoch(self)->bool:
-        _, AvgLoss = self.NNModel.GetLoss()
+        _, AvgLoss = self.NNModel.GetLossValue()
         return AvgLoss <= 0.01
 ###########################################################################################

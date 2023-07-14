@@ -27,14 +27,22 @@ class BaseNNModule(torch.nn.Module):
             self._Optimizer = inOptimizerType(self.parameters(), inLearningRate, **inKVArgs)
         else:
             raise TypeError
+        
+        if self._Optimizer is None:
+            raise RuntimeError
 
     def ApplyLossFunc(self, inLossFunc, **inKVArgs):
         if inspect.isclass(inLossFunc):
             self._LossFunction = inLossFunc(**inKVArgs)
         elif inspect.isfunction(inLossFunc) or inspect.ismethod(inLossFunc):
             self._LossFunction = inLossFunc
-        else:
+        elif callable(inLossFunc):
             self._LossFunction = inLossFunc
+        else:
+            raise TypeError
+
+        if self._LossFunction is None:
+            raise RuntimeError
 
     def AcceptLoss(self, inLoss: torch.Tensor):
         self._Loss = inLoss
@@ -47,7 +55,7 @@ class BaseNNModule(torch.nn.Module):
         self._Loss = self._LossFunction(inInput, inTarget, **inKVArgs)
         self._AvgLoss.AcceptNewValue(self._Loss.item())
 
-    def GetLoss(self):
+    def GetLossValue(self):
         return self._Loss.item(), self._AvgLoss.item()
 
     def ApplyEMA(self, inDecay, inModule : Optional['BaseNNModule'] = None):

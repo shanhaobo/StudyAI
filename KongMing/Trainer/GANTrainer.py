@@ -36,8 +36,9 @@ class GANTrainer(MultiNNTrainer):
         self.Discriminator.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
 
     def _CreateLossFN(self) -> None:
-        self.Generator.ApplyLossFunc(F.binary_cross_entropy)
+        #self.Generator.ApplyLossFunc(F.binary_cross_entropy)
         self.Discriminator.ApplyLossFunc(F.binary_cross_entropy)
+        self.Generator.ApplyLossFunc(torch.nn.BCELoss().to(self.Device))
 
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
 
@@ -66,8 +67,8 @@ class GANTrainer(MultiNNTrainer):
 ###########################################################################################
 
     def MyEndBatchTrain(self, inArgs, inKVArgs) -> None:
-        DLoss, _ = self.Discriminator.GetLoss()
-        GLoss, _ = self.Generator.GetLoss()
+        DLoss, _ = self.Discriminator.GetLossValue()
+        GLoss, _ = self.Generator.GetLossValue()
         print(
             "{} | Epoch:{:0>4d} | Batch:{:0>4d} | DLoss:{:.8f} | GLoss:{:.8f}".
             format(
