@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 from .BaseTrainer import BaseTrainer
 
-from KongMing.Modules.BaseNNModule import BaseNNModule
+from KongMing.Models.BaseNNModule import BaseNNModule
 
 import pandas as pd
 

@@ -6,7 +6,7 @@ from ..UtilsModules import DoubleLinearModule
 from ..Resampling.Up import UpConv_2 as Upsample_Two
 from ..Resampling.Down import PixelShuffle_2 as Downsample_Half
 
-from ..BaseNNModule import BaseNNModule
+from ...Models.BaseNNModule import BaseNNModule
 
 ######################################################################################
 ######################################################################################

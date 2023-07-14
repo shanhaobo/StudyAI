@@ -4,7 +4,7 @@ import inspect
 
 from KongMing.Utils.AveragedUtils import EMAValue
 
-from .AveragedModel import EMA as EMAModle
+from ..Modules.AveragedModel import EMA as EMAModle
 
 from typing import Optional
 

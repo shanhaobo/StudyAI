@@ -4,8 +4,8 @@ from KongMing.ModelFactory.BaseModelFactory import BaseModel
 from KongMing.Archiver.DDPMArchiver import DDPMArchiver
 from KongMing.Trainer.DDPMTrainer import DDPMTrainer
 
-from KongMing.Modules.UNets.UNet2D import UNet2D_ConvNeXt, UNet2D_WSR
-from KongMing.Modules.UNets.ConditionUNet import ConditionUNet
+from KongMing.Models.UNets.UNet2D import UNet2D_ConvNeXt, UNet2D_WSR
+from KongMing.Models.UNets.ConditionUNet import ConditionUNet
 
 from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
 

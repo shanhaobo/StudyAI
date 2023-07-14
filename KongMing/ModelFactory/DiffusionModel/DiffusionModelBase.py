@@ -3,7 +3,7 @@ import torch.nn.functional as F
 
 from KongMing.Modules.AveragedModel import EMA
 
-from KongMing.Modules.BaseNNModule import BaseNNModule
+from KongMing.Models.BaseNNModule import BaseNNModule
 
 from .Utils import BetaSchedule
 

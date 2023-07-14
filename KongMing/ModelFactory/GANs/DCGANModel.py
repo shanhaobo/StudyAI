@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from .GANModelFactory import GANModel
 
-from KongMing.Modules.BaseNNModule import BaseNNModule
+from KongMing.Models.BaseNNModule import BaseNNModule
 
 class DCGANModel(GANModel):
     # G(z)
