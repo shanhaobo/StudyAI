@@ -9,7 +9,7 @@ from .AveragedModel import EMA as EMAModle
 from typing import Optional
 
 class BaseNNModule(torch.nn.Module):
-    
+
     EMAHolder : EMAModle                = None
     EMATargeModule : torch.nn.Module    = None
 
@@ -19,7 +19,7 @@ class BaseNNModule(torch.nn.Module):
         self._Optimizer : torch.optim.Optimizer = None
 
         self._LossFunction                      = None
-        self._Loss                            = None
+        self._Loss                              = None
         self._AvgLoss : EMAValue                = EMAValue(0.99)
     
         self.EMA : EMAModle                     = None
