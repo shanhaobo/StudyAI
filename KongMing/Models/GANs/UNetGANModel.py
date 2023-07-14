@@ -36,6 +36,21 @@ class UNet2D_GAN_SampleConv(nn.Module):
     def forward(self, inData):
         return self.Blocks(inData)
 
+class UNet2D_GAN_FinalConv(nn.Module):
+    def __init__(self, inInputDim, inOutputDim) -> None:
+        super().__init__()
+
+        self.Blocks = nn.Sequential(
+            # kernel_size=5, stride=1, padding=2 保持大小不变
+            nn.Conv2d(inInputDim, inOutputDim, kernel_size=5, stride=1, padding=2),
+            nn.BatchNorm2d(inOutputDim),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Tanh()
+        )
+
+    def forward(self, inData):
+        return self.Blocks(inData)
+    
 #########################################################################
 
 class UNet2D_GAN(UNet2DBase) :
@@ -49,7 +64,7 @@ class UNet2D_GAN(UNet2DBase) :
             UNet2D_GAN_SampleConv,
             UNet2D_GAN_InitConv,
             UNet2D_GAN_SampleConv,
-            UNet2D_GAN_InitConv
+            UNet2D_GAN_FinalConv
         )
 
 #########################################################################
@@ -105,6 +120,8 @@ class UNetGANModel(GANModel):
             inEmbeddingDim=inEmbeddingDim,
             inEmbedLvlCntORList=inEmbedLvlCntORList
         )
+
+        self.Generator.ApplyEMA(0.999)
 
         self.Discriminator = UNetGANModel.InnerDiscriminator(
             inColorChan=inColorChan,
