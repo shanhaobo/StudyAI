@@ -34,7 +34,7 @@ class BaseModel(object):
 
     def LoadLastest(self, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
         EpochIndex = self.Archiver.LoadLastest()
-        if (EpochIndex <= 0) :
+        if (EpochIndex is None) or (EpochIndex < 0):
             return False
         self.Trainer.CurrEpochIndex = EpochIndex + 1
         return True

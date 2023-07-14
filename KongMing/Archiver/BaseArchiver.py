@@ -93,7 +93,7 @@ class BaseArchiver(object):
         MaxEpochIndex = -1
         for Name, _ in self.NNModelDict.items():
             EpochIndex = self.LoadLastestByModelName(Name)
-            if EpochIndex <= 0 :
+            if EpochIndex is None:
                 return None
             if EpochIndex > MaxEpochIndex :
                 MaxEpochIndex = EpochIndex
