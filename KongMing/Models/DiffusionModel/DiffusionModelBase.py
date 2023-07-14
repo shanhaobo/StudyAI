@@ -40,7 +40,7 @@ class DiffusionModel(BaseNNModule):
 
         RegisterBufferF32("PosteriorVariance",          PosteriorVariance)
 
-        self.ApplyEMA(inNNModule, 0.999)
+        self.ApplyEMA(0.999, inNNModule)
 
     @staticmethod
     def Extract(inData, inIndex, inShape):
