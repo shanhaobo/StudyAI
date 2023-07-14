@@ -5,7 +5,7 @@ from datetime import datetime
 
 from torchvision.utils import save_image
 
-from KongMing.Models.DiffusionModel.DDPMModel import DDPMModel
+from KongMing.ModelFactory.DiffusionModel.DDPMModelFactory import DDPMModel
 from KongMing.Utils.Executor import Executor
 
 from torchvision import transforms
@@ -33,7 +33,7 @@ torch.set_printoptions(precision=10, sci_mode=False)
 ###################################
 
 image_size = 64
-image_channel = 3
+image_channel = 1
 EmbedDim = 32
 if __name__ == "__main__" :
     DDPM = DDPMModel(
@@ -69,7 +69,7 @@ if __name__ == "__main__" :
             transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
             transforms.Normalize((0.5,), (0.5,))  # (0, 1) -> (-1, 1),
         ])
-        if False :
+        if True :
             dataset = torchvision.datasets.FashionMNIST(
                 root=DatasetPath, train=True, transform=transform, download=True
             )

@@ -1,5 +1,5 @@
 from . import (
-    GANModel,
     DCGANModel,
+    GANModelFactory,
     UNetGANModel
 )

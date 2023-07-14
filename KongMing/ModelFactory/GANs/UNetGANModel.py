@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from .GANModel import GANModel
+from .GANModelFactory import GANModel
 from KongMing.Modules.UNets.UNet2DBase import UNet2DBase
 
 from KongMing.Modules.BaseNNModule import BaseNNModule

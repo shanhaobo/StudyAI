@@ -1,5 +1,5 @@
 
-from KongMing.Models.BaseModel import BaseModel
+from KongMing.ModelFactory.BaseModelFactory import BaseModel
 
 from KongMing.Archiver.DDPMArchiver import DDPMArchiver
 from KongMing.Trainer.DDPMTrainer import DDPMTrainer

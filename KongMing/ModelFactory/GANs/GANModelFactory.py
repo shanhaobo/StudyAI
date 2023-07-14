@@ -1,6 +1,6 @@
 import torch
 
-from KongMing.Models.BaseModel import BaseModel
+from KongMing.ModelFactory.BaseModelFactory import BaseModel
 
 from KongMing.Trainer.GANTrainer import GANTrainer
 from KongMing.Trainer.WGANTrainer import WGANTrainer

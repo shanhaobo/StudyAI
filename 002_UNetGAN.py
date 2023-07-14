@@ -6,7 +6,7 @@ import torchvision.datasets as datasets
 from torchvision.transforms import transforms
 from torchvision.utils import save_image
 
-from KongMing.Models.GANs.UNetGANModel import UNetGANModel
+from KongMing.ModelFactory.GANs.UNetGANModel import UNetGANModel
 
 from datetime import datetime
 
@@ -33,7 +33,7 @@ torch.set_printoptions(precision=10, sci_mode=False)
 
 EmbeddingDim        = 256
 ImageSize           = 64
-ImageColorChan      = 3
+ImageColorChan      = 1
 
 if __name__ == "__main__" :
     GAN = UNetGANModel(ImageColorChan, EmbeddingDim, 3, inModelRootFolderPath="{}/trained_models".format(OutputPath))
@@ -64,7 +64,7 @@ if __name__ == "__main__" :
             transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
             transforms.Normalize((0.5,), (0.5,))  # (0, 1) -> (-1, 1),
         ])
-        if False :
+        if True :
             dataset = torchvision.datasets.FashionMNIST(
                 root=DatasetPath, train=True, transform=transform, download=True
             )
