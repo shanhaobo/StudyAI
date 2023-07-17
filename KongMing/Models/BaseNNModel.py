@@ -79,7 +79,7 @@ class BaseNNModel(torch.nn.Module):
             self._Loss.backward()
         else:
             # 如果这里错误, 先屏蔽,看看哪里报错了
-            # 因为这里不应该为Non
+            # 因为这里不应该为None
             raise RuntimeError
         
         self._Optimizer.step()

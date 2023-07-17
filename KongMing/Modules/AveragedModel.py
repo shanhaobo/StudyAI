@@ -18,8 +18,8 @@ class AveragedModel(Module):
             self.Module = self.Module.to(inDevice)
         self.register_buffer('Averaged', torch.tensor(0, dtype=torch.long, device=inDevice))
         if inAvgFN is None:
-            def inAvgFN(AveragedModelParameter, ModelParameter, NumAveraged):
-                return AveragedModelParameter + (ModelParameter - AveragedModelParameter) / (NumAveraged + 1)
+            def inAvgFN(AvgModelParam, ModelParam, NumAvg):
+                return AvgModelParam + (ModelParam - AvgModelParam) / (NumAvg + 1)
         self.AvgFN = inAvgFN
         self.UseBuffers = inUseBuffers
         
@@ -65,7 +65,7 @@ class EMA(AveragedModel):
     def __init__(self, inModel, inDecay, inDevice="cpu"):
         super().__init__(inModel, inDevice)
         self.decay = inDecay
-        def ema_avg(avg_model_param, model_param, num_averaged):
-            return inDecay * avg_model_param + (1 - inDecay) * model_param
+        def EMA_Avg(AvgModelParam, ModelParam, NumAveraged):
+            return inDecay * AvgModelParam + (1 - inDecay) * ModelParam
 
-        super().__init__(inModel, inDevice, ema_avg, inUseBuffers=True)
+        super().__init__(inModel, inDevice, EMA_Avg, inUseBuffers=True)
