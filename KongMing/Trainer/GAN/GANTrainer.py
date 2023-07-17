@@ -1,12 +1,8 @@
 import torch
-import torch.nn as nn
-import torch.optim as optim
 
 from datetime import datetime
 
-import torch.nn.functional as F
-
-from .MultiNNTrainer import MultiNNTrainer
+from ..MultiNNTrainer import MultiNNTrainer
 
 from KongMing.Models.BaseNNModel import BaseNNModel
 

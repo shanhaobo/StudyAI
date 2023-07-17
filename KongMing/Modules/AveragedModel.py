@@ -16,15 +16,12 @@ class AveragedModel(Module):
         self.Module = deepcopy(inModel)
         if inDevice is not None:
             self.Module = self.Module.to(inDevice)
-        self.register_buffer('n_averaged',
-                             torch.tensor(0, dtype=torch.long, device=inDevice))
+        self.register_buffer('Averaged', torch.tensor(0, dtype=torch.long, device=inDevice))
         if inAvgFN is None:
-            def inAvgFN(averaged_model_parameter, model_parameter, num_averaged):
-                return averaged_model_parameter + \
-                    (model_parameter - averaged_model_parameter) / (num_averaged + 1)
+            def inAvgFN(AveragedModelParameter, ModelParameter, NumAveraged):
+                return AveragedModelParameter + (ModelParameter - AveragedModelParameter) / (NumAveraged + 1)
         self.AvgFN = inAvgFN
         self.UseBuffers = inUseBuffers
-        self.Averaged = 0
         
     def forward(self, *inArgs, **inKVargs):
         return self.Module(*inArgs, **inKVargs)
