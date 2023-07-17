@@ -70,7 +70,6 @@ class IMultiHeadAttention2D(nn.Module):
         Out = rearrange(AttScaled, "b h d (x y) -> b (h d) x y", x=h, y=w)
         
         return self._AttOutLayer(Out)
-    
 
 class MultiHeadAttention2D(IMultiHeadAttention2D):
     def __init__(self, inDim, inNumHeads, inHeadEmbedDim):

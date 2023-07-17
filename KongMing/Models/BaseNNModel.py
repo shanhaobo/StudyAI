@@ -85,4 +85,4 @@ class BaseNNModel(torch.nn.Module):
         self._Optimizer.step()
 
         if ((BaseNNModel.EMAHolder is not None) and (BaseNNModel.EMATargeModule == self)):
-            BaseNNModel.EMAHolder.update_parameters(BaseNNModel.EMATargeModule)
+            BaseNNModel.EMAHolder.UpdateParameters(BaseNNModel.EMATargeModule)

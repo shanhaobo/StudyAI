@@ -11,8 +11,10 @@ class DCGANModelFactory(GANModelFactory):
         # initializers
         def __init__(self, inColorChan, inAllEmbeddingDims):
             super().__init__()
-
-            InOutPairDims = list(zip(inAllEmbeddingDims[1:], inAllEmbeddingDims[:-1]))
+            # [In, Out] -> [Out, In]
+            # [[0, Len - 1], [1, Len]] -> [[1, Len], [0, Len - 1]] -> reversed[[Len, 1], [Len - 1, 0]]
+            # [(2048, 1024), (1024, 512), (512, 256), (256, 128), (128, 64), (64, 32), (32, 0)]
+            InOutPairDims = reversed(list(zip(inAllEmbeddingDims[1:], inAllEmbeddingDims[:-1])))
 
             self.InputModule = nn.Sequential(
                 nn.ConvTranspose2d(inAllEmbeddingDims[0], inAllEmbeddingDims[-1], kernel_size=4, stride=2, padding=1),
@@ -21,7 +23,7 @@ class DCGANModelFactory(GANModelFactory):
                 nn.AvgPool2d(2, stride=2),
             )
             self.ModuleList = nn.ModuleList([])
-            for InDim, OutDim in reversed(InOutPairDims):
+            for InDim, OutDim in InOutPairDims:
                 self.ModuleList.append(nn.Sequential(
                     nn.ConvTranspose2d(InDim, OutDim, kernel_size=4, stride=2, padding=1),
                     nn.BatchNorm2d(OutDim),

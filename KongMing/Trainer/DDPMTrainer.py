@@ -34,7 +34,6 @@ class DDPMTrainer(BaseTrainer) :
 ###########################################################################################
 
     def _CreateOptimizer(self) -> None:
-        #self.Optimizer = torch.optim.Adam(self.NNModel.parameters(),     lr=self.LearningRate, betas=(0.5, 0.999))
         self.NNModel.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
 
     def _CreateLossFN(self) -> None:
@@ -88,7 +87,7 @@ class DDPMTrainer(BaseTrainer) :
     def DDPMBeginTrain(self, inArgs, inKVArgs) -> None:
         if "ema_override" in inArgs:
             print("EMA Override........")
-            self.DiffusionMode.EMA.override_parameters(self.NNModel)
+            self.DiffusionMode.EMA.OverrideParameters(self.NNModel)
 
     def _CheckEndEpoch(self)->bool:
         _, AvgLoss = self.NNModel.GetLossValue()

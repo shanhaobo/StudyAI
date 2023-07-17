@@ -24,7 +24,7 @@ class GANTrainer(MultiNNTrainer):
         self.Generator                  = inGenerator.to(self.Device)
         self.Discriminator              = inDiscriminator.to(self.Device)
 
-        self.GeneratorEmbeddingDim         = inGeneratorEmbeddingDim
+        self.GeneratorEmbeddingDim      = inGeneratorEmbeddingDim
 
         self.EndBatchTrain.add(self.MyEndBatchTrain)
 

@@ -61,7 +61,7 @@ class BaseModelFactory(object):
 
     def __BMBeginTrain(self, inArgs, inKVArgs)->None:
         print("Begin Training...")
-        SaveInterval = inKVArgs.get("saveinterval")
+        SaveInterval = inKVArgs.get("SaveInterval")
         if SaveInterval is not None:
             self.SaveInterval = int(SaveInterval)
 
