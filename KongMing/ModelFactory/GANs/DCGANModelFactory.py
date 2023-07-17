@@ -38,12 +38,12 @@ class DCGANModelFactory(GANModelFactory):
 
         # forward method
         def forward(self, inData):
-            x = self.InputModule(inData)
+            X = self.InputModule(inData)
             
             for Module in self.ModuleList:
-                x = Module(x)
+                X = Module(X)
 
-            return self.FinalModule(x)
+            return self.FinalModule(X)
 
     class InnerDiscriminator(BaseNNModel):
         # initializers
@@ -74,12 +74,12 @@ class DCGANModelFactory(GANModelFactory):
 
         # forward method
         def forward(self, inData):
-            x = self.InputModule(inData)
+            X = self.InputModule(inData)
 
             for Module in self.ModuleList:
-                x = Module(x)
+                X = Module(X)
 
-            return self.FinalModule(x)
+            return self.FinalModule(X)
 
     def __init__(self, inColorChan, inEmbeddingDim, inEmbedLvlCntORList, inLearningRate=0.00001, inModelRootFolderPath=".") -> None:
 

@@ -30,7 +30,6 @@ class GANTrainer(MultiNNTrainer):
 
 ###########################################################################################
 
-
     def _CreateOptimizer(self) -> None:
         self.Generator.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
         self.Discriminator.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
@@ -48,7 +47,12 @@ class GANTrainer(MultiNNTrainer):
         
         with self.Discriminator as D:
             with self.Generator as G: 
-                FakeData = self.Generator(torch.randn((BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth), device=self.Device))
+                FakeData = self.Generator(
+                    torch.randn(
+                        (BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth),
+                        device=self.Device
+                    )
+                )
 
                 DiscriminatorScores = self.Discriminator(FakeData)
                 RealLabels = torch.ones(DiscriminatorScores.size(), device=self.Device)
