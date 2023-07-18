@@ -1,6 +1,6 @@
 import torch
 from torch.nn import functional as F
-from KongMing.ModelFactory.Transformer.GPTModel import GPTModel, GPTConfig
+from KongMing.Modules.Transformer.GPTModel import GPTModel, GPTConfig
 
 torch.manual_seed(1337)
 
