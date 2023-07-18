@@ -5,14 +5,14 @@ from copy import deepcopy
 
 import itertools
 
-class AveragedModel(Module):
+class AveragedModule(Module):
     """
     You can also use custom averaging functions with `avg_fn` parameter.
     If no averaging function is provided, the default is to compute
     equally-weighted average of the weights.
     """
     def __init__(self, inModel, inDevice=None, inAvgFN=None, inUseBuffers=False):
-        super(AveragedModel, self).__init__()
+        super(AveragedModule, self).__init__()
         self.Module = deepcopy(inModel)
         if inDevice is not None:
             self.Module = self.Module.to(inDevice)
@@ -35,7 +35,7 @@ class AveragedModel(Module):
             itertools.chain(inModel.named_parameters(), inModel.named_buffers())
             if self.UseBuffers else inModel.named_parameters()
         )
-        ModelParamDict = {name : param for name, param in ModelParam}
+        ModelParamDict = {MPName : MPParam for MPName, MPParam in ModelParam}
         for (SWAName, SWAParam) in SelfParam:
             ModelParam = ModelParamDict[SWAName]
             Device = SWAParam.device
@@ -43,8 +43,8 @@ class AveragedModel(Module):
             if self.Averaged == 0:
                 SWAParam.detach().copy_(DeviceParamModel)
             else:
-                SWAParam.detach().copy_(self.AvgFN(SWAParam.detach(), DeviceParamModel,
-                                                 self.Averaged.to(Device)))
+                AvgValue = self.AvgFN(SWAParam.detach(), DeviceParamModel, self.Averaged.to(Device))
+                SWAParam.detach().copy_(AvgValue)
         self.Averaged += 1
 
     def OverrideParameters(self, inModel):
@@ -61,7 +61,7 @@ class AveragedModel(Module):
             ModelParam.detach().copy_(DeviceSWAParam)
 
 ## ExponentialMovingAverage
-class EMA(AveragedModel):
+class EMA(AveragedModule):
     def __init__(self, inModel, inDecay, inDevice="cpu"):
         super().__init__(inModel, inDevice)
         self.decay = inDecay
