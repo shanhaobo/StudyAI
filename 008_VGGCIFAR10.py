@@ -22,6 +22,10 @@ DatasetPath = os.path.join(DatasetPath, "Datasets")
 
 import sys
 
+# 检查是否有可用的GPU，如果有则使用GPU
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print("Running on", device)
+
 ###################################
 # 定义transform
 transform = transforms.Compose(
@@ -46,14 +50,14 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
 
 def main():
     # 使用VGG16预训练模型
-    model = torchvision.models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
+    model = torchvision.models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1).to(device)
 
     # 冻结所有参数
     for param in model.parameters():
         param.requires_grad = False
 
     # 修改最后一层为新的线性层，输出为10分类，新的层默认requires_grad=True
-    model.classifier[6] = nn.Linear(4096, 10)
+    model.classifier[6] = nn.Linear(4096, 10).to(device)
 
     # 定义损失函数和优化器
     criterion = nn.CrossEntropyLoss()
@@ -64,7 +68,7 @@ def main():
 
         running_loss = 0.0
         for i, data in enumerate(trainloader, 0):
-            inputs, labels = data
+            inputs, labels = data[0].to(device), data[1].to(device)
             optimizer.zero_grad()
 
             outputs = model(inputs)
@@ -85,7 +89,7 @@ def main():
     total = 0
     with torch.no_grad():
         for data in testloader:
-            images, labels = data
+            images, labels = data[0].to(device), data[1].to(device)
             outputs = model(images)
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
