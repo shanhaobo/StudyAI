@@ -5,6 +5,7 @@ from .SingleNNTrainer import SingleNNTrainer
 from KongMing.Models.BaseNNModel import BaseNNModel
 
 import torch.nn.functional as F
+from torch import nn
 
 class VGGTrainer(SingleNNTrainer) :
     def __init__(
@@ -14,24 +15,25 @@ class VGGTrainer(SingleNNTrainer) :
             inLogRootPath
         ) -> None:
         super().__init__(
+            inNNModel,
             inLearningRate,
             inLogRootPath
         )
-        self.NNModel        = inNNModel.to(self.Device)
 
     def _CreateOptimizer(self) -> None:
-        self.NNModel.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
+        self.NNModel.ApplyOptimizer(torch.optim.SGD, lr=self.LearningRate, momentum=0.9)
 
     def _CreateLossFN(self) -> None:
-        self.NNModel.ApplyLossFunc(F.smooth_l1_loss)
-
+        self.NNModel.ApplyLossFunc(nn.CrossEntropyLoss)
 
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
         # get BatchSize
         nBatchSize = inBatchData.size(0)
         
         # Prepare Real and Fake Data
-        RealData = inBatchData.to(self.Device)
+        DeviceData = inBatchData.to(self.Device)
+        DeviceLabel = inBatchLabel.to(self.Device)
         
         with self.NNModel as Model:
-            pass
+            Output = Model(DeviceData)
+            Model.CalcAndAcceptLoss(Output, DeviceLabel)
