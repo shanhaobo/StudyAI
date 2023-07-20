@@ -2,11 +2,13 @@ from KongMing.Archiver.SingleNNArchiver import SingleNNArchiver
 from KongMing.ModelFactory.BaseModelFactory import BaseModelFactory
 from KongMing.Trainer.VGGTrainer import VGGTrainer
 
+from KongMing.Models.BaseNNModel import BaseNNModel
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class VGG16(nn.Module):
+class VGG16(BaseNNModel):
     def __init__(self, num_classes=10):
         super(VGG16, self).__init__()
         self.features = nn.Sequential(
@@ -74,14 +76,13 @@ class VGG16(nn.Module):
 class VGGModelFactory(BaseModelFactory) :
     def __init__(self,
             inLearningRate,
-            inModeRootlFolderPath
+            inModelRootFolderPath
         ):
         self.VGG = VGG16()
 
-        Trainer = VGGTrainer(inLearningRate)
-        Archiver = SingleNNArchiver(self.VGG, "VGG", inModeRootlFolderPath)
+        Trainer = VGGTrainer(self.VGG, inLearningRate, inModelRootFolderPath)
+        Archiver = SingleNNArchiver(self.VGG, "VGG", inModelRootFolderPath)
 
         super().__init__(Trainer, Archiver)
 
         print("Sum of Params:{:,} ".format(self._SumParameters(self.VGG)))
-        

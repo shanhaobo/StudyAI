@@ -18,13 +18,13 @@ class DDPMModelFactory(BaseModelFactory) :
             inColorChanNum,
             inLearningRate=0.00001,
             inTimesteps : int = 1000,
-            inModeRootlFolderPath="."
+            inModelRootFolderPath="."
         ):
         self.NNModel =  UNet2D_WSR(inColorChanNum=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=(1, 2, 4))
         #self.NNModel = UNet2D_ConvNeXt(inColorChanNum=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=(1, 2, 4))
         self.DiffusionModel = DiffusionModel(inTimesteps=inTimesteps, inNNModule=self.NNModel)
 
-        NewArchiver         = DDPMArchiver(self.NNModel, self.DiffusionModel, inModeRootlFolderPath)
+        NewArchiver         = DDPMArchiver(self.NNModel, self.DiffusionModel, inModelRootFolderPath)
 
         NewTrainer          = DDPMTrainer(
                                 self.NNModel,

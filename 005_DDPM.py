@@ -41,7 +41,7 @@ if __name__ == "__main__" :
         inColorChanNum= image_channel,
         inLearningRate=0.00001,
         inTimesteps=1000,
-        inModeRootlFolderPath="{}/trained_models".format(OutputPath)
+        inModelRootFolderPath="{}/trained_models".format(OutputPath)
     )
     Exec = Executor(DDPM)
 

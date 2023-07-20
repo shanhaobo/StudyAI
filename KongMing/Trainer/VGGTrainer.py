@@ -21,7 +21,7 @@ class VGGTrainer(SingleNNTrainer) :
         )
 
     def _CreateOptimizer(self) -> None:
-        self.NNModel.ApplyOptimizer(torch.optim.SGD, lr=self.LearningRate, momentum=0.9)
+        self.NNModel.ApplyOptimizer(torch.optim.SGD, self.LearningRate, momentum=0.9)
 
     def _CreateLossFN(self) -> None:
         self.NNModel.ApplyLossFunc(nn.CrossEntropyLoss)
