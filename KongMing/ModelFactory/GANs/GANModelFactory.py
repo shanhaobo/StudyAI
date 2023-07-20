@@ -2,8 +2,8 @@ import torch
 
 from KongMing.ModelFactory.BaseModelFactory import BaseModelFactory
 
-from KongMing.Trainer.GAN.GANTrainer import GANTrainer
-from KongMing.Trainer.GAN.WGANTrainer import WGANTrainer
+from KongMing.Trainer.GANs.GANTrainer import GANTrainer
+from KongMing.Trainer.GANs.WGANTrainer import WGANTrainer
 from KongMing.Archiver.GANArchiver import GANArchiver
 
 from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
