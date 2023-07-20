@@ -1,20 +1,19 @@
 import torch
 
-from .BaseArchiver import BaseArchiver
+from .MultiNNArchiver import MultiNNArchiver
 
-class DDPMArchiver(BaseArchiver):
+class DDPMArchiver(MultiNNArchiver):
     def __init__(
             self,
             inNNModel : torch.nn.Module,
             inDiffusionModel : torch.nn.Module,
-            inModelRootFolderPath: str = "."
+            inModelRootFolderPath: str
         ) -> None:
-        super().__init__("DDPM", inModelRootFolderPath)
-        self.NNModel = inNNModel
-        self.DiffusionModel = inDiffusionModel
-
-        self.NNModelDict["NNModel"] = self.NNModel
-        self.NNModelDict["DiffusionModel"] = self.DiffusionModel
+        super().__init__(
+            {"NNModel" : inNNModel, "DiffusionModel" : inDiffusionModel},
+            "DDPM",
+            inModelRootFolderPath
+        )
 
         self.NNModelNameOnlyForTrain.append("NNModel")
         

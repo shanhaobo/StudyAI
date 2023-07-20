@@ -4,13 +4,13 @@ from datetime import datetime
 
 import torch.nn.functional as F
 
-from .BaseTrainer import BaseTrainer
+from .MultiNNTrainer import MultiNNTrainer
 
 from KongMing.Models.BaseNNModel import BaseNNModel
 
 import pandas as pd
 
-class DDPMTrainer(BaseTrainer) :
+class DDPMTrainer(MultiNNTrainer) :
     def __init__(self, 
             inNN : BaseNNModel,
             inDiffusionMode : BaseNNModel,

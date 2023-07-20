@@ -22,33 +22,34 @@ DatasetPath = os.path.join(DatasetPath, "Datasets")
 
 import sys
 
-# 检查是否有可用的GPU，如果有则使用GPU
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print("Running on", device)
-
 ###################################
-# 定义transform
-transform = transforms.Compose(
-    [transforms.Resize((224,224)), # VGG模型输入的图片尺寸为224*224
-     transforms.ToTensor(),
-     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-
-# 加载CIFAR10数据集
-trainset = torchvision.datasets.CIFAR10(root=DatasetPath, train=True,
-                                        download=True, transform=transform)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=4,
-                                          shuffle=True, num_workers=2)
-
-testset = torchvision.datasets.CIFAR10(root=DatasetPath, train=False,
-                                       download=True, transform=transform)
-testloader = torch.utils.data.DataLoader(testset, batch_size=4,
-                                         shuffle=False, num_workers=2)
-
-classes = ('plane', 'car', 'bird', 'cat', 'deer',
-           'dog', 'frog', 'horse', 'ship', 'truck')
-
 
 def main():
+    # 检查是否有可用的GPU，如果有则使用GPU
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print("Running on", device)
+
+    # 定义transform
+    transform = transforms.Compose(
+        [transforms.Resize((224,224)), # VGG模型输入的图片尺寸为224*224
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+    # 加载CIFAR10数据集
+    trainset = torchvision.datasets.CIFAR10(root=DatasetPath, train=True,
+                                            download=True, transform=transform)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=4,
+                                            shuffle=True, num_workers=2)
+
+    testset = torchvision.datasets.CIFAR10(root=DatasetPath, train=False,
+                                        download=True, transform=transform)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=4,
+                                            shuffle=False, num_workers=2)
+
+    classes = ('plane', 'car', 'bird', 'cat', 'deer',
+            'dog', 'frog', 'horse', 'ship', 'truck')
+
+
     # 使用VGG16预训练模型
     model = torchvision.models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1).to(device)
 
@@ -100,4 +101,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-    

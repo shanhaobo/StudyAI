@@ -10,11 +10,10 @@ class GANArchiver(MultiNNArchiver):
             inModelPrefix : str = "GAN",
             inModelRootFolderPath : str = "."
         ) -> None:
-        super().__init__(inModelPrefix, inModelRootFolderPath)
-        self.Generator = inGenerator
-        self.Discriminator = inDiscriminator
+        super().__init__(
+            {"Generator" : inGenerator, "Discriminator" : inDiscriminator},
+            inModelPrefix,
+            inModelRootFolderPath
+        )
 
-        self.NNModelDict["Generator"] = self.Generator
-        self.NNModelDict["Discriminator"] = self.Discriminator
-        
         self.NNModelNameOnlyForTrain.append("Discriminator")

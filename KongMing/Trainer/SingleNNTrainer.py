@@ -1,6 +1,8 @@
+import torch
+
 from .BaseTrainer import BaseTrainer
 
-class MultiNNTrainer(BaseTrainer) :
+class SingleNNTrainer(BaseTrainer) :
     def __init__(
             self,
             inLearningRate,

@@ -6,7 +6,7 @@ from KongMing.Utils.ModelFileOp import FindFileWithMaxNum
 from .Path.FileManagerWithNum import FileManagerWithNum
 
 class BaseArchiver(object):
-    def __init__(self, inModelPrefix : str, inModelRootFolderPath : str = ".") -> None:
+    def __init__(self, inModelPrefix : str, inModelRootFolderPath : str) -> None:
         self.ModelPrefix                = inModelPrefix
         self.ModelRootFolderPath        = inModelRootFolderPath
         self.ModelArchiveRootFolderPath = os.path.join(self.ModelRootFolderPath, self.ModelPrefix)
