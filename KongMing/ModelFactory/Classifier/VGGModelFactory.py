@@ -7,12 +7,14 @@ from KongMing.Models.BaseNNModel import BaseNNModel
 from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
 
 import torch
+import torchvision
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.models.vgg import VGG16_Weights
 
 class VGG16(BaseNNModel):
     def __init__(self, inNumClasses=10):
-        super(VGG16, self).__init__()
+        super().__init__()
         self.features = nn.Sequential(
             # Block 1
             nn.Conv2d(3, 64, kernel_size=3, padding=1),
@@ -75,6 +77,33 @@ class VGG16(BaseNNModel):
         x = self.classifier(x)
         return x
 
+class VGG16_PreTrained(BaseNNModel):
+    def __init__(self, inNumClasses = 10) -> None:
+        super().__init__()
+        PreTrainedModel = torchvision.models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
+        PreTrainedModel.classifier = nn.Sequential()
+
+        self.features = PreTrainedModel
+        
+        self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
+
+        self.classifier = nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, inNumClasses),
+        )
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.classifier(x)
+        return x
+
 class VGGModelFactory(BaseModelFactory) :
     def __init__(
             self,
@@ -82,7 +111,8 @@ class VGGModelFactory(BaseModelFactory) :
             inLearningRate,
             inModelRootFolderPath
         ):
-        self.VGG = VGG16(inNumClasses)
+        #self.VGG = VGG16(inNumClasses)
+        self.VGG = VGG16_PreTrained(inNumClasses)
 
         Trainer = VGGTrainer(self.VGG, inLearningRate, inModelRootFolderPath)
         Archiver = SingleNNArchiver(self.VGG, inModelRootFolderPath)
