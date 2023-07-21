@@ -35,7 +35,7 @@ class Executor :
         keyboard.add_hotkey('ctrl + x', self.__HotKeyExit)
         ##-----------------
         if self.bForceNewTrain or self.bIncTrain is False :
-            self.Model.Train(inDataLoader, self.EpochIterCount, self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML))
+            self.Model.NewTrain(inDataLoader, self.EpochIterCount, self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML))
         else :
             self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML))
     

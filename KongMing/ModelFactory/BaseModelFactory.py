@@ -22,7 +22,7 @@ class BaseModelFactory(object):
 
     ###########################################################################################
 
-    def Train(self, inDataLoader : DataLoader, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
+    def NewTrain(self, inDataLoader : DataLoader, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
         self.Trainer.Train(inDataLoader, 0, inEpochIterCount, inArgs, inKVArgs)
 
     def IncTrain(self, inDataLoader : DataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:

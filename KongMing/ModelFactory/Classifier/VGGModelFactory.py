@@ -77,26 +77,6 @@ class VGG16(BaseNNModel):
         inX = self.classifier(inX)
         return inX
 
-class VGG16_PreTrained(BaseNNModel):
-    def __init__(self, inNumClasses = 10) -> None:
-        super().__init__()
-        self.PreTrainedModel = torchvision.models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
-        self.PreTrainedModel.classifier = nn.Sequential(
-            nn.Linear(512 * 7 * 7, 4096),
-            nn.ReLU(True),
-            nn.Dropout(),
-            nn.Linear(4096, 4096),
-            nn.ReLU(True),
-            nn.Dropout(),
-            nn.Linear(4096, inNumClasses),
-        )
-
-    def forward(self, inX):
-        inX = self.PreTrainedModel.features(inX)
-        inX = self.PreTrainedModel.avgpool(inX)
-        inX = torch.flatten(inX, 1)
-        return self.PreTrainedModel.classifier(inX)
-
 class VGGModelFactory(BaseModelFactory) :
     def __init__(
             self,
@@ -104,8 +84,7 @@ class VGGModelFactory(BaseModelFactory) :
             inLearningRate,
             inModelRootFolderPath
         ):
-        #self.VGG = VGG16(inNumClasses)
-        self.VGG = VGG16_PreTrained(inNumClasses)
+        self.VGG = VGG16(inNumClasses)
 
         Trainer = VGGTrainer(self.VGG, inLearningRate, inModelRootFolderPath)
         Archiver = SingleNNArchiver(self.VGG, inModelRootFolderPath)
@@ -114,6 +93,13 @@ class VGGModelFactory(BaseModelFactory) :
 
         print("Sum of Params:{:,} ".format(self._SumParameters(self.VGG)))
 
+    def NewTrain(self, inDataLoader, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
+        PreTrained = inArgs.get("LoadPretrained")
+        if PreTrained is not None:
+            PreTrainedModel = torchvision.models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
+            self.VGG.features.load_state_dict(PreTrainedModel.features.state_dict())
+
+        super().NewTrain(inDataLoader=inDataLoader, inEpochIterCount=inEpochIterCount, inArgs=inArgs, inKVArgs=inKVArgs)
 
     def Eval(self, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
         if (super().Eval(inEpoch, inArgs, inKVArgs) == False) :
