@@ -40,22 +40,22 @@ if __name__ == "__main__" :
     VGG = VGGModelFactory(inLearningRate=0.00001, inModelRootFolderPath="{}/trained_models".format(OutputPath))
     Exec = Executor(VGG)
 
-    if (Exec.ForceTrain() == False) and Exec.IsExistModel():
-        pass
-    else :
-        if DatasetPath is None:
-            sys.exit()
+    transform = transforms.Compose([
+        transforms.Resize((ImageSizeW, ImageSizeH)),
+        transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # (0, 1) -> (-1, 1),
+    ])
 
-        transform = transforms.Compose([
-            transforms.Resize((ImageSizeW, ImageSizeH)),
-            transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # (0, 1) -> (-1, 1),
-        ])
-        if True :
-            trainset = torchvision.datasets.CIFAR10(root=DatasetPath, train=True,
-                                                    download=True, transform=transform)
-        else:
-            trainset = datasets.ImageFolder(root='{}/cartoon_faces'.format(DatasetPath), transform=transform)
+    if DatasetPath is None:
+        sys.exit()
+
+    if (Exec.ForceTrain() == False) and Exec.IsExistModel():
+        testset = torchvision.datasets.CIFAR10(root=DatasetPath, train=False,
+                                            download=True, transform=transform)
+        testloader = DataLoader(testset, batch_size=64, shuffle=False, num_workers=2)
+        Exec.Eval(inDataLoader=testloader)
+    else :
+        trainset = torchvision.datasets.CIFAR10(root=DatasetPath, train=True, download=True, transform=transform)
         
         dataloader = DataLoader(trainset, batch_size=64, shuffle=True, num_workers=2)
         Exec.Train(dataloader, SaveInterval=13)
