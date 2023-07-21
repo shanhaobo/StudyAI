@@ -37,25 +37,29 @@ ImageSizeH          = 224
 ImageColorChan      = 1
 
 if __name__ == "__main__" :
+    
     VGG = VGGModelFactory(inLearningRate=0.00001, inModelRootFolderPath="{}/trained_models".format(OutputPath))
     Exec = Executor(VGG)
 
+    if DatasetPath is None:
+        sys.exit()
+
+    # 当前是Eval 还是 Train
+    DoEval =  (Exec.ForceTrain() == False) and Exec.IsExistModel()
+
+    # 加载相应数据
     transform = transforms.Compose([
         transforms.Resize((ImageSizeW, ImageSizeH)),
         transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # (0, 1) -> (-1, 1),
     ])
 
-    if DatasetPath is None:
-        sys.exit()
+    dataset = torchvision.datasets.CIFAR10(root=DatasetPath, train=(DoEval == False), download=True, transform=transform)
+    
+    dataloader = DataLoader(dataset, batch_size=64, shuffle=True, num_workers=2)
 
-    if (Exec.ForceTrain() == False) and Exec.IsExistModel():
-        testset = torchvision.datasets.CIFAR10(root=DatasetPath, train=False,
-                                            download=True, transform=transform)
-        testloader = DataLoader(testset, batch_size=64, shuffle=False, num_workers=2)
-        Exec.Eval(inDataLoader=testloader)
+    # 开始Eval 或者 Train
+    if DoEval:
+        Exec.Eval(inDataLoader=dataloader)
     else :
-        trainset = torchvision.datasets.CIFAR10(root=DatasetPath, train=True, download=True, transform=transform)
-        
-        dataloader = DataLoader(trainset, batch_size=64, shuffle=True, num_workers=2)
         Exec.Train(dataloader, SaveInterval=13)
