@@ -70,7 +70,7 @@ class GANTrainer(MultiNNTrainer):
         DLoss, DAvgLoss = self.Discriminator.GetLossValue()
         GLoss, GAvgLoss = self.Generator.GetLossValue()
         print(
-            "{} | Epoch:{:0>4d}/{:0>4d} | Batch:{:0>4d}/{:0>4d} | DLoss:{:.6f}/DAvgLoss:{:.6f} | GLoss:{:.6f}/GAvgLoss:{:.6f}".
+            "{} | Epoch: {:0>4d} / {:0>4d} | Batch: {:0>4d} / {:0>4d} | DLoss: {:.6f} / {:.6f} | GLoss: {:.6f} / {:.6f}".
             format(
                 datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]"),
                 self.CurrEpochIndex,
