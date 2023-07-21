@@ -25,9 +25,9 @@ class BaseNNModel(torch.nn.Module):
             self._Loss                              = None
             self._AvgLoss : EMAValue                = EMAValue(0.99)
         
-        def ApplyOptimizer(self, inOptimizerType, inLearningRate, **inKVArgs):
+        def ApplyOptimizer(self, inModule:torch.nn.Module, inOptimizerType, inLearningRate, **inKVArgs):
             if inspect.isclass(inOptimizerType):
-                self._Optimizer = inOptimizerType(self.parameters(), inLearningRate, **inKVArgs)
+                self._Optimizer = inOptimizerType(inModule.parameters(), inLearningRate, **inKVArgs)
             else:
                 raise TypeError
             
@@ -87,7 +87,7 @@ class BaseNNModel(torch.nn.Module):
         self.EMA : EMAModle = None
 
     def ApplyOptimizer(self, inOptimizerType, inLearningRate, **inKVArgs):
-        self.BackPropagater.ApplyOptimizer(inOptimizerType, inLearningRate, **inKVArgs)
+        self.BackPropagater.ApplyOptimizer(self, inOptimizerType, inLearningRate, **inKVArgs)
 
     def ApplyLossFunc(self, inLossFunc, **inKVArgs):
         self.BackPropagater.ApplyLossFunc(inLossFunc, **inKVArgs)
@@ -114,7 +114,7 @@ class BaseNNModel(torch.nn.Module):
     ##---------------------------------------##
     def __enter__(self):
         self.BackPropagater.BeginBackPropagate()
-        return self.BackPropagater
+        return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         self.BackPropagater.EndBackPropagate()
