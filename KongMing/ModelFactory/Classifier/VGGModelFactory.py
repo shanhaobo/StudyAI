@@ -70,24 +70,18 @@ class VGG16(BaseNNModel):
             nn.Linear(4096, inNumClasses),
         )
 
-    def forward(self, x):
-        x = self.features(x)
-        x = self.avgpool(x)
-        x = torch.flatten(x, 1)
-        x = self.classifier(x)
-        return x
+    def forward(self, inX):
+        inX = self.features(inX)
+        inX = self.avgpool(inX)
+        inX = torch.flatten(inX, 1)
+        inX = self.classifier(inX)
+        return inX
 
 class VGG16_PreTrained(BaseNNModel):
     def __init__(self, inNumClasses = 10) -> None:
         super().__init__()
-        PreTrainedModel = torchvision.models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
-        PreTrainedModel.classifier = nn.Sequential()
-
-        self.features = PreTrainedModel
-        
-        self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
-
-        self.classifier = nn.Sequential(
+        self.PreTrainedModel = torchvision.models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
+        self.PreTrainedModel.classifier = nn.Sequential(
             nn.Linear(512 * 7 * 7, 4096),
             nn.ReLU(True),
             nn.Dropout(),
@@ -97,12 +91,11 @@ class VGG16_PreTrained(BaseNNModel):
             nn.Linear(4096, inNumClasses),
         )
 
-    def forward(self, x):
-        x = self.features(x)
-        x = self.avgpool(x)
-        x = torch.flatten(x, 1)
-        x = self.classifier(x)
-        return x
+    def forward(self, inX):
+        inX = self.PreTrainedModel.features(inX)
+        inX = self.PreTrainedModel.avgpool(inX)
+        inX = torch.flatten(inX, 1)
+        return self.PreTrainedModel.classifier(inX)
 
 class VGGModelFactory(BaseModelFactory) :
     def __init__(

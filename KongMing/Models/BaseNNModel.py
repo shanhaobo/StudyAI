@@ -70,7 +70,9 @@ class BaseNNModel(torch.nn.Module):
             else:
                 # 如果这里错误, 先屏蔽,看看哪里报错了
                 # 因为这里不应该为None
-                raise RuntimeError
+                # raise RuntimeError
+                pass
+
             self._Optimizer.step()
 
         def BackPropagate(self):
