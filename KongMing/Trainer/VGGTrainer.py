@@ -23,7 +23,8 @@ class VGGTrainer(SingleNNTrainer) :
         self.EndEpochTrain.add(self.__VGGEndEpochTrain)
 
     def _CreateOptimizer(self) -> None:
-        self.NNModel.ApplyOptimizer(torch.optim.SGD, self.LearningRate, momentum=0.9)
+        self.NNModel.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
+        #self.NNModel.ApplyOptimizer(torch.optim.SGD, self.LearningRate, momentum=0.9)
         self.NNModel.ApplyLRScheduler(torch.optim.lr_scheduler.ExponentialLR, gamma=0.999)
 
     def _CreateLossFN(self) -> None:

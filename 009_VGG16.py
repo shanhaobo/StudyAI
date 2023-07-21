@@ -37,7 +37,7 @@ NumClasses          = 10
 
 if __name__ == "__main__" :
 
-    VGG = VGGModelFactory(NumClasses, inLearningRate=0.001, inModelRootFolderPath="{}/CIFAR10".format(OutputPath))
+    VGG = VGGModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="{}/CIFAR10".format(OutputPath))
     Exec = Executor(VGG)
 
     if DatasetPath is None:
