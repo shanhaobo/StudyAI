@@ -94,8 +94,8 @@ class VGGModelFactory(BaseModelFactory) :
         print("Sum of Params:{:,} ".format(self._SumParameters(self.VGG)))
 
     def NewTrain(self, inDataLoader, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
-        PreTrained = inArgs.get("LoadPretrained")
-        if PreTrained is not None:
+        if "LoadPretrained" in inArgs:
+            print("Load Pretranined........")
             PreTrainedModel = torchvision.models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
             self.VGG.features.load_state_dict(PreTrainedModel.features.state_dict())
 
