@@ -67,16 +67,18 @@ class GANTrainer(MultiNNTrainer):
 ###########################################################################################
 
     def MyEndBatchTrain(self, inArgs, inKVArgs) -> None:
-        DLoss, _ = self.Discriminator.GetLossValue()
-        GLoss, _ = self.Generator.GetLossValue()
+        DLoss, DAvgLoss = self.Discriminator.GetLossValue()
+        GLoss, GAvgLoss = self.Generator.GetLossValue()
         print(
-            "{} | Epoch:{:0>4d} | Batch:{:0>4d} | DLoss:{:.8f} | GLoss:{:.8f}".
+            "{} | Epoch:{:0>4d} / {:0>4d} | Batch:{:0>4d} / {:0>4d} | DLoss:{:.8f} /  DAvgLoss:{:.8f} | GLoss:{:.8f}  /  GAvgLoss:{:.8f}".
             format(
                 datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]"),
                 self.CurrEpochIndex,
+                self.EndEpochIndex,
                 self.CurrBatchIndex,
-                DLoss,
-                GLoss
+                self.BatchNumPerEpoch,
+                DLoss, DAvgLoss,
+                GLoss, GAvgLoss
             )
         )
 

@@ -47,6 +47,8 @@ class BaseTrainer(abc.ABC):
         self.CurrEpochIndex     = 0
         self.CurrBatchIndex     = 0
 
+        self.BatchNumPerEpoch   = 0
+
         self.EndEpochIndex      = 0
 
         self.SoftExit           = False
@@ -85,6 +87,10 @@ class BaseTrainer(abc.ABC):
         # call BeginEpochTrain
         self.BeginEpochTrain(inArgs, inKVArgs)
 
+        DataLen = len(inDataLoader.dataset)
+        BatchSize = inDataLoader.batch_size
+        #self.BatchNumPerEpoch = (DataLen // BatchSize)  + 0 if (DataLen % BatchSize == 0) else 1
+        self.BatchNumPerEpoch = -(-DataLen // BatchSize)
         # For Each Batch Train
         for self.CurrBatchIndex, (CurrBatchData, CurrBatchLabel) in enumerate(inDataLoader):
             self.BeginBatchTrain(inArgs, inKVArgs)

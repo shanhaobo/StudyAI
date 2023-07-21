@@ -60,11 +60,13 @@ class DDPMTrainer(MultiNNTrainer) :
         Loss, AvgLoss = self.NNModel.GetLossValue()
         
         print(
-            "{} | Epoch:{:0>4d} | Batch:{:0>4d} | Loss:{:.8f} | AverageLoss:{:.8f}".
+            "{} | Epoch:{:0>4d} / {:0>4d} | Batch:{:0>4d} / {:0>4d} | Loss:{:.8f} | AverageLoss:{:.8f}".
             format(
                 datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]"),
                 self.CurrEpochIndex,
+                self.EndEpochIndex,
                 self.CurrBatchIndex,
+                self.BatchNumPerEpoch,
                 Loss,
                 AvgLoss
             )
