@@ -1,21 +1,18 @@
 import os
 import torch
-from datetime import datetime
 from KongMing.Utils.ModelFileOp import FindFileWithMaxNum
 
 from .Path.FileManagerWithNum import FileManagerWithNum
 
 class BaseArchiver(object):
     def __init__(self, inModelRootFolderPath : str) -> None:
-        self.ModelRootFolderPath        = inModelRootFolderPath
-        self.ModelArchiveRootFolderPath = inModelRootFolderPath
-        self.ModelArchiveFolderPath     = self.ModelArchiveRootFolderPath
+        self.ModelArchiveRootFolderPath = os.path.join(inModelRootFolderPath, "ArchivedModels")
 
-        self.FileNameManager = FileManagerWithNum(self.ModelArchiveRootFolderPath, ".pkl", 100, True)
+        self.FileNameManager            = FileManagerWithNum(self.ModelArchiveRootFolderPath, ".pkl", 100, True)
 
         self.SaveEpochIndex             = -1
         self.NNModelDict                = {}
-        self.NNModelNameOnlyForTrain     = []
+        self.NNModelNameOnlyForTrain    = []
 
 ############################################################################
     def GetCurrTrainRootPath(self):

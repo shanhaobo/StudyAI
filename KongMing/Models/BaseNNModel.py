@@ -9,57 +9,120 @@ from ..Modules.AveragedModel import EMA as EMAModle
 from typing import Optional
 
 class BaseNNModel(torch.nn.Module):
-
+    ##---------------------------------------##
     EMAHolder : EMAModle                = None
     EMATargeModule : torch.nn.Module    = None
+    ##---------------------------------------##
 
+    ##---------------------------------------##
+    class BackPropagaterClass() :
+        def __init__(self) -> None:
+            super().__init__()
+
+            self._Optimizer : torch.optim.Optimizer = None
+
+            self._LossFunction                      = None
+            self._Loss                              = None
+            self._AvgLoss : EMAValue                = EMAValue(0.99)
+        
+        def ApplyOptimizer(self, inOptimizerType, inLearningRate, **inKVArgs):
+            if inspect.isclass(inOptimizerType):
+                self._Optimizer = inOptimizerType(self.parameters(), inLearningRate, **inKVArgs)
+            else:
+                raise TypeError
+            
+            if self._Optimizer is None:
+                raise RuntimeError
+
+        def ApplyLossFunc(self, inLossFunc, **inKVArgs):
+            if inspect.isclass(inLossFunc):
+                self._LossFunction = inLossFunc(**inKVArgs)
+            elif inspect.isfunction(inLossFunc) or inspect.ismethod(inLossFunc):
+                self._LossFunction = inLossFunc
+            elif callable(inLossFunc):
+                self._LossFunction = inLossFunc
+            else:
+                raise TypeError
+
+            if self._LossFunction is None:
+                raise RuntimeError
+
+        def AcceptLoss(self, inLoss: torch.Tensor):
+            self._Loss = inLoss
+            self._AvgLoss.AcceptNewValue(self._Loss.item())
+
+        def CalcLoss(self, inInput: torch.Tensor, inTarget: torch.Tensor, **inKVArgs):
+            return self._LossFunction(inInput, inTarget, **inKVArgs)
+        
+        def CalcAndAcceptLoss(self, inInput: torch.Tensor, inTarget: torch.Tensor = None, **inKVArgs):
+            self._Loss = self._LossFunction(inInput, inTarget, **inKVArgs)
+            self._AvgLoss.AcceptNewValue(self._Loss.item())
+
+        def GetLossValue(self):
+            return self._Loss.item(), self._AvgLoss.item()
+
+        def BeginBackPropagate(self):
+            self._Optimizer.zero_grad()
+
+        def EndBackPropagate(self):
+            if self._Loss is not None:
+                self._Loss.backward()
+            else:
+                # 如果这里错误, 先屏蔽,看看哪里报错了
+                # 因为这里不应该为None
+                raise RuntimeError
+            self._Optimizer.step()
+
+        def BackPropagate(self):
+            self.BeginBackPropagate()
+            self.EndBackPropagate()
+    ##---------------------------------------##
+
+    ##---------------------------------------##
     def __init__(self) -> None:
         super().__init__()
 
-        self._Optimizer : torch.optim.Optimizer = None
+        self.BackPropagater = BaseNNModel.BackPropagaterClass()
 
-        self._LossFunction                      = None
-        self._Loss                              = None
-        self._AvgLoss : EMAValue                = EMAValue(0.99)
-    
-        self.EMA : EMAModle                     = None
+        self.EMA : EMAModle = None
 
     def ApplyOptimizer(self, inOptimizerType, inLearningRate, **inKVArgs):
-        if inspect.isclass(inOptimizerType):
-            self._Optimizer = inOptimizerType(self.parameters(), inLearningRate, **inKVArgs)
-        else:
-            raise TypeError
-        
-        if self._Optimizer is None:
-            raise RuntimeError
+        self.BackPropagater.ApplyOptimizer(inOptimizerType, inLearningRate, **inKVArgs)
 
     def ApplyLossFunc(self, inLossFunc, **inKVArgs):
-        if inspect.isclass(inLossFunc):
-            self._LossFunction = inLossFunc(**inKVArgs)
-        elif inspect.isfunction(inLossFunc) or inspect.ismethod(inLossFunc):
-            self._LossFunction = inLossFunc
-        elif callable(inLossFunc):
-            self._LossFunction = inLossFunc
-        else:
-            raise TypeError
-
-        if self._LossFunction is None:
-            raise RuntimeError
+        self.BackPropagater.ApplyLossFunc(inLossFunc, **inKVArgs)
 
     def AcceptLoss(self, inLoss: torch.Tensor):
-        self._Loss = inLoss
-        self._AvgLoss.AcceptNewValue(self._Loss.item())
+        self.BackPropagater.AcceptLoss(inLoss)
 
     def CalcLoss(self, inInput: torch.Tensor, inTarget: torch.Tensor, **inKVArgs):
-        return self._LossFunction(inInput, inTarget, **inKVArgs)
+        return self.BackPropagater.CalcLoss(inInput, inTarget, **inKVArgs)
     
     def CalcAndAcceptLoss(self, inInput: torch.Tensor, inTarget: torch.Tensor = None, **inKVArgs):
-        self._Loss = self._LossFunction(inInput, inTarget, **inKVArgs)
-        self._AvgLoss.AcceptNewValue(self._Loss.item())
+        self.BackPropagater.CalcAndAcceptLoss(inInput, inTarget, **inKVArgs)
 
     def GetLossValue(self):
-        return self._Loss.item(), self._AvgLoss.item()
+        return self.BackPropagater.GetLossValue()
 
+    ##---------------------------------------##
+    def BackPropagate(self):
+        self.BackPropagater.BackPropagate()
+        
+        self.__UpdateEMA()
+    ##---------------------------------------##
+
+    ##---------------------------------------##
+    def __enter__(self):
+        self.BackPropagater.BeginBackPropagate()
+        return self.BackPropagater
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        self.BackPropagater.EndBackPropagate()
+
+        self.__UpdateEMA()
+    ##---------------------------------------##
+
+    ##---------------------------------------##
     def ApplyEMA(self, inDecay, inModule : Optional['BaseNNModel'] = None):
         TargetModule = inModule
         if TargetModule is None:
@@ -70,29 +133,7 @@ class BaseNNModel(torch.nn.Module):
         BaseNNModel.EMAHolder = self.EMA
         BaseNNModel.EMATargeModule = TargetModule
 
-    def BackPropagate(self):
-        self._Optimizer.zero_grad()
-        self._Loss.backward()
-        self._Optimizer.step()
-
-        self.__UpdateEMA()
-
     def __UpdateEMA(self):
         if ((BaseNNModel.EMAHolder is not None) and (BaseNNModel.EMATargeModule == self)):
             BaseNNModel.EMAHolder.UpdateParameters(BaseNNModel.EMATargeModule)
-
-    def __enter__(self):
-        self._Optimizer.zero_grad()
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback) -> None:
-        if self._Loss is not None:
-            self._Loss.backward()
-        else:
-            # 如果这里错误, 先屏蔽,看看哪里报错了
-            # 因为这里不应该为None
-            raise RuntimeError
-        
-        self._Optimizer.step()
-
-        self.__UpdateEMA()
+    ##---------------------------------------##

@@ -85,7 +85,7 @@ class VGGModelFactory(BaseModelFactory) :
         self.VGG = VGG16(inNumClasses)
 
         Trainer = VGGTrainer(self.VGG, inLearningRate, inModelRootFolderPath)
-        Archiver = SingleNNArchiver(self.VGG, "VGG", inModelRootFolderPath)
+        Archiver = SingleNNArchiver(self.VGG, inModelRootFolderPath)
 
         super().__init__(Trainer, Archiver)
 
