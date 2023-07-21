@@ -20,8 +20,11 @@ class VGGTrainer(SingleNNTrainer) :
             inLogRootPath
         )
 
+        self.EndEpochTrain.add(self.__VGGEndEpochTrain)
+
     def _CreateOptimizer(self) -> None:
         self.NNModel.ApplyOptimizer(torch.optim.SGD, self.LearningRate, momentum=0.9)
+        self.NNModel.ApplyLRScheduler(torch.optim.lr_scheduler.ExponentialLR, gamma=0.999)
 
     def _CreateLossFN(self) -> None:
         self.NNModel.ApplyLossFunc(nn.CrossEntropyLoss().to(self.Device))
@@ -34,3 +37,6 @@ class VGGTrainer(SingleNNTrainer) :
         with self.NNModel as Model:
             Output = Model(DeviceData)
             Model.CalcAndAcceptLoss(Output, DeviceLabel)
+
+    def __VGGEndEpochTrain(self, inArgs, inKVArgs):
+        self.NNModel.UpdateLRScheduler()

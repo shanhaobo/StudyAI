@@ -20,6 +20,7 @@ class BaseNNModel(torch.nn.Module):
             super().__init__()
 
             self._Optimizer : torch.optim.Optimizer = None
+            self._LRScheduler : torch.optim.lr_scheduler._LRScheduler = None
 
             self._LossFunction                      = None
             self._Loss                              = None
@@ -32,6 +33,15 @@ class BaseNNModel(torch.nn.Module):
                 raise TypeError
             
             if self._Optimizer is None:
+                raise RuntimeError
+
+        def ApplyLRScheduler(self, inSchedulerType, **inKVArgs):
+            if inspect.isclass(inSchedulerType):
+                self._LRScheduler = inSchedulerType(self._Optimizer, **inKVArgs)
+            else:
+                raise TypeError
+            
+            if self._LRScheduler is None:
                 raise RuntimeError
 
         def ApplyLossFunc(self, inLossFunc, **inKVArgs):
@@ -78,6 +88,11 @@ class BaseNNModel(torch.nn.Module):
         def BackPropagate(self):
             self.BeginBackPropagate()
             self.EndBackPropagate()
+
+        def UpdateLRScheduler(self):
+            if self._LRScheduler is not None:
+                self._LRScheduler.step()
+
     ##---------------------------------------##
 
     ##---------------------------------------##
@@ -90,6 +105,9 @@ class BaseNNModel(torch.nn.Module):
 
     def ApplyOptimizer(self, inOptimizerType, inLearningRate, **inKVArgs):
         self.BackPropagater.ApplyOptimizer(self, inOptimizerType, inLearningRate, **inKVArgs)
+
+    def ApplyLRScheduler(self, inSchedulerType, **inKVArgs):
+        self.BackPropagater.ApplyLRScheduler(inSchedulerType, **inKVArgs)
 
     def ApplyLossFunc(self, inLossFunc, **inKVArgs):
         self.BackPropagater.ApplyLossFunc(inLossFunc, **inKVArgs)
@@ -105,6 +123,9 @@ class BaseNNModel(torch.nn.Module):
 
     def GetLossValue(self):
         return self.BackPropagater.GetLossValue()
+
+    def UpdateLRScheduler(self):
+        self.BackPropagater.UpdateLRScheduler()
 
     ##---------------------------------------##
     def BackPropagate(self):
