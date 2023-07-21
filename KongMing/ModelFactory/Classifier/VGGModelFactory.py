@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class VGG16(BaseNNModel):
-    def __init__(self, num_classes=10):
+    def __init__(self, inNumClasses=10):
         super(VGG16, self).__init__()
         self.features = nn.Sequential(
             # Block 1
@@ -65,7 +65,7 @@ class VGG16(BaseNNModel):
             nn.Linear(4096, 4096),
             nn.ReLU(True),
             nn.Dropout(),
-            nn.Linear(4096, num_classes),
+            nn.Linear(4096, inNumClasses),
         )
 
     def forward(self, x):
@@ -76,11 +76,13 @@ class VGG16(BaseNNModel):
         return x
 
 class VGGModelFactory(BaseModelFactory) :
-    def __init__(self,
+    def __init__(
+            self,
+            inNumClasses,
             inLearningRate,
             inModelRootFolderPath
         ):
-        self.VGG = VGG16()
+        self.VGG = VGG16(inNumClasses)
 
         Trainer = VGGTrainer(self.VGG, inLearningRate, inModelRootFolderPath)
         Archiver = SingleNNArchiver(self.VGG, "VGG", inModelRootFolderPath)
@@ -94,7 +96,7 @@ class VGGModelFactory(BaseModelFactory) :
         if (super().Eval(inEpoch, inArgs, inKVArgs) == False) :
             return
 
-        TestDataLoader = inKVArgs.get("DataLoader")
+        TestDataLoader = inKVArgs.get("inDataLoader")
         if (TestDataLoader is None) :
             return
 

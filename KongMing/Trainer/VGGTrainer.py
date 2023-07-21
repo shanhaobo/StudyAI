@@ -27,9 +27,6 @@ class VGGTrainer(SingleNNTrainer) :
         self.NNModel.ApplyLossFunc(nn.CrossEntropyLoss)
 
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
-        # get BatchSize
-        nBatchSize = inBatchData.size(0)
-        
         # Prepare Real and Fake Data
         DeviceData = inBatchData.to(self.Device)
         DeviceLabel = inBatchLabel.to(self.Device)

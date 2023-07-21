@@ -70,6 +70,17 @@ class BaseNNModel(torch.nn.Module):
         BaseNNModel.EMAHolder = self.EMA
         BaseNNModel.EMATargeModule = TargetModule
 
+    def BackPropagate(self):
+        self._Optimizer.zero_grad()
+        self._Loss.backward()
+        self._Optimizer.step()
+
+        self.__UpdateEMA()
+
+    def __UpdateEMA(self):
+        if ((BaseNNModel.EMAHolder is not None) and (BaseNNModel.EMATargeModule == self)):
+            BaseNNModel.EMAHolder.UpdateParameters(BaseNNModel.EMATargeModule)
+
     def __enter__(self):
         self._Optimizer.zero_grad()
         return self
@@ -82,7 +93,8 @@ class BaseNNModel(torch.nn.Module):
             # 因为这里不应该为None
             raise RuntimeError
         
-        self._Optimizer.step()
+        loss = self._Optimizer.step()
+        print("exit:loss:{}".format(loss))
 
-        if ((BaseNNModel.EMAHolder is not None) and (BaseNNModel.EMATargeModule == self)):
-            BaseNNModel.EMAHolder.UpdateParameters(BaseNNModel.EMATargeModule)
+        self.__UpdateEMA()
+

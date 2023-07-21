@@ -37,8 +37,8 @@ ImageSizeH          = 224
 ImageColorChan      = 1
 
 if __name__ == "__main__" :
-    
-    VGG = VGGModelFactory(inLearningRate=0.00001, inModelRootFolderPath="{}/trained_models".format(OutputPath))
+
+    VGG = VGGModelFactory(10, inLearningRate=0.001, inModelRootFolderPath="{}/trained_models".format(OutputPath))
     Exec = Executor(VGG)
 
     if DatasetPath is None:
