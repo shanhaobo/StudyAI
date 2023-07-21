@@ -24,7 +24,7 @@ class VGGTrainer(SingleNNTrainer) :
         self.NNModel.ApplyOptimizer(torch.optim.SGD, self.LearningRate, momentum=0.9)
 
     def _CreateLossFN(self) -> None:
-        self.NNModel.ApplyLossFunc(nn.CrossEntropyLoss)
+        self.NNModel.ApplyLossFunc(nn.CrossEntropyLoss().to(self.Device))
 
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
         # Prepare Real and Fake Data

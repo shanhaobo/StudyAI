@@ -7,12 +7,10 @@ class GANArchiver(MultiNNArchiver):
             self,
             inGenerator : torch.nn.Module,
             inDiscriminator : torch.nn.Module,
-            inModelPrefix : str = "GAN",
             inModelRootFolderPath : str = "."
         ) -> None:
         super().__init__(
             {"Generator" : inGenerator, "Discriminator" : inDiscriminator},
-            inModelPrefix,
             inModelRootFolderPath
         )
 

@@ -6,9 +6,8 @@ class SingleNNArchiver(BaseArchiver):
     def __init__(
             self, 
             inNNModel : torch.nn.Module,
-            inModelPrefix : str, 
             inModelRootFolderPath : str
         ) -> None:
-        super().__init__(inModelPrefix, inModelRootFolderPath)
+        super().__init__(inModelRootFolderPath)
 
-        self.NNModelDict[inModelPrefix] = inNNModel
+        self.NNModelDict["NNModel"] = inNNModel

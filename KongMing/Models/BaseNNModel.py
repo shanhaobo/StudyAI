@@ -93,8 +93,6 @@ class BaseNNModel(torch.nn.Module):
             # 因为这里不应该为None
             raise RuntimeError
         
-        loss = self._Optimizer.step()
-        print("exit:loss:{}".format(loss))
+        self._Optimizer.step()
 
         self.__UpdateEMA()
-

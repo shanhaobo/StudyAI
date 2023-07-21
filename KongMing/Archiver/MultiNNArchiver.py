@@ -4,10 +4,9 @@ class MultiNNArchiver(BaseArchiver):
     def __init__(
             self,
             inNNModelDict,
-            inModelPrefix : str,
             inModelRootFolderPath : str
         ) -> None:
-        super().__init__(inModelPrefix, inModelRootFolderPath)
+        super().__init__(inModelRootFolderPath)
 
-        for Name, NNModel in inNNModelDict:
+        for Name, NNModel in enumerate(inNNModelDict):
             self.NNModelDict[Name] = NNModel

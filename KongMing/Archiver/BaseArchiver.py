@@ -6,10 +6,9 @@ from KongMing.Utils.ModelFileOp import FindFileWithMaxNum
 from .Path.FileManagerWithNum import FileManagerWithNum
 
 class BaseArchiver(object):
-    def __init__(self, inModelPrefix : str, inModelRootFolderPath : str) -> None:
-        self.ModelPrefix                = inModelPrefix
+    def __init__(self, inModelRootFolderPath : str) -> None:
         self.ModelRootFolderPath        = inModelRootFolderPath
-        self.ModelArchiveRootFolderPath = os.path.join(self.ModelRootFolderPath, self.ModelPrefix)
+        self.ModelArchiveRootFolderPath = inModelRootFolderPath
         self.ModelArchiveFolderPath     = self.ModelArchiveRootFolderPath
 
         self.FileNameManager = FileManagerWithNum(self.ModelArchiveRootFolderPath, ".pkl", 100, True)

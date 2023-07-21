@@ -11,9 +11,7 @@ class DDPMArchiver(MultiNNArchiver):
         ) -> None:
         super().__init__(
             {"NNModel" : inNNModel, "DiffusionModel" : inDiffusionModel},
-            "DDPM",
             inModelRootFolderPath
         )
 
         self.NNModelNameOnlyForTrain.append("NNModel")
-        
