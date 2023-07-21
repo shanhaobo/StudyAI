@@ -31,14 +31,13 @@ torch.set_printoptions(precision=10, sci_mode=False)
 
 ###################################
 
-EmbeddingDim        = 256
 ImageSizeW          = 224
 ImageSizeH          = 224
-ImageColorChan      = 1
+NumClasses          = 10
 
 if __name__ == "__main__" :
 
-    VGG = VGGModelFactory(10, inLearningRate=0.001, inModelRootFolderPath="{}/trained_models".format(OutputPath))
+    VGG = VGGModelFactory(NumClasses, inLearningRate=0.001, inModelRootFolderPath="{}/CIFAR10".format(OutputPath))
     Exec = Executor(VGG)
 
     if DatasetPath is None:

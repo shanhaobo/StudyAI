@@ -36,7 +36,13 @@ ImageSize           = 64
 ImageColorChan      = 1
 
 if __name__ == "__main__" :
-    GAN = UNetGANModelFactory(ImageColorChan, EmbeddingDim, 3, inLearningRate=0.00001, inModelRootFolderPath="{}/trained_models".format(OutputPath))
+    GAN = UNetGANModelFactory(
+        ImageColorChan,
+        EmbeddingDim,
+        3,
+        inLearningRate=0.00001,
+        inModelRootFolderPath="{}/FashionMNIST".format(OutputPath)
+    )
     Exec = Executor(GAN)
 
     if (Exec.ForceTrain() == False) and Exec.IsExistModel():

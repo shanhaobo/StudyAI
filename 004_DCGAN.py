@@ -36,7 +36,7 @@ ImageSize           = 64
 ImageColorChan      = 1
 
 if __name__ == "__main__" :
-    GAN = DCGANModelFactory(ImageColorChan, EmbeddingDim, 3, inModelRootFolderPath="{}/trained_models".format(OutputPath))
+    GAN = DCGANModelFactory(ImageColorChan, EmbeddingDim, 3, inModelRootFolderPath="{}/FashionMNIST".format(OutputPath))
     Exec = Executor(GAN)
 
     if (Exec.ForceTrain() == False) and Exec.IsExistModel():

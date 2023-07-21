@@ -65,7 +65,7 @@ class DDPMTrainer(MultiNNTrainer) :
                 datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]"),
                 self.CurrEpochIndex,
                 self.EndEpochIndex,
-                self.CurrBatchIndex,
+                self.CurrBatchIndex + 1,
                 self.BatchNumPerEpoch,
                 Loss,
                 AvgLoss
