@@ -20,6 +20,7 @@ class SingleNNTrainer(BaseTrainer) :
         self.NNModel        = inNNModel.to(self.Device)
 
         self.EndBatchTrain.add(self.__SNNEndBatchTrain)
+        self.EndEpochTrain.add(self.__SNNEndEpochTrain)
 
     def __SNNEndBatchTrain(self, inArgs, inKVArgs) -> None:
         Loss, AvgLoss = self.NNModel.GetLossValue()
@@ -36,3 +37,6 @@ class SingleNNTrainer(BaseTrainer) :
                 AvgLoss
             )
         )
+
+    def __SNNEndEpochTrain(self, inArgs, inKVArgs):
+        self.NNModel.UpdateLRScheduler()
