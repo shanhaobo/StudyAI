@@ -31,12 +31,22 @@ torch.set_printoptions(precision=10, sci_mode=False)
 
 ###################################
 
-EmbeddingDim        = 32
-ImageSize           = 64
-ImageColorChan      = 1
+bFashionMNIST       = True
+if bFashionMNIST:
+    ModelFolderByDataset    = "FashionMNIST"
+    EmbeddingDim            = 32
+    ImageSize               = 64
+    ImageColorChan          = 1
+else:
+    ModelFolderByDataset    = "CartoonnFace"
+    EmbeddingDim            = 128
+    ImageSize               = 64
+    ImageColorChan          = 3
+
+ModelRootFolderPath     = "{}/{}".format(OutputPath, ModelFolderByDataset)
 
 if __name__ == "__main__" :
-    GAN = DCGANModelFactory(ImageColorChan, EmbeddingDim, 3, inModelRootFolderPath="{}/FashionMNIST".format(OutputPath))
+    GAN = DCGANModelFactory(ImageColorChan, EmbeddingDim, 3, inModelRootFolderPath=ModelRootFolderPath)
     Exec = Executor(GAN)
 
     if (Exec.ForceTrain() == False) and Exec.IsExistModel():
@@ -64,7 +74,7 @@ if __name__ == "__main__" :
             transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
             transforms.Normalize((0.5,), (0.5,))  # (0, 1) -> (-1, 1),
         ])
-        if True :
+        if bFashionMNIST :
             dataset = torchvision.datasets.FashionMNIST(
                 root=DatasetPath, train=True, transform=transform, download=True
             )

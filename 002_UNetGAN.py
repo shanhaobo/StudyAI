@@ -31,9 +31,19 @@ torch.set_printoptions(precision=10, sci_mode=False)
 
 ###################################
 
-EmbeddingDim        = 256
-ImageSize           = 64
-ImageColorChan      = 1
+bFashionMNIST       = True
+if bFashionMNIST:
+    ModelFolderByDataset    = "FashionMNIST"
+    EmbeddingDim            = 32
+    ImageSize               = 64
+    ImageColorChan          = 1
+else:
+    ModelFolderByDataset    = "CartoonnFace"
+    EmbeddingDim            = 128
+    ImageSize               = 64
+    ImageColorChan          = 3
+
+ModelRootFolderPath     = "{}/{}".format(OutputPath, ModelFolderByDataset)
 
 if __name__ == "__main__" :
     GAN = UNetGANModelFactory(
@@ -41,7 +51,7 @@ if __name__ == "__main__" :
         EmbeddingDim,
         3,
         inLearningRate=0.00001,
-        inModelRootFolderPath="{}/FashionMNIST".format(OutputPath)
+        inModelRootFolderPath=ModelRootFolderPath
     )
     Exec = Executor(GAN)
 
@@ -70,7 +80,7 @@ if __name__ == "__main__" :
             transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
             transforms.Normalize((0.5,), (0.5,))  # (0, 1) -> (-1, 1),
         ])
-        if True :
+        if bFashionMNIST :
             dataset = torchvision.datasets.FashionMNIST(
                 root=DatasetPath, train=True, transform=transform, download=True
             )

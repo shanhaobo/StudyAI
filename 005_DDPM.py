@@ -32,23 +32,34 @@ torch.set_printoptions(precision=10, sci_mode=False)
 
 ###################################
 
-image_size = 64
-image_channel = 1
-EmbedDim = 32
+bFashionMNIST       = True
+if bFashionMNIST:
+    ModelFolderByDataset    = "FashionMNIST"
+    EmbeddingDim            = 32
+    ImageSize               = 64
+    ImageColorChan          = 1
+else:
+    ModelFolderByDataset    = "CartoonnFace"
+    EmbeddingDim            = 128
+    ImageSize               = 64
+    ImageColorChan          = 3
+
+ModelRootFolderPath     = "{}/{}".format(OutputPath, ModelFolderByDataset)
+
 if __name__ == "__main__" :
     DDPM = DDPMModelFactory(
-        inEmbeddingDim=EmbedDim,
-        inColorChanNum= image_channel,
+        inEmbeddingDim=EmbeddingDim,
+        inColorChanNum= ImageColorChan,
         inLearningRate=0.00001,
         inTimesteps=1000,
-        inModelRootFolderPath="{}/FashionMNIST".format(OutputPath)
+        inModelRootFolderPath=ModelRootFolderPath
     )
     Exec = Executor(DDPM)
 
     if (Exec.ForceTrain() == False) and Exec.IsExistModel():
         GenImage = Exec.Eval(
-            inImageSize=image_size,
-            inColorChanNum=image_channel,
+            inImageSize=ImageSize,
+            inColorChanNum=ImageColorChan,
             inBatchSize=15
         )
         print(GenImage.size())
@@ -65,15 +76,16 @@ if __name__ == "__main__" :
             sys.exit()
             
         transform = transforms.Compose([
-            transforms.Resize(image_size),
+            transforms.Resize(ImageSize),
             transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
             transforms.Normalize((0.5,), (0.5,))  # (0, 1) -> (-1, 1),
         ])
-        if True :
+        if bFashionMNIST :
             dataset = torchvision.datasets.FashionMNIST(
                 root=DatasetPath, train=True, transform=transform, download=True
             )
         else:
             dataset = torchvision.datasets.ImageFolder(root='{}/cartoon_faces'.format(DatasetPath), transform=transform)
+
         dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
         Exec.Train(dataloader, SaveInterval=13)
