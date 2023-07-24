@@ -38,7 +38,7 @@ if bFashionMNIST:
     ImageSize               = 64
     ImageColorChan          = 1
 else:
-    ModelFolderByDataset    = "CartoonnFace"
+    ModelFolderByDataset    = "CartoonFace"
     EmbeddingDim            = 128
     ImageSize               = 64
     ImageColorChan          = 3
