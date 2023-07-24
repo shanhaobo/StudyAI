@@ -8,5 +8,5 @@ class MultiNNArchiver(BaseArchiver):
         ) -> None:
         super().__init__(inModelRootFolderPath)
 
-        for Name, NNModel in enumerate(inNNModelDict):
+        for Name, NNModel in inNNModelDict.items():
             self.NNModelDict[Name] = NNModel
