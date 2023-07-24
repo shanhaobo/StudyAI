@@ -95,9 +95,16 @@ class VGGModelFactory(BaseModelFactory) :
 
     def NewTrain(self, inDataLoader, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
         if "LoadPretrained" in inArgs:
-            print("Load Pretranined........")
+            print("Load Pretranined Begin........")
             PreTrainedModel = torchvision.models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
+            print("\t Load Features")
             self.VGG.features.load_state_dict(PreTrainedModel.features.state_dict())
+            print("\t Load Avgpool")
+            self.VGG.avgpool.load_state_dict(PreTrainedModel.avgpool.state_dict())
+            for i in range(6):
+                print("\t Load classifier[{}]".format(i))
+                self.VGG.classifier[i].load_state_dict(PreTrainedModel.classifier[i].state_dict())
+            print("Load Pretranined Finished........")
 
         super().NewTrain(inDataLoader=inDataLoader, inEpochIterCount=inEpochIterCount, inArgs=inArgs, inKVArgs=inKVArgs)
 
