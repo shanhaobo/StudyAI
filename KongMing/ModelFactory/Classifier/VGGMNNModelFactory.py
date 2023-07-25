@@ -268,6 +268,10 @@ class VGGMNNModelFactory(BaseModelFactory) :
             NNModelDict,
             inModelRootFolderPath
         )
+        Archiver.NNModelNameOnlyForTrain.append("VGG1")
+        Archiver.NNModelNameOnlyForTrain.append("VGG2")
+        Archiver.NNModelNameOnlyForTrain.append("VGG3")
+        Archiver.NNModelNameOnlyForTrain.append("VGG4")
 
         super().__init__(Trainer, Archiver)
 
@@ -293,14 +297,14 @@ class VGGMNNModelFactory(BaseModelFactory) :
         if (TestDataLoader is None) :
             return
 
-        VGG = VGG16(self.NumClasses)
+        self.VGG5.eval()
 
         correct = 0
         total = 0
         with torch.no_grad():
             for data in TestDataLoader:
                 images, labels = data[0].to(self.Device), data[1].to(self.Device)
-                outputs = VGG(images)
+                outputs = self.VGG5(images)
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
