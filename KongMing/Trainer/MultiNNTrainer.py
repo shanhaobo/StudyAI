@@ -3,6 +3,7 @@ from .BaseTrainer import BaseTrainer
 class MultiNNTrainer(BaseTrainer) :
     def __init__(
             self,
+            inMNNDict,
             inLearningRate,
             inLogRootPath
         ) -> None:
@@ -10,5 +11,7 @@ class MultiNNTrainer(BaseTrainer) :
             inLearningRate,
             inLogRootPath
         )
+        self.MNNDict = {}
 
-        pass
+        for NNName, NN in inMNNDict.items():
+            self.MNNDict[NNName] = NN.to(self.Device)

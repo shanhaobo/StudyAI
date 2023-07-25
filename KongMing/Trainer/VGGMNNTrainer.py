@@ -1,5 +1,7 @@
 import torch
 
+from datetime import datetime
+
 from .MultiNNTrainer import MultiNNTrainer
 
 from KongMing.Models.BaseNNModel import BaseNNModel
@@ -15,10 +17,13 @@ class VGGMNNTrainer(MultiNNTrainer) :
             inLogRootPath
         ) -> None:
         super().__init__(
+            inMNNDict,
             inLearningRate,
             inLogRootPath
         )
-        self.MNNDict = inMNNDict
+
+        self.EndBatchTrain.add(self.__VGGMNNEndBatchTrain)
+        
 
     def _CreateOptimizer(self) -> None:
         self.MNNDict["VGG1"].ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
@@ -51,21 +56,47 @@ class VGGMNNTrainer(MultiNNTrainer) :
         DeviceLabel = inBatchLabel.to(self.Device)
         
         with self.MNNDict["VGG1"] as Model:
-            Output = Model(DeviceData)
+            MidData, Output = Model(DeviceData)
             Model.CalcAndAcceptLoss(Output, DeviceLabel)
 
         with self.MNNDict["VGG2"] as Model:
-            Output = Model(DeviceData)
+            MidData, Output = Model(MidData.detach())
             Model.CalcAndAcceptLoss(Output, DeviceLabel)
         
         with self.MNNDict["VGG3"] as Model:
-            Output = Model(DeviceData)
+            MidData, Output = Model(MidData.detach())
             Model.CalcAndAcceptLoss(Output, DeviceLabel)
             
         with self.MNNDict["VGG4"] as Model:
-            Output = Model(DeviceData)
+            MidData, Output = Model(MidData.detach())
             Model.CalcAndAcceptLoss(Output, DeviceLabel)
 
         with self.MNNDict["VGG5"] as Model:
-            Output = Model(DeviceData)
+            Output = Model(MidData.detach())
             Model.CalcAndAcceptLoss(Output, DeviceLabel)
+
+        """
+        MidData, Output = self.MNNDict["VGG1"](DeviceData)
+        self.MNNDict["VGG1"].CalcAndAcceptLoss(Output, DeviceLabel)
+        self.MNNDict["VGG1"].BackPropagate()
+
+        MidData, Output = self.MNNDict["VGG2"](MidData)
+        self.MNNDict["VGG2"].CalcAndAcceptLoss(Output, DeviceLabel)
+        self.MNNDict["VGG2"].BackPropagate()
+        """
+
+    def __VGGMNNEndBatchTrain(self, inArgs, inKVArgs) -> None:
+        Loss, AvgLoss = self.MNNDict["VGG5"].GetLossValue()
+
+        print(
+            "{} | Epoch: {:0>4d} / {:0>4d} | Batch: {:0>4d} / {:0>4d} | Loss: {:.6f} / {:.6f}".
+            format(
+                datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]"),
+                self.CurrEpochIndex,
+                self.EndEpochIndex,
+                self.CurrBatchIndex + 1,
+                self.BatchNumPerEpoch,
+                Loss,
+                AvgLoss
+            )
+        )

@@ -38,11 +38,11 @@ class VGG16_Part1(BaseNNModel):
         )
 
     def forward(self, inX):
-        inX = self.features(inX)
-        inX = self.avgpool(inX)
-        inX = torch.flatten(inX, 1)
-        inX = self.classifier(inX)
-        return inX
+        R = self.features(inX)
+        X = self.avgpool(R)
+        X = torch.flatten(X, 1)
+        X = self.classifier(X)
+        return R, X
 
 class VGG16_Part2(BaseNNModel):
     def __init__(self, inNumClasses=10):
@@ -70,11 +70,11 @@ class VGG16_Part2(BaseNNModel):
         )
 
     def forward(self, inX):
-        inX = self.features(inX)
-        inX = self.avgpool(inX)
-        inX = torch.flatten(inX, 1)
-        inX = self.classifier(inX)
-        return inX
+        R = self.features(inX)
+        X = self.avgpool(R)
+        X = torch.flatten(X, 1)
+        X = self.classifier(X)
+        return R, X
 
 class VGG16_Part3(BaseNNModel):
     def __init__(self, inNumClasses=10):
@@ -104,11 +104,11 @@ class VGG16_Part3(BaseNNModel):
         )
 
     def forward(self, inX):
-        inX = self.features(inX)
-        inX = self.avgpool(inX)
-        inX = torch.flatten(inX, 1)
-        inX = self.classifier(inX)
-        return inX
+        R = self.features(inX)
+        X = self.avgpool(R)
+        X = torch.flatten(X, 1)
+        X = self.classifier(X)
+        return R, X
 
 class VGG16_Part4(BaseNNModel):
     def __init__(self, inNumClasses=10):
@@ -138,11 +138,11 @@ class VGG16_Part4(BaseNNModel):
         )
 
     def forward(self, inX):
-        inX = self.features(inX)
-        inX = self.avgpool(inX)
-        inX = torch.flatten(inX, 1)
-        inX = self.classifier(inX)
-        return inX
+        R = self.features(inX)
+        X = self.avgpool(R)
+        X = torch.flatten(X, 1)
+        X = self.classifier(X)
+        return R, X
 
 class VGG16_Part5(BaseNNModel):
     def __init__(self, inNumClasses=10):
@@ -172,11 +172,11 @@ class VGG16_Part5(BaseNNModel):
         )
 
     def forward(self, inX):
-        inX = self.features(inX)
-        inX = self.avgpool(inX)
-        inX = torch.flatten(inX, 1)
-        inX = self.classifier(inX)
-        return inX
+        X = self.features(inX)
+        X = self.avgpool(X)
+        X = torch.flatten(X, 1)
+        X = self.classifier(X)
+        return X
 
 class VGG16(BaseNNModel):
     def __init__(self, inNumClasses=10):
@@ -271,7 +271,11 @@ class VGGMNNModelFactory(BaseModelFactory) :
 
         super().__init__(Trainer, Archiver)
 
-        print("Sum of Params:{:,} ".format(self._SumParameters(self.VGG)))
+        Sum = 0
+        for i in NNModelDict.values():
+            Sum += self._SumParameters(i)
+
+        print("Sum of Params:{:,} ".format(Sum))
 
     def NewTrain(self, inDataLoader, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
         if "LoadPretrained" in inArgs:
