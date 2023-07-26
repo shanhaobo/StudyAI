@@ -323,7 +323,7 @@ class VGGMNNModelFactory(BaseModelFactory) :
 
         print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
 
-    def VGG(self, inVGG:VGG16, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
+    def LoadVGG(self, inVGG:VGG16, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
         if (super().Eval(inEpoch, inArgs, inKVArgs) == False) :
             return None
 

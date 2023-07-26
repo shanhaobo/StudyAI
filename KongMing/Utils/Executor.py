@@ -47,6 +47,7 @@ class Executor :
     ##----------------------------------------##
     
     def Load(self, *inArgsForML, **inKVArgsForML) :
+        
         return self.Model.LoadLastest(self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML))
     
     ##----------------------------------------##

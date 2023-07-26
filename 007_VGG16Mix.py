@@ -8,6 +8,8 @@ from torchvision.utils import save_image
 
 from KongMing.ModelFactory.Classifier.VGGMNNModelFactory import VGGMNNModelFactory
 
+from KongMing.ModelFactory.Classifier.VGGModelFactory import VGGModelFactory
+
 from datetime import datetime
 
 from KongMing.Utils.Executor import Executor
@@ -36,8 +38,12 @@ ImageSizeH          = 224
 NumClasses          = 10
 
 if __name__ == "__main__" :
+    VGGMNN = VGGMNNModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="{}/CIFAR10".format(OutputPath))
 
-    VGG = VGGMNNModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="{}/CIFAR10".format(OutputPath))
+    VGG = VGGModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="output/008_VGGMNN16/{}/CIFAR10".format(OutputPath))
+
+    VGGMNN.LoadVGG(1, VGG)
+
     Exec = Executor(VGG)
 
     if DatasetPath is None:
