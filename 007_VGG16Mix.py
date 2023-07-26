@@ -38,11 +38,11 @@ ImageSizeH          = 224
 NumClasses          = 10
 
 if __name__ == "__main__" :
-    VGGMNN = VGGMNNModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="{}/CIFAR10".format(OutputPath))
+    VGGMNN = VGGMNNModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="output/008_VGGMNN16/CIFAR10")
 
-    VGG = VGGModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="output/008_VGGMNN16/{}/CIFAR10".format(OutputPath))
+    VGG = VGGModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="{}/CIFAR10".format(OutputPath))
 
-    VGGMNN.LoadVGG(1, VGG)
+    VGGMNN.LoadVGG(VGG.VGG, 2)
 
     Exec = Executor(VGG)
 
