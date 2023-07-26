@@ -309,7 +309,7 @@ class VGGMNNModelFactory(BaseModelFactory) :
         self.VGG4.eval()
         self.VGG5.eval()
 
-        VGG = self.LoadVGGStateDict(VGG16(self.NumClasses)).eval()
+        VGG = self.LoadVGGStateDict(VGG16(self.NumClasses).to(self.VGG1.device)).eval()
 
         correct = 0
         total = 0
