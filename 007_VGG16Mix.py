@@ -6,7 +6,7 @@ import torchvision.datasets as datasets
 from torchvision.transforms import transforms
 from torchvision.utils import save_image
 
-from KongMing.ModelFactory.Classifier.VGGModelFactory import VGGModelFactory
+from KongMing.ModelFactory.Classifier.VGGMNNModelFactory import VGGMNNModelFactory
 
 from datetime import datetime
 
@@ -37,7 +37,7 @@ NumClasses          = 10
 
 if __name__ == "__main__" :
 
-    VGG = VGGModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="{}/CIFAR10".format(OutputPath))
+    VGG = VGGMNNModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="{}/CIFAR10".format(OutputPath))
     Exec = Executor(VGG)
 
     if DatasetPath is None:
@@ -54,7 +54,7 @@ if __name__ == "__main__" :
     ])
 
     dataset = torchvision.datasets.CIFAR10(root=DatasetPath, train=(DoEval == False), download=True, transform=transform)
-
+    
     dataloader = DataLoader(dataset, batch_size=64, shuffle=True, num_workers=2)
 
     # 开始Eval 或者 Train

@@ -281,6 +281,7 @@ class VGGMNNModelFactory(BaseModelFactory) :
 
         print("Sum of Params:{:,} ".format(Sum))
 
+    ###### NEW
     def NewTrain(self, inDataLoader, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
         if "LoadPretrained" in inArgs:
             print("Load Pretranined........")
@@ -289,6 +290,11 @@ class VGGMNNModelFactory(BaseModelFactory) :
 
         super().NewTrain(inDataLoader=inDataLoader, inEpochIterCount=inEpochIterCount, inArgs=inArgs, inKVArgs=inKVArgs)
 
+    ###### INC
+    def IncTrain(self, inDataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
+        super().IncTrain(inDataLoader=inDataLoader, inStartEpochNum=inStartEpochNum, inEpochIterCount=inEpochIterCount, inArgs=inArgs, inKVArgs=inKVArgs)
+        
+    ###### EVAL
     def Eval(self, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
         if (super().Eval(inEpoch, inArgs, inKVArgs) == False) :
             return
@@ -303,18 +309,45 @@ class VGGMNNModelFactory(BaseModelFactory) :
         self.VGG4.eval()
         self.VGG5.eval()
 
+        VGG = self.LoadVGGStateDict(VGG16(self.NumClasses)).eval()
+
         correct = 0
         total = 0
         with torch.no_grad():
             for data in TestDataLoader:
                 images, labels = data[0].to(self.Device), data[1].to(self.Device)
-                mid, _ = self.VGG1(images)
-                mid, _ = self.VGG2(mid)
-                mid, _ = self.VGG3(mid)
-                mid, _ = self.VGG4(mid)
-                outputs = self.VGG5(mid)
+                outputs = VGG(images)
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
 
         print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
+
+    def VGG(self, inVGG:VGG16, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
+        if (super().Eval(inEpoch, inArgs, inKVArgs) == False) :
+            return None
+
+        return self.LoadVGGStateDict(inVGG)
+
+    def LoadVGGStateDict(self, nVGG:VGG16):
+        i = 0
+        for n in self.VGG1.features:
+            nVGG.features[i].load_state_dict(n.state_dict())
+            i += 1
+        for n in self.VGG2.features:
+            nVGG.features[i].load_state_dict(n.state_dict())
+            i += 1
+        for n in self.VGG3.features:
+            nVGG.features[i].load_state_dict(n.state_dict())
+            i += 1
+        for n in self.VGG4.features:
+            nVGG.features[i].load_state_dict(n.state_dict())
+            i += 1
+        for n in self.VGG5.features:
+            nVGG.features[i].load_state_dict(n.state_dict())
+            i += 1
+
+        nVGG.avgpool.load_state_dict(self.VGG5.avgpool.state_dict())
+        nVGG.classifier.load_state_dict(self.VGG5.classifier.state_dict())
+
+        return nVGG
