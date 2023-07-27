@@ -64,6 +64,6 @@ if __name__ == "__main__" :
     else :
         if Exec.IsNewTrain() :
             VGGMNN = VGGMNNModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="output/008_VGGMNN16/CIFAR10")
-            VGGMNN.LoadVGG(VGG.VGG, Exec.StartEpochIndex)
+            VGGMNN.Cover(VGG.VGG, Exec.StartEpochIndex)
 
         Exec.Train(dataloader, SaveInterval=1)

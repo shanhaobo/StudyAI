@@ -309,7 +309,7 @@ class VGGMNNModelFactory(BaseModelFactory) :
         self.VGG4.eval()
         self.VGG5.eval()
 
-        VGG = self.LoadVGGStateDict(VGG16(self.NumClasses).to(self.VGG1.device)).eval()
+        VGG = self.StateDictCover(VGG16(self.NumClasses).to(self.Device)).eval()
 
         correct = 0
         total = 0
@@ -323,13 +323,13 @@ class VGGMNNModelFactory(BaseModelFactory) :
 
         print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
 
-    def LoadVGG(self, inVGG:VGG16, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
+    def Cover(self, inVGG:VGG16, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
         if (self.Load(inEpoch, inArgs, inKVArgs) == False) :
             return None
 
-        return self.LoadVGGStateDict(inVGG)
+        return self.StateDictCover(inVGG)
 
-    def LoadVGGStateDict(self, nVGG:VGG16):
+    def StateDictCover(self, nVGG:VGG16):
         i = 0
         for n in self.VGG1.features:
             nVGG.features[i].load_state_dict(n.state_dict())
