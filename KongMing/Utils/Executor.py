@@ -58,7 +58,18 @@ class Executor :
     ##----------------------------------------##
     
     def ForceTrain(self) :
-        return self.bForceNewTrain or self.bForceIncTrain
+        return (self.bForceNewTrain or self.bForceIncTrain) and self.bForceEval is False
+
+    ##----------------------------------------##
+    
+    def IsNewTrain(self) : 
+        return (self.bForceNewTrain or self.bIncTrain is False) and self.bForceEval is False
+
+    ##----------------------------------------##
+    
+    def IsEval(self) :
+        return self.bForceEval or (self.bForceNewTrain is False and self.bForceIncTrain is False)
+
 
 ###################################################################################################
 
