@@ -61,4 +61,4 @@ if __name__ == "__main__" :
     if DoEval:
         Exec.Eval(inDataLoader=dataloader)
     else :
-        Exec.Train(dataloader, SaveInterval=13)
+        Exec.Train(dataloader, SaveInterval=1)
