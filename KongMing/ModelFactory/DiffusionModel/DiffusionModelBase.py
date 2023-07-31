@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from KongMing.Modules.AveragedModel import EMA
+from KongMing.Modules.AveragedModule import EMA
 
 from KongMing.Models.BaseNNModel import BaseNNModel
 

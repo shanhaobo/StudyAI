@@ -1,6 +1,6 @@
 from . import (
+    AveragedModule,
     CustomEnhancedModules,
     PositionEmbedding,
     UtilsModules,
-    AveragedModel,
 )
