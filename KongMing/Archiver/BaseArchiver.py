@@ -4,15 +4,18 @@ from KongMing.Utils.ModelFileOp import FindFileWithMaxNum
 
 from .Path.FileManagerWithNum import FileManagerWithNum
 
+from typing import Dict as TypedDict
+from typing import List as TypedList
+
 class BaseArchiver(object):
-    def __init__(self, inModelRootFolderPath : str) -> None:
+    def __init__(self, inModelRootFolderPath : str, inNNModuleNameOnlyForTrain : TypedList[str] = []) -> None:
         self.ModelArchiveRootFolderPath = os.path.join(inModelRootFolderPath, "ArchivedModels")
 
         self.FileNameManager            = FileManagerWithNum(self.ModelArchiveRootFolderPath, ".pkl", 100, True)
 
         self.SaveEpochIndex             = -1
-        self.NNModelDict                = {}
-        self.NNModelNameOnlyForTrain    = []
+        self.NNModuleDict : TypedDict[str, torch.nn.Module] = {}
+        self.NNModuleNameOnlyForTrain   = inNNModuleNameOnlyForTrain
 
 ############################################################################
     def GetCurrTrainRootPath(self):
@@ -20,7 +23,7 @@ class BaseArchiver(object):
 ############################################################################
 
     def IsExistModel(self) -> bool:
-        for Name, _ in self.NNModelDict.items():
+        for Name, _ in self.NNModuleDict.items():
             Path, _ = self.FindLatestModelFile(Name) 
             if Path is None:
                 return False
@@ -30,8 +33,8 @@ class BaseArchiver(object):
 ############################################################################
 
     def Eval(self):
-        for Name in self.NNModelNameOnlyForTrain:
-            del self.NNModelDict[Name]
+        for Name in self.NNModuleNameOnlyForTrain:
+            del self.NNModuleDict[Name]
 
 ############################################################################
 
@@ -67,7 +70,7 @@ class BaseArchiver(object):
             self.SaveEpochIndex = inEpochIndex
     
     def _Save(self, inEpochIndex : int) -> None:
-        for Name, Model in self.NNModelDict.items():
+        for Name, Model in self.NNModuleDict.items():
             ModelFolderPath, ModelFileName = self.MakeNeuralNetworkArchiveFullPath(Name, inEpochIndex)
             os.makedirs(ModelFolderPath, exist_ok=True)
             ModelFullPath = os.path.join(ModelFolderPath, ModelFileName)
@@ -75,19 +78,19 @@ class BaseArchiver(object):
             print("Save Model:" + ModelFullPath)
 
     def Load(self, inEpochIndex : int):
-        for Name, _ in self.NNModelDict.items():
+        for Name, _ in self.NNModuleDict.items():
             FilePath, FileName = self.GetFileFromValidLatestTimestampDirPath(Name, inEpochIndex)
             if FilePath is None:
                 return False
             ModelFullPath = os.path.join(FilePath, FileName)
-            self.NNModelDict[Name].load_state_dict(torch.load(ModelFullPath))
+            self.NNModuleDict[Name].load_state_dict(torch.load(ModelFullPath))
             print("Load Model:" + ModelFullPath)
 
         return True
 
     def LoadLastest(self):
         MaxEpochIndex = -1
-        for Name, _ in self.NNModelDict.items():
+        for Name, _ in self.NNModuleDict.items():
             EpochIndex = self.LoadLastestByModelName(Name)
             if EpochIndex is None:
                 return None
@@ -99,12 +102,12 @@ class BaseArchiver(object):
         ModelFullPath, EpochIndex = self.FindLatestModelFile(inModelName)
         if ModelFullPath is None :
             return None
-        self.NNModelDict[inModelName].load_state_dict(torch.load(ModelFullPath))
+        self.NNModuleDict[inModelName].load_state_dict(torch.load(ModelFullPath))
         print("Load Model:" + ModelFullPath)
         return EpochIndex
 
     def LoadModelByTimestamp(self, inTimestamp:str, inEpochIndex):
-        for Name, Model in self.NNModelDict.items():
+        for Name, Model in self.NNModuleDict.items():
             ModelFullPath = self.FileNameManager.GetFilePathByTimestamp(
                 inTimestamp=inTimestamp,
                 Num=inEpochIndex,

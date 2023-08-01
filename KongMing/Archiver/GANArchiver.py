@@ -14,4 +14,4 @@ class GANArchiver(MultiNNArchiver):
             inModelRootFolderPath
         )
 
-        self.NNModelNameOnlyForTrain.append("Discriminator")
+        self.NNModuleNameOnlyForTrain.append("Discriminator")

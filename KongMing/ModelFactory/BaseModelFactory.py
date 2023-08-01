@@ -1,3 +1,5 @@
+import torch
+
 from torch.utils.data import DataLoader
 
 from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
@@ -7,10 +9,14 @@ from KongMing.Archiver.BaseArchiver import BaseArchiver
 
 class BaseModelFactory(object):
     def __init__(self, inTrainer : BaseTrainer, inArchiver : BaseArchiver):
+        self.Device         = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(torch.cuda.get_device_name(self.Device.index))
+
         self.Trainer        = inTrainer
         self.Archiver       = inArchiver
-        self.Device         = inTrainer.Device
 
+        self.Trainer.Device = self.Device
+        
         self.Trainer.BeginTrain.add(self.__BMBeginTrain)
         self.Trainer.EndBatchTrain.add(self.__BMEndBatchTrain)
         self.Trainer.EndEpochTrain.add(self.__BMEndEpochTrain)
@@ -30,7 +36,11 @@ class BaseModelFactory(object):
             pass
         else:
             inStartEpochNum = self.Archiver.LoadLastest()
-        self.Trainer.Train(inDataLoader, inStartEpochNum + 1, inEpochIterCount, inArgs, inKVArgs)
+
+        if inStartEpochNum is None:
+            self.Trainer.Train(inDataLoader, 0, inEpochIterCount, inArgs, inKVArgs)
+        else:
+            self.Trainer.Train(inDataLoader, inStartEpochNum + 1, inEpochIterCount, inArgs, inKVArgs)
 
     def LoadLastest(self, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
         EpochIndex = self.Archiver.LoadLastest()

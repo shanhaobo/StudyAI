@@ -13,12 +13,12 @@ class GANTrainer(MultiNNTrainer):
             inDiscriminator : BaseNNModel,
             inGeneratorEmbeddingDim,
             inLearningRate = 1e-5,
-            inLogRootPath="."
+            inLogRootPath = "."
         ) -> None:
-        super().__init__(inLearningRate, inLogRootPath)
+        super().__init__({"Generator": inGenerator, "Discriminator" : inDiscriminator}, inLearningRate, inLogRootPath)
         
-        self.Generator                  = inGenerator.to(self.Device)
-        self.Discriminator              = inDiscriminator.to(self.Device)
+        self.Generator                  = self.NNModuleDict["Generator"]
+        self.Discriminator              = self.NNModuleDict["Discriminator"]
 
         self.GeneratorEmbeddingDim      = inGeneratorEmbeddingDim
 
@@ -43,22 +43,22 @@ class GANTrainer(MultiNNTrainer):
         
         with self.Discriminator as D:
             with self.Generator as G: 
-                FakeData = self.Generator(
+                FakeData = G(
                     torch.randn(
                         (BatchSize, self.GeneratorEmbeddingDim, ImageHeight, ImageWidth),
                         device=self.Device
                     )
                 )
 
-                DiscriminatorScores = self.Discriminator(FakeData)
+                DiscriminatorScores = D(FakeData)
                 RealLabels = torch.ones(DiscriminatorScores.size(), device=self.Device)
                 
                 G.CalcAndAcceptLoss(DiscriminatorScores, RealLabels)
 
-            DiscriminatorScores = self.Discriminator(RealData)
+            DiscriminatorScores = D(RealData)
             DLossReal = D.CalcLoss(DiscriminatorScores, RealLabels)
 
-            DiscriminatorScores = self.Discriminator(FakeData.detach())
+            DiscriminatorScores = D(FakeData.detach())
             FakeLabels = torch.zeros(DiscriminatorScores.size(), device=self.Device)
             DLossFake = D.CalcLoss(DiscriminatorScores, FakeLabels)
 

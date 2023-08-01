@@ -6,30 +6,33 @@ import torch.nn.functional as F
 
 from .MultiNNTrainer import MultiNNTrainer
 
-from KongMing.Models.BaseNNModel import BaseNNModel
+from typing import Dict as TypedDict
 
 import pandas as pd
 
 class DDPMTrainer(MultiNNTrainer) :
-    def __init__(self, 
-            inNN : BaseNNModel,
-            inDiffusionMode : BaseNNModel,
+    def __init__(self,
             inLearningRate,
-            inTimesteps = 1000,
             inLogRootPath = "."
         ) -> None:
         super().__init__(inLearningRate, inLogRootPath)
-        self.NNModel        = inNN.to(self.Device)
-        self.DiffusionMode  = inDiffusionMode.to(self.Device)
-
-        self.Timesteps      = inTimesteps
-
+        
         self.BeginTrain.add(self.DDPMBeginTrain)
 
         self.EndBatchTrain.add(self.DDPMEndBatchTrain)
         self.EndEpochTrain.add(self.DDPMEndEpochTrain)
 
         self.LossData       = {"Epoch":[], "Batch":[], "Loss":[], "AvgLoss":[]}
+
+    def RegisterMultiNNModule(
+            self,
+            inNNModelDict : TypedDict[str, torch.nn.Module]
+        ) -> None:
+        super().RegisterMultiNNModule(inNNModelDict)
+
+        self.NNModel        = self.NNModuleDict["NNModel"]
+        self.DiffusionMode  = self.NNModuleDict["DiffusionModel"]
+
 
 ###########################################################################################
 
@@ -47,7 +50,7 @@ class DDPMTrainer(MultiNNTrainer) :
         with self.NNModel as Model:
             Noise               = torch.randn_like(RealData)
 
-            TimeEmbedding       = torch.randint(0, self.Timesteps, (nBatchSize,), device=self.Device).long()
+            TimeEmbedding       = torch.randint(0, self.DiffusionMode.Timesteps, (nBatchSize,), device=self.Device).long()
             RealDataWithNoise   = self.DiffusionMode.Q_Sample(inXStart = RealData, inT = TimeEmbedding, inNoise = Noise)
 
             PredictedNoise      = Model(RealDataWithNoise, TimeEmbedding)

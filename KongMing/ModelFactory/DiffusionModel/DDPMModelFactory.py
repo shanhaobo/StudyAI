@@ -1,7 +1,8 @@
+import torch
 
-from KongMing.ModelFactory.BaseModelFactory import BaseModelFactory
+from ..MultiNNModelFactory import MultiNNModelFacotry
 
-from KongMing.Archiver.DDPMArchiver import DDPMArchiver
+from KongMing.Archiver.MultiNNArchiver import MultiNNArchiver
 from KongMing.Trainer.DDPMTrainer import DDPMTrainer
 
 from KongMing.Models.UNets.ConditionUNet import ConditionUNet
@@ -11,7 +12,9 @@ from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseIns
 from .DiffusionModelBase import DiffusionModel
 from .UNet2D import UNet2D_ConvNeXt, UNet2D_WSR
 
-class DDPMModelFactory(BaseModelFactory) :
+from typing import Dict
+
+class DDPMModelFactory(MultiNNModelFacotry) :
     def __init__(
             self,
             inEmbeddingDim,
@@ -24,16 +27,16 @@ class DDPMModelFactory(BaseModelFactory) :
         #self.NNModel = UNet2D_ConvNeXt(inColorChanNum=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=(1, 2, 4))
         self.DiffusionModel = DiffusionModel(inTimesteps=inTimesteps, inNNModule=self.NNModel)
 
-        NewArchiver         = DDPMArchiver(self.NNModel, self.DiffusionModel, inModelRootFolderPath)
-
+        MNNDict : Dict[str, torch.nn.Module] = {"NNModel" : self.NNModel, "DiffusionModel" : self.DiffusionModel}
+        NewArchiver         = MultiNNArchiver(
+                                inModelRootFolderPath,
+                                inNNModuleNameOnlyForTrain = ["NNModel"]
+                            )
         NewTrainer          = DDPMTrainer(
-                                self.NNModel,
-                                self.DiffusionModel,
                                 inLearningRate,
-                                inTimesteps=inTimesteps,
                                 inLogRootPath=NewArchiver.GetCurrTrainRootPath()
                             )
-        super().__init__(NewTrainer, NewArchiver)
+        super().__init__(MNNDict, NewTrainer, NewArchiver)
 
         m = self._SumParameters(self.NNModel)
         b = self._SumParameters(self.DiffusionModel)

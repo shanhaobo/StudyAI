@@ -31,8 +31,8 @@ class BaseTrainer(abc.ABC):
     #####
 
     def __init__(self, inLearningRate, inLogRootPath) -> None:
-        self.Device             = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(torch.cuda.get_device_name(self.Device.index))
+        self.Device             = None
+        
         self.LearningRate       = inLearningRate
 
         self.BeginTrain         = Delegate()

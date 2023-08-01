@@ -1,9 +1,11 @@
 from .BaseTrainer import BaseTrainer
 
+import torch
+from typing import Dict as TypedDict
+
 class MultiNNTrainer(BaseTrainer) :
     def __init__(
             self,
-            inMNNDict,
             inLearningRate,
             inLogRootPath
         ) -> None:
@@ -11,7 +13,10 @@ class MultiNNTrainer(BaseTrainer) :
             inLearningRate,
             inLogRootPath
         )
-        self.MNNDict = {}
+        self.NNModuleDict : TypedDict[str, torch.nn.Module] = {}
 
-        for NNName, NN in inMNNDict.items():
-            self.MNNDict[NNName] = NN.to(self.Device)
+    def RegisterMultiNNModule(
+            self,
+            inNNModelDict : TypedDict[str, torch.nn.Module]
+        ) -> None:
+        self.NNModuleDict = inNNModelDict

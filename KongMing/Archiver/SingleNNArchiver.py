@@ -10,4 +10,4 @@ class SingleNNArchiver(BaseArchiver):
         ) -> None:
         super().__init__(inModelRootFolderPath)
 
-        self.NNModelDict["NNModel"] = inNNModel
+        self.NNModuleDict["NNModel"] = inNNModel

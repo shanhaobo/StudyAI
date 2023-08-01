@@ -26,27 +26,27 @@ class VGGMNNTrainer(MultiNNTrainer) :
         
 
     def _CreateOptimizer(self) -> None:
-        self.MNNDict["VGG1"].ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
-        self.MNNDict["VGG1"].ApplyLRScheduler(torch.optim.lr_scheduler.ExponentialLR, gamma=0.999)
-        self.MNNDict["VGG2"].ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
-        self.MNNDict["VGG2"].ApplyLRScheduler(torch.optim.lr_scheduler.ExponentialLR, gamma=0.999)
-        self.MNNDict["VGG3"].ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
-        self.MNNDict["VGG3"].ApplyLRScheduler(torch.optim.lr_scheduler.ExponentialLR, gamma=0.999)
-        self.MNNDict["VGG4"].ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
-        self.MNNDict["VGG4"].ApplyLRScheduler(torch.optim.lr_scheduler.ExponentialLR, gamma=0.999)
-        self.MNNDict["VGG5"].ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
-        self.MNNDict["VGG5"].ApplyLRScheduler(torch.optim.lr_scheduler.ExponentialLR, gamma=0.999)
+        self.NNModuleDict["VGG1"].ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
+        self.NNModuleDict["VGG1"].ApplyLRScheduler(torch.optim.lr_scheduler.ExponentialLR, gamma=0.999)
+        self.NNModuleDict["VGG2"].ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
+        self.NNModuleDict["VGG2"].ApplyLRScheduler(torch.optim.lr_scheduler.ExponentialLR, gamma=0.999)
+        self.NNModuleDict["VGG3"].ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
+        self.NNModuleDict["VGG3"].ApplyLRScheduler(torch.optim.lr_scheduler.ExponentialLR, gamma=0.999)
+        self.NNModuleDict["VGG4"].ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
+        self.NNModuleDict["VGG4"].ApplyLRScheduler(torch.optim.lr_scheduler.ExponentialLR, gamma=0.999)
+        self.NNModuleDict["VGG5"].ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
+        self.NNModuleDict["VGG5"].ApplyLRScheduler(torch.optim.lr_scheduler.ExponentialLR, gamma=0.999)
         #self.NNModel.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
         #self.NNModel.ApplyOptimizer(torch.optim.SGD, self.LearningRate, momentum=0.9)
         #self.NNModel.ApplyLRScheduler(torch.optim.lr_scheduler.ExponentialLR, gamma=0.999)
         pass
 
     def _CreateLossFN(self) -> None:
-        self.MNNDict["VGG1"].ApplyLossFunc(nn.CrossEntropyLoss().to(self.Device))
-        self.MNNDict["VGG2"].ApplyLossFunc(nn.CrossEntropyLoss().to(self.Device))
-        self.MNNDict["VGG3"].ApplyLossFunc(nn.CrossEntropyLoss().to(self.Device))
-        self.MNNDict["VGG4"].ApplyLossFunc(nn.CrossEntropyLoss().to(self.Device))
-        self.MNNDict["VGG5"].ApplyLossFunc(nn.CrossEntropyLoss().to(self.Device))
+        self.NNModuleDict["VGG1"].ApplyLossFunc(nn.CrossEntropyLoss().to(self.Device))
+        self.NNModuleDict["VGG2"].ApplyLossFunc(nn.CrossEntropyLoss().to(self.Device))
+        self.NNModuleDict["VGG3"].ApplyLossFunc(nn.CrossEntropyLoss().to(self.Device))
+        self.NNModuleDict["VGG4"].ApplyLossFunc(nn.CrossEntropyLoss().to(self.Device))
+        self.NNModuleDict["VGG5"].ApplyLossFunc(nn.CrossEntropyLoss().to(self.Device))
         #self.NNModel.ApplyLossFunc(nn.CrossEntropyLoss().to(self.Device))
         pass
 
@@ -55,23 +55,23 @@ class VGGMNNTrainer(MultiNNTrainer) :
         DeviceData = inBatchData.to(self.Device)
         DeviceLabel = inBatchLabel.to(self.Device)
         
-        with self.MNNDict["VGG1"] as Model:
+        with self.NNModuleDict["VGG1"] as Model:
             MidData, Output = Model(DeviceData)
             Model.CalcAndAcceptLoss(Output, DeviceLabel)
 
-        with self.MNNDict["VGG2"] as Model:
+        with self.NNModuleDict["VGG2"] as Model:
             MidData, Output = Model(MidData.detach())
             Model.CalcAndAcceptLoss(Output, DeviceLabel)
         
-        with self.MNNDict["VGG3"] as Model:
+        with self.NNModuleDict["VGG3"] as Model:
             MidData, Output = Model(MidData.detach())
             Model.CalcAndAcceptLoss(Output, DeviceLabel)
             
-        with self.MNNDict["VGG4"] as Model:
+        with self.NNModuleDict["VGG4"] as Model:
             MidData, Output = Model(MidData.detach())
             Model.CalcAndAcceptLoss(Output, DeviceLabel)
 
-        with self.MNNDict["VGG5"] as Model:
+        with self.NNModuleDict["VGG5"] as Model:
             Output = Model(MidData.detach())
             Model.CalcAndAcceptLoss(Output, DeviceLabel)
 
@@ -86,7 +86,7 @@ class VGGMNNTrainer(MultiNNTrainer) :
         """
 
     def __VGGMNNEndBatchTrain(self, inArgs, inKVArgs) -> None:
-        Loss, AvgLoss = self.MNNDict["VGG5"].GetLossValue()
+        Loss, AvgLoss = self.NNModuleDict["VGG5"].GetLossValue()
 
         print(
             "{} | Epoch: {:0>4d} / {:0>4d} | Batch: {:0>4d} / {:0>4d} | Loss: {:.6f} / {:.6f}".
