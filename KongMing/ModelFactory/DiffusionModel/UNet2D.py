@@ -2,7 +2,7 @@ from einops import rearrange
 
 import torch.nn as nn
 
-from .UNet2DBase import UNet2DBaseWithExtData, UNet2DBase
+from KongMing.Models.UNets.UNet2DBase import UNet2DBaseWithExtData, UNet2DBase
 from KongMing.Modules.PositionEmbedding import SinusoidalPositionEmbedding
 from KongMing.Modules.UtilsModules import DoubleLinearModuleTO4D, DoubleLinearModule, ResNet, PreNorm
 from KongMing.Modules.Attentions.Attention2D import MultiHeadAttention2D, MultiHeadLinearAttn2D

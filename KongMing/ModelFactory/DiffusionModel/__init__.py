@@ -1,4 +1,5 @@
 from . import(
     DDPMModelFactory,
-    Utils
+    Utils,
+    UNet2D
 )

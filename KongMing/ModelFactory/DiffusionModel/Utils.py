@@ -32,3 +32,5 @@ class BetaSchedule() :
         betas = 1 - (AlphasCumprod[1:] / AlphasCumprod[:-1])
         return torch.clip(betas, 0.0001, 0.9999)
  
+
+ 

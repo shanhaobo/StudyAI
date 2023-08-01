@@ -4,12 +4,12 @@ from KongMing.ModelFactory.BaseModelFactory import BaseModelFactory
 from KongMing.Archiver.DDPMArchiver import DDPMArchiver
 from KongMing.Trainer.DDPMTrainer import DDPMTrainer
 
-from KongMing.Models.UNets.UNet2D import UNet2D_ConvNeXt, UNet2D_WSR
 from KongMing.Models.UNets.ConditionUNet import ConditionUNet
 
 from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
 
 from .DiffusionModelBase import DiffusionModel
+from .UNet2D import UNet2D_ConvNeXt, UNet2D_WSR
 
 class DDPMModelFactory(BaseModelFactory) :
     def __init__(
