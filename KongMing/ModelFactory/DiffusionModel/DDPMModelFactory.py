@@ -5,14 +5,10 @@ from ..MultiNNModelFactory import MultiNNModelFacotry
 from KongMing.Archiver.MultiNNArchiver import MultiNNArchiver
 from KongMing.Trainer.DDPMTrainer import DDPMTrainer
 
-from KongMing.Models.UNets.ConditionUNet import ConditionUNet
-
 from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
 
 from .DiffusionModelBase import DiffusionModel
 from .UNet2D import UNet2D_ConvNeXt, UNet2D_WSR
-
-from typing import Dict
 
 class DDPMModelFactory(MultiNNModelFacotry) :
     def __init__(
@@ -27,7 +23,6 @@ class DDPMModelFactory(MultiNNModelFacotry) :
         #self.NNModel = UNet2D_ConvNeXt(inColorChanNum=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=(1, 2, 4))
         self.DiffusionModel = DiffusionModel(inTimesteps=inTimesteps, inNNModule=self.NNModel)
 
-        MNNDict : Dict[str, torch.nn.Module] = {"NNModel" : self.NNModel, "DiffusionModel" : self.DiffusionModel}
         NewArchiver         = MultiNNArchiver(
                                 inModelRootFolderPath,
                                 inNNModuleNameOnlyForTrain = ["NNModel"]
@@ -36,7 +31,7 @@ class DDPMModelFactory(MultiNNModelFacotry) :
                                 inLearningRate,
                                 inLogRootPath=NewArchiver.GetCurrTrainRootPath()
                             )
-        super().__init__(MNNDict, NewTrainer, NewArchiver)
+        super().__init__({"NNModel" : self.NNModel, "DiffusionModel" : self.DiffusionModel}, NewTrainer, NewArchiver)
 
         m = self._SumParameters(self.NNModel)
         b = self._SumParameters(self.DiffusionModel)

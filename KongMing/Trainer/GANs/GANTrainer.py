@@ -6,23 +6,29 @@ from ..MultiNNTrainer import MultiNNTrainer
 
 from KongMing.Models.BaseNNModel import BaseNNModel
 
+from typing import Dict as TypedDict
+
 class GANTrainer(MultiNNTrainer):
     def __init__(
             self,
-            inGenerator : BaseNNModel,
-            inDiscriminator : BaseNNModel,
             inGeneratorEmbeddingDim,
             inLearningRate = 1e-5,
             inLogRootPath = "."
         ) -> None:
-        super().__init__({"Generator": inGenerator, "Discriminator" : inDiscriminator}, inLearningRate, inLogRootPath)
+        super().__init__(inLearningRate, inLogRootPath)
         
-        self.Generator                  = self.NNModuleDict["Generator"]
-        self.Discriminator              = self.NNModuleDict["Discriminator"]
-
         self.GeneratorEmbeddingDim      = inGeneratorEmbeddingDim
 
         self.EndBatchTrain.add(self.MyEndBatchTrain)
+
+    def RegisterMultiNNModule(
+            self,
+            inNNModelDict : TypedDict[str, torch.nn.Module]
+        ) -> None:
+        super().RegisterMultiNNModule(inNNModelDict)
+
+        self.Generator : BaseNNModel        = self.NNModuleDict["Generator"]
+        self.Discriminator : BaseNNModel    = self.NNModuleDict["Discriminator"]
 
 ###########################################################################################
 

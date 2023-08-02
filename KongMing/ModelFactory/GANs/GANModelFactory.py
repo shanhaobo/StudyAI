@@ -1,14 +1,15 @@
 import torch
 
-from KongMing.ModelFactory.BaseModelFactory import BaseModelFactory
+from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
+
+from KongMing.ModelFactory.MultiNNModelFactory import MultiNNModelFacotry
 
 from KongMing.Trainer.GANs.GANTrainer import GANTrainer
 from KongMing.Trainer.GANs.WGANTrainer import WGANTrainer
-from KongMing.Archiver.GANArchiver import GANArchiver
 
-from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
+from KongMing.Archiver.MultiNNArchiver import MultiNNArchiver
 
-class GANModelFactory(BaseModelFactory):
+class GANModelFactory(MultiNNModelFacotry):
     def __init__(
             self,
             inGenerator : torch.nn.Module,
@@ -21,26 +22,21 @@ class GANModelFactory(BaseModelFactory):
         
         if inWTrainer :
             NewTrainer = WGANTrainer(
-                inGenerator,
-                inDiscriminator,
                 inGeneratorEmbeddingDim,
                 inLearningRate
             )
         else:
             NewTrainer = GANTrainer(
-                inGenerator,
-                inDiscriminator,
                 inGeneratorEmbeddingDim,
                 inLearningRate
             )
 
-        NewArchiver = GANArchiver(
-            inGenerator,
-            inDiscriminator,
-            inModelRootFolderPath
+        NewArchiver = MultiNNArchiver(
+            inModelRootFolderPath,
+            inNNModuleNameOnlyForTrain = ["Discriminator"]
         )
 
-        super().__init__(NewTrainer, NewArchiver)
+        super().__init__({"Generator" : inGenerator, "Discriminator" : inDiscriminator}, NewTrainer, NewArchiver)
 
         self.GeneratorEmbeddingDim = inGeneratorEmbeddingDim
 

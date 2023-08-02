@@ -1,8 +1,8 @@
 import torch
+from .BaseModelFactory import BaseModelFactory
 
 from KongMing.Archiver.MultiNNArchiver import MultiNNArchiver
 from KongMing.Trainer.MultiNNTrainer import MultiNNTrainer
-from .BaseModelFactory import BaseModelFactory
 
 from typing import Dict as TypedDict
 

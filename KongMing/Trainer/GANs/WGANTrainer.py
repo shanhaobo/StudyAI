@@ -8,13 +8,11 @@ import torch.nn.functional as F
 class WGANTrainer(GANTrainer) :
     def __init__(
             self,
-            inGenerator: nn.Module,
-            inDiscriminator: nn.Module,
             inGeneratorInputSize,
             inLearningRate=0.00001,
             inLogRootPath="."
         ) -> None:
-        super().__init__(inGenerator, inDiscriminator, inGeneratorInputSize, inLearningRate, inLogRootPath)
+        super().__init__(inGeneratorInputSize, inLearningRate, inLogRootPath)
 
     def _CreateOptimizer(self) -> None:
         #self.Generator.ApplyOptimizer(torch.optim.RMSprop, self.LearningRate)

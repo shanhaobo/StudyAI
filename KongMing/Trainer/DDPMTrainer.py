@@ -8,6 +8,8 @@ from .MultiNNTrainer import MultiNNTrainer
 
 from typing import Dict as TypedDict
 
+from KongMing.Models.BaseNNModel import BaseNNModel
+
 import pandas as pd
 
 class DDPMTrainer(MultiNNTrainer) :
@@ -30,8 +32,8 @@ class DDPMTrainer(MultiNNTrainer) :
         ) -> None:
         super().RegisterMultiNNModule(inNNModelDict)
 
-        self.NNModel        = self.NNModuleDict["NNModel"]
-        self.DiffusionMode  = self.NNModuleDict["DiffusionModel"]
+        self.NNModel : BaseNNModel  = self.NNModuleDict["NNModel"]
+        self.DiffusionMode          = self.NNModuleDict["DiffusionModel"]
 
 
 ###########################################################################################

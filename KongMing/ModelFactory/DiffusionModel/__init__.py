@@ -1,5 +1,6 @@
 from . import(
     DDPMModelFactory,
     Utils,
-    UNet2D
+    UNet2D,
+    ConditionUNet
 )
