@@ -1,5 +1,5 @@
 from . import (
     BaseArchiver,
     MultiNNArchiver,
-    GANArchiver
+    SingleNNArchiver
 )
