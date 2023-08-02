@@ -1,3 +1,5 @@
+from ..MultiNNModelFactory import MultiNNModelFacotry
+
 from KongMing.Archiver.MultiNNArchiver import MultiNNArchiver
 from KongMing.ModelFactory.BaseModelFactory import BaseModelFactory
 from KongMing.Trainer.VGGMNNTrainer import VGGMNNTrainer
@@ -243,7 +245,7 @@ class VGG16(BaseNNModel):
         inX = self.classifier(inX)
         return inX
 
-class VGGMNNModelFactory(BaseModelFactory) :
+class VGGMNNModelFactory(MultiNNModelFacotry) :
     def __init__(
             self,
             inNumClasses,
@@ -258,28 +260,26 @@ class VGGMNNModelFactory(BaseModelFactory) :
         self.VGG4 = VGG16_Part4(inNumClasses)
         self.VGG5 = VGG16_Part5(inNumClasses)
 
-        NNModelDict = {"VGG1" : self.VGG1, "VGG2" : self.VGG2, "VGG3" : self.VGG3, "VGG4" : self.VGG4, "VGG5" : self.VGG5}
         Trainer = VGGMNNTrainer(
-            NNModelDict,
             inLearningRate,
             inModelRootFolderPath
         )
         Archiver = MultiNNArchiver(
-            NNModelDict,
             inModelRootFolderPath
         )
-        #Archiver.NNModelNameOnlyForTrain.append("VGG1")
-        #Archiver.NNModelNameOnlyForTrain.append("VGG2")
-        #Archiver.NNModelNameOnlyForTrain.append("VGG3")
-        #Archiver.NNModelNameOnlyForTrain.append("VGG4")
 
-        super().__init__(Trainer, Archiver)
+        NNModelDict = {"VGG1" : self.VGG1, "VGG2" : self.VGG2, "VGG3" : self.VGG3, "VGG4" : self.VGG4, "VGG5" : self.VGG5}
+        super().__init__(
+            NNModelDict,
+            Trainer,
+            Archiver
+        )
 
         Sum = 0
         for i in NNModelDict.values():
             Sum += self._SumParameters(i)
 
-        print("Sum of Params:{:,} ".format(Sum))
+        print("Sum of Params:{:,}".format(Sum))
 
     ###### NEW
     def NewTrain(self, inDataLoader, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
