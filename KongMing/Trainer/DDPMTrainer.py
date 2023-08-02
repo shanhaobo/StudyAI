@@ -15,10 +15,11 @@ import pandas as pd
 class DDPMTrainer(MultiNNTrainer) :
     def __init__(self,
             inLearningRate,
-            inLogRootPath = "."
+            inLogRootPath
         ) -> None:
-        super().__init__(inLearningRate, inLogRootPath)
-        
+        super().__init__(inLearningRate)
+        self.LogRootPath = inLogRootPath
+
         self.BeginTrain.add(self.DDPMBeginTrain)
 
         self.EndBatchTrain.add(self.DDPMEndBatchTrain)
@@ -34,7 +35,6 @@ class DDPMTrainer(MultiNNTrainer) :
 
         self.NNModel : BaseNNModel  = self.NNModuleDict["NNModel"]
         self.DiffusionMode          = self.NNModuleDict["DiffusionModel"]
-
 
 ###########################################################################################
 

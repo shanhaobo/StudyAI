@@ -6,12 +6,10 @@ from typing import Dict as TypedDict
 class MultiNNTrainer(BaseTrainer) :
     def __init__(
             self,
-            inLearningRate,
-            inLogRootPath
+            inLearningRate
         ) -> None:
         super().__init__(
-            inLearningRate,
-            inLogRootPath
+            inLearningRate
         )
         self.NNModuleDict : TypedDict[str, torch.nn.Module] = {}
 

@@ -10,12 +10,10 @@ class SingleNNTrainer(BaseTrainer) :
     def __init__(
             self,
             inNNModel : BaseNNModel,
-            inLearningRate,
-            inLogRootPath
+            inLearningRate
         ) -> None:
         super().__init__(
-            inLearningRate,
-            inLogRootPath
+            inLearningRate
         )
         self.NNModel        = inNNModel.to(self.Device)
 

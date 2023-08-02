@@ -83,7 +83,7 @@ class VGGModelFactory(BaseModelFactory) :
             inNumClasses,
             inLearningRate,
             inModelRootFolderPath
-        ):
+        ) :
         self.VGG = VGG16(inNumClasses)
 
         Trainer = VGGTrainer(self.VGG, inLearningRate, inModelRootFolderPath)
@@ -108,13 +108,13 @@ class VGGModelFactory(BaseModelFactory) :
 
         super().NewTrain(inDataLoader=inDataLoader, inEpochIterCount=inEpochIterCount, inArgs=inArgs, inKVArgs=inKVArgs)
 
-    def Eval(self, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
+    def Eval(self, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) :
         if (super().Eval(inEpoch, inArgs, inKVArgs) == False) :
-            return
+            return False
 
         TestDataLoader = inKVArgs.get("inDataLoader")
         if (TestDataLoader is None) :
-            return
+            return False
 
         self.VGG.eval()
 
@@ -129,3 +129,5 @@ class VGGModelFactory(BaseModelFactory) :
                 correct += (predicted == labels).sum().item()
 
         print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
+
+        return True

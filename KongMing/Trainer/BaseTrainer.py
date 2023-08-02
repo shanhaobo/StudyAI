@@ -30,7 +30,7 @@ class BaseTrainer(abc.ABC):
 
     #####
 
-    def __init__(self, inLearningRate, inLogRootPath) -> None:
+    def __init__(self, inLearningRate) -> None:
         self.Device             = None
         
         self.LearningRate       = inLearningRate
@@ -52,8 +52,6 @@ class BaseTrainer(abc.ABC):
         self.EndEpochIndex      = 0
 
         self.SoftExit           = False
-
-        self.LogRootPath        = inLogRootPath
 
     @staticmethod
     def _BackPropagate(inOptimizer : Optimizer, inLoss : Tensor) -> None:
