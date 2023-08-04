@@ -14,12 +14,9 @@ import pandas as pd
 
 class DDPMTrainer(MultiNNTrainer) :
     def __init__(self,
-            inLearningRate,
-            inLogRootPath
+            inLearningRate
         ) -> None:
         super().__init__(inLearningRate)
-        self.LogRootPath = inLogRootPath
-
         self.BeginTrain.add(self.DDPMBeginTrain)
 
         self.EndBatchTrain.add(self.DDPMEndBatchTrain)

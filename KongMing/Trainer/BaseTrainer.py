@@ -53,6 +53,8 @@ class BaseTrainer(abc.ABC):
 
         self.SoftExit           = False
 
+        self.LogRootPath        = "."
+
     @staticmethod
     def _BackPropagate(inOptimizer : Optimizer, inLoss : Tensor) -> None:
         inOptimizer.zero_grad()

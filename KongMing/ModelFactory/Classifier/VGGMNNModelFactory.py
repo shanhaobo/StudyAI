@@ -1,7 +1,5 @@
-from ..MultiNNModelFactory import MultiNNModelFacotry
+from KongMing.ModelFactory.MultiNNModelFactory import MultiNNModelFacotry
 
-from KongMing.Archiver.MultiNNArchiver import MultiNNArchiver
-from KongMing.ModelFactory.BaseModelFactory import BaseModelFactory
 from KongMing.Trainer.VGGMNNTrainer import VGGMNNTrainer
 
 from KongMing.Models.BaseNNModel import BaseNNModel
@@ -261,18 +259,13 @@ class VGGMNNModelFactory(MultiNNModelFacotry) :
         self.VGG5 = VGG16_Part5(inNumClasses)
 
         Trainer = VGGMNNTrainer(
-            inLearningRate,
-            inModelRootFolderPath
+            inLearningRate
         )
-        Archiver = MultiNNArchiver(
-            inModelRootFolderPath
-        )
-
         NNModelDict = {"VGG1" : self.VGG1, "VGG2" : self.VGG2, "VGG3" : self.VGG3, "VGG4" : self.VGG4, "VGG5" : self.VGG5}
         super().__init__(
             NNModelDict,
             Trainer,
-            Archiver
+            inModelRootFolderPath
         )
 
         Sum = 0

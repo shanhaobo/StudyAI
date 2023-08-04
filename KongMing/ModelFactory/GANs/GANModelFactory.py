@@ -7,8 +7,6 @@ from KongMing.ModelFactory.MultiNNModelFactory import MultiNNModelFacotry
 from KongMing.Trainer.GANs.GANTrainer import GANTrainer
 from KongMing.Trainer.GANs.WGANTrainer import WGANTrainer
 
-from KongMing.Archiver.MultiNNArchiver import MultiNNArchiver
-
 class GANModelFactory(MultiNNModelFacotry):
     def __init__(
             self,
@@ -31,12 +29,12 @@ class GANModelFactory(MultiNNModelFacotry):
                 inLearningRate
             )
 
-        NewArchiver = MultiNNArchiver(
+        super().__init__(
+            {"Generator" : inGenerator, "Discriminator" : inDiscriminator},
+            NewTrainer,
             inModelRootFolderPath,
             inNNModuleNameOnlyForTrain = ["Discriminator"]
         )
-
-        super().__init__({"Generator" : inGenerator, "Discriminator" : inDiscriminator}, NewTrainer, NewArchiver)
 
         self.GeneratorEmbeddingDim = inGeneratorEmbeddingDim
 

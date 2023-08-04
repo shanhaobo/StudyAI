@@ -2,7 +2,6 @@ import torch
 
 from ..MultiNNModelFactory import MultiNNModelFacotry
 
-from KongMing.Archiver.MultiNNArchiver import MultiNNArchiver
 from KongMing.Trainer.DDPMTrainer import DDPMTrainer
 
 from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
@@ -15,32 +14,35 @@ class DDPMModelFactory(MultiNNModelFacotry) :
             self,
             inEmbeddingDim,
             inColorChanNum,
-            inLearningRate=0.00001,
+            inLearningRate = 0.00001,
             inTimesteps : int = 1000,
-            inModelRootFolderPath="."
-        ):
+            inModelRootFolderPath = "."
+        ) :
         self.NNModel =  UNet2D_WSR(inColorChanNum=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=(1, 2, 4))
         #self.NNModel = UNet2D_ConvNeXt(inColorChanNum=inColorChanNum, inEmbeddingDim=inEmbeddingDim, inEmbedLvlCntORList=(1, 2, 4))
         self.DiffusionModel = DiffusionModel(inTimesteps=inTimesteps, inNNModule=self.NNModel)
 
-        NewArchiver         = MultiNNArchiver(
-                                inModelRootFolderPath,
-                                inNNModuleNameOnlyForTrain = ["NNModel"]
-                            )
         NewTrainer          = DDPMTrainer(
-                                inLearningRate,
-                                inLogRootPath=NewArchiver.GetCurrTrainRootPath()
+                                inLearningRate
                             )
-        super().__init__({"NNModel" : self.NNModel, "DiffusionModel" : self.DiffusionModel}, NewTrainer, NewArchiver)
+        super().__init__(
+            {"NNModel" : self.NNModel, "DiffusionModel" : self.DiffusionModel},
+            NewTrainer,
+            inModelRootFolderPath,
+            inNNModuleNameOnlyForTrain = ["NNModel"]
+        )
 
         m = self._SumParameters(self.NNModel)
         b = self._SumParameters(self.DiffusionModel)
         print("Sum of Params:{:,} | Model Params:{:,} | Buffer Params:{:,}".format(m + b, m, b))
 
-    def Eval(self, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
+    def Eval(self, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) :
+
         if (super().Eval(inEpoch, inArgs, inKVArgs) == False) :
             return None
+
         self.DiffusionModel.eval()
+
         return self.DiffusionModel.Sample(
             self.DiffusionModel.EMA,
             inImageSize=inKVArgs["inImageSize"],
