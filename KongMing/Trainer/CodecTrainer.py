@@ -8,10 +8,9 @@ from .MultiNNTrainer import MultiNNTrainer
 
 class CodecTrainer(MultiNNTrainer) :
     def __init__(self,
-            inLearningRate,
-            inLogRootPath
+            inLearningRate
         ) -> None:
-        super().__init__(inLearningRate, inLogRootPath)
+        super().__init__(inLearningRate)
 
     def RegisterMultiNNModule(
             self,
