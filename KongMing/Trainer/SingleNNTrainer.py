@@ -9,13 +9,12 @@ from KongMing.Models.BaseNNModel import BaseNNModel
 class SingleNNTrainer(BaseTrainer) :
     def __init__(
             self,
-            inNNModel : BaseNNModel,
             inLearningRate
         ) -> None:
         super().__init__(
             inLearningRate
         )
-        self.NNModel        = inNNModel.to(self.Device)
+        self.NNModel        = None
 
         self.EndBatchTrain.add(self.__SNNEndBatchTrain)
         self.EndEpochTrain.add(self.__SNNEndEpochTrain)

@@ -1,5 +1,5 @@
 from KongMing.Archiver.SingleNNArchiver import SingleNNArchiver
-from KongMing.ModelFactory.BaseModelFactory import BaseModelFactory
+from KongMing.ModelFactory.SingleNNModelFactory import SingleNNModelFactory
 from KongMing.Trainer.VGGTrainer import VGGTrainer
 
 from KongMing.Models.BaseNNModel import BaseNNModel
@@ -77,7 +77,7 @@ class VGG16(BaseNNModel):
         inX = self.classifier(inX)
         return inX
 
-class VGGModelFactory(BaseModelFactory) :
+class VGGModelFactory(SingleNNModelFactory) :
     def __init__(
             self,
             inNumClasses,
@@ -86,10 +86,9 @@ class VGGModelFactory(BaseModelFactory) :
         ) :
         self.VGG = VGG16(inNumClasses)
 
-        Trainer = VGGTrainer(self.VGG, inLearningRate, inModelRootFolderPath)
-        Archiver = SingleNNArchiver(self.VGG, inModelRootFolderPath)
+        Trainer = VGGTrainer(inLearningRate)
 
-        super().__init__(Trainer, Archiver)
+        super().__init__(self.VGG, Trainer, inModelRootFolderPath)
 
         print("Sum of Params:{:,} ".format(self._SumParameters(self.VGG)))
 

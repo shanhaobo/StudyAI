@@ -18,14 +18,14 @@ class MultiNNModelFacotry(BaseModelFactory):
         self.MultiNNDict : TypedDict[str, torch.nn.Module] = {}
 
         # new Archiver
-        Archiver = MultiNNArchiver(
+        NewArchiver = MultiNNArchiver(
             inModelRootFolderPath,
             inNNModuleNameOnlyForTrain
         )
         # set Log Root Path
-        inTrainer.LogRootPath = Archiver.GetCurrTrainRootPath()
+        inTrainer.LogRootPath = NewArchiver.GetCurrTrainRootPath()
 
-        super().__init__(inTrainer, Archiver)
+        super().__init__(inTrainer, NewArchiver)
 
         for Name, NN in inMultiNNDict.items():
             self.MultiNNDict[Name] = NN.to(self.Device)

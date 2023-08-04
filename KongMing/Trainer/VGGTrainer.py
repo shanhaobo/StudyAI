@@ -10,14 +10,10 @@ from torch import nn
 class VGGTrainer(SingleNNTrainer) :
     def __init__(
             self,
-            inNNModel : BaseNNModel,
-            inLearningRate,
-            inLogRootPath
+            inLearningRate
         ) -> None:
         super().__init__(
-            inNNModel,
-            inLearningRate,
-            inLogRootPath
+            inLearningRate
         )
 
     def _CreateOptimizer(self) -> None:
