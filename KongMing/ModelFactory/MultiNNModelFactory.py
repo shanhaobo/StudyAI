@@ -30,5 +30,5 @@ class MultiNNModelFacotry(BaseModelFactory):
         for Name, NN in inMultiNNDict.items():
             self.MultiNNDict[Name] = NN.to(self.Device)
 
-        self.Trainer : MultiNNTrainer.RegisterMultiNNModule(self.MultiNNDict)
-        self.Archiver : MultiNNTrainer.RegisterMultiNNModule(self.MultiNNDict)
+        self.Trainer.RegisterMultiNNModule(self.MultiNNDict)
+        self.Archiver.RegisterMultiNNModule(self.MultiNNDict)

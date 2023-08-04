@@ -12,10 +12,9 @@ class GANTrainer(MultiNNTrainer):
     def __init__(
             self,
             inGeneratorEmbeddingDim,
-            inLearningRate = 1e-5,
-            inLogRootPath = "."
+            inLearningRate = 1e-5
         ) -> None:
-        super().__init__(inLearningRate, inLogRootPath)
+        super().__init__(inLearningRate)
         
         self.GeneratorEmbeddingDim      = inGeneratorEmbeddingDim
 
