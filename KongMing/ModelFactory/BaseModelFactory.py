@@ -9,8 +9,12 @@ from KongMing.Archiver.BaseArchiver import BaseArchiver
 
 class BaseModelFactory(object):
     def __init__(self, inTrainer : BaseTrainer, inArchiver : BaseArchiver):
-        self.Device         = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(torch.cuda.get_device_name(self.Device.index))
+        if torch.cuda.is_available():
+            self.Device = torch.device("cuda")
+            print(torch.cuda.get_device_name(self.Device))
+        else:
+            self.Device = torch.device("cpu")
+            print("CUDA unavailable, using CPU")
 
         self.Trainer        = inTrainer
         self.Archiver       = inArchiver

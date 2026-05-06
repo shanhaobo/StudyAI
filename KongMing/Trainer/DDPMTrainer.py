@@ -36,7 +36,7 @@ class DDPMTrainer(MultiNNTrainer) :
 ###########################################################################################
 
     def _CreateOptimizer(self) -> None:
-        self.NNModel.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.5, 0.999))
+        self.NNModel.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.9, 0.999))
 
     def _CreateLossFN(self) -> None:
         self.NNModel.ApplyLossFunc(F.smooth_l1_loss)
@@ -95,5 +95,5 @@ class DDPMTrainer(MultiNNTrainer) :
 
     def _CheckEndEpoch(self)->bool:
         _, AvgLoss = self.NNModel.GetLossValue()
-        return AvgLoss <= 0.01
+        return AvgLoss <= 0.005
 ###########################################################################################

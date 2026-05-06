@@ -13,9 +13,9 @@ def FindFileWithMaxNum(inFileList, inPrefix, inSuffix, inExtension=None):
 
     if inExtension:
         inExtension = re.escape(inExtension)
-        Pattern = f'^{PartialPrefix}.*?(\d+){PartialSuffix}\.{inExtension}$'
+        Pattern = rf'^{PartialPrefix}.*?(\d+){PartialSuffix}\.{inExtension}$'
     else:
-        Pattern = f'^{PartialPrefix}.*?(\d+){PartialSuffix}\..*$'
+        Pattern = rf'^{PartialPrefix}.*?(\d+){PartialSuffix}\..*$'
 
     for File in inFileList:
         Match = re.match(Pattern, File)
@@ -32,7 +32,7 @@ def FindFileWithMaxNumByFolderPath(inFolderPath, inPrefix, inSuffix, inExtension
     return os.path.join(inFolderPath, FlieName), MaxNum
 
 if __name__ == "__main__" :
-    folder_path = "trained_models\CFGAN_202305291532"  # 替换为你的文件夹路径
+    folder_path = r"trained_models\CFGAN_202305291532"  # 替换为你的文件夹路径
     prefix = 'Discr*'  # 替换为你的前缀
     suffix = ''  # 替换为你的后缀
     max_file, max_num = FindFileWithMaxNumByFolderPath(folder_path, prefix, suffix)

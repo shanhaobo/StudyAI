@@ -18,14 +18,8 @@ import os
 OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
 os.makedirs(OutputPath, exist_ok=True)
 ###########
-DatasetPath = None
-if os.path.exists("D:/AI/") :
-    DatasetPath = "D:/AI/"
-elif os.path.exists("D:/__DevAI__/") :
-    DatasetPath = "D:/__DevAI__/"
-DatasetPath = os.path.join(DatasetPath, "Datasets")
-
-import sys
+from KongMing.Utils.DatasetPath import ResolveDatasetPath
+DatasetPath = ResolveDatasetPath()
 
 ###################################
 
@@ -40,9 +34,6 @@ NumClasses          = 10
 if __name__ == "__main__" :
     VGG = VGGModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="{}/CIFAR10".format(OutputPath))
     Exec = Executor(VGG)
-
-    if DatasetPath is None:
-        sys.exit()
 
     # 当前是Eval 还是 Train
     DoEval =  (Exec.ForceTrain() == False) and Exec.IsExistModel()

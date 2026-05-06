@@ -1,0 +1,14 @@
+# 核心深度学习
+torch
+torchvision
+
+# 训练辅助
+einops
+keyboard          # Executor 的 Ctrl+S / Ctrl+X 全局热键 (Windows 下注册需管理员权限)
+
+# 强化学习 (006_PPO.py)
+gym
+
+# 可视化与数据 (零散试验脚本 003/904 等)
+graphviz          # 仅 Python 绑定; 渲染图形还需系统级 Graphviz 可执行文件
+pandas

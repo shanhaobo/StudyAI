@@ -17,14 +17,8 @@ import os
 OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
 os.makedirs(OutputPath, exist_ok=True)
 ###########
-DatasetPath = "data"
-if os.path.exists("D:/AI/") :
-    DatasetPath = "D:/AI/"
-elif os.path.exists("D:/__DevAI__/") :
-    DatasetPath = "D:/__DevAI__/"
-DatasetPath = os.path.join(DatasetPath, "Datasets")
-
-import sys
+from KongMing.Utils.DatasetPath import ResolveDatasetPath
+DatasetPath = ResolveDatasetPath()
 
 ###################################
 
@@ -46,12 +40,21 @@ else:
 
 ModelRootFolderPath     = "{}/{}".format(OutputPath, ModelFolderByDataset)
 
+LearningRate            = 0.0002
+Timesteps               = 1000
+# Betas 在 KongMing/Trainer/DDPMTrainer.py:_CreateOptimizer 里硬编码，这里只用于打印
+BetasForLog             = (0.9, 0.999)
+
 if __name__ == "__main__" :
+    print("[Run] Dataset={} | LR={} | Betas={} | Timesteps={} | EmbDim={} | ImgSize={}".format(
+        ModelFolderByDataset, LearningRate, BetasForLog, Timesteps, EmbeddingDim, ImageSize
+    ))
+
     DDPM = DDPMModelFactory(
         inEmbeddingDim=EmbeddingDim,
         inColorChanNum= ImageColorChan,
-        inLearningRate=0.00001,
-        inTimesteps=1000,
+        inLearningRate=LearningRate,
+        inTimesteps=Timesteps,
         inModelRootFolderPath=ModelRootFolderPath
     )
     Exec = Executor(DDPM)
@@ -72,9 +75,6 @@ if __name__ == "__main__" :
         os.makedirs(Path, exist_ok=True)
         save_image(reverse_transform(GenImage), "{}/{}.png".format(Path, datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else:
-        if DatasetPath is None:
-            sys.exit()
-            
         transform = transforms.Compose([
             transforms.Resize(ImageSize),
             transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 

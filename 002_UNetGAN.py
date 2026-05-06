@@ -16,14 +16,8 @@ import os
 OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
 os.makedirs(OutputPath, exist_ok=True)
 ###########
-DatasetPath = None
-if os.path.exists("D:/AI/") :
-    DatasetPath = "D:/AI/"
-elif os.path.exists("D:/__DevAI__/") :
-    DatasetPath = "D:/__DevAI__/"
-DatasetPath = os.path.join(DatasetPath, "Datasets")
-
-import sys
+from KongMing.Utils.DatasetPath import ResolveDatasetPath
+DatasetPath = ResolveDatasetPath()
 
 ###################################
 
@@ -72,9 +66,6 @@ if __name__ == "__main__" :
         os.makedirs(ImagetFolderPath, exist_ok=True)
         save_image(transform(GenImage), "{}/{}.png".format(ImagetFolderPath, datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else :
-        if DatasetPath is None:
-            sys.exit()
-
         transform = transforms.Compose([
             transforms.Resize(ImageSize),
             transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
