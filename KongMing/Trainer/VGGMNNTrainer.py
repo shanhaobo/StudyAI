@@ -84,6 +84,8 @@ class VGGMNNTrainer(MultiNNTrainer) :
             Model.CalcAndAcceptLoss(Output, DeviceLabel)
 
     def __VGGMNNEndBatchTrain(self, inArgs, inKVArgs) -> None:
+        if not self.ShouldPrintBatch():
+            return
         Loss, AvgLoss = self.VGG5.GetLossValue()
 
         print(

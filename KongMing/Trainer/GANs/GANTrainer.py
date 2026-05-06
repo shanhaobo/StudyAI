@@ -72,6 +72,8 @@ class GANTrainer(MultiNNTrainer):
 ###########################################################################################
 
     def MyEndBatchTrain(self, inArgs, inKVArgs) -> None:
+        if not self.ShouldPrintBatch():
+            return
         DLoss, DAvgLoss = self.Discriminator.GetLossValue()
         GLoss, GAvgLoss = self.Generator.GetLossValue()
         print(

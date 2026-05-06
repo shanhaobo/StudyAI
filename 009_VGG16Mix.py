@@ -19,7 +19,10 @@ OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
 os.makedirs(OutputPath, exist_ok=True)
 ###########
 from KongMing.Utils.DatasetPath import ResolveDatasetPath
+from KongMing.Utils.HardwareProfile import DetectHardwareProfile, FormatProfileLine
 DatasetPath = ResolveDatasetPath()
+# VGG16 + 224x224
+HardwareProfile = DetectHardwareProfile(inMemoryFactor=4.0)
 
 ###################################
 
@@ -32,6 +35,7 @@ ImageSizeH          = 224
 NumClasses          = 10
 
 if __name__ == "__main__" :
+    print("[HW] {}".format(FormatProfileLine(HardwareProfile)))
     VGG = VGGModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="{}/CIFAR10".format(OutputPath))
     Exec = Executor(VGG)
 
@@ -47,7 +51,13 @@ if __name__ == "__main__" :
 
     dataset = torchvision.datasets.CIFAR10(root=DatasetPath, train=(DoEval == False), download=True, transform=transform)
     
-    dataloader = DataLoader(dataset, batch_size=64, shuffle=True, num_workers=2)
+    dataloader = DataLoader(
+        dataset,
+        batch_size=HardwareProfile["BatchSize"],
+        num_workers=HardwareProfile["NumWorkers"],
+        pin_memory=HardwareProfile["PinMemory"],
+        shuffle=True,
+    )
 
     # 开始Eval 或者 Train
     if DoEval:
@@ -57,4 +67,4 @@ if __name__ == "__main__" :
             VGGMNN = VGGMNNModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="output/008_VGGMNN16/CIFAR10")
             VGGMNN.StateDictCopyTo(VGG.VGG, Exec.StartEpochIndex)
 
-        Exec.Train(dataloader, SaveInterval=1)
+        Exec.Train(dataloader, SaveInterval=1, PrintInterval=100)

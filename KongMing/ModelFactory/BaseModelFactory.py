@@ -78,6 +78,9 @@ class BaseModelFactory(object):
         SaveInterval = inKVArgs.get("SaveInterval")
         if SaveInterval is not None:
             self.SaveInterval = int(SaveInterval)
+        PrintInterval = inKVArgs.get("PrintInterval")
+        if PrintInterval is not None:
+            self.Trainer.PrintInterval = int(PrintInterval)
 
     ############################################
 

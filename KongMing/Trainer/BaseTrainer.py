@@ -55,6 +55,13 @@ class BaseTrainer(abc.ABC):
 
         self.LogRootPath        = "."
 
+        self.PrintInterval      = 1     # 每 N 个 batch 打印一次；通过 inKVArgs["PrintInterval"] 覆盖
+
+    def ShouldPrintBatch(self) -> bool:
+        """子类的 EndBatchTrain hook 在 print 前检查；最后一个 batch 总是 print"""
+        bIsLastBatch = (self.CurrBatchIndex + 1) == self.BatchNumPerEpoch
+        return bIsLastBatch or ((self.CurrBatchIndex + 1) % self.PrintInterval == 0)
+
     @staticmethod
     def _BackPropagate(inOptimizer : Optimizer, inLoss : Tensor) -> None:
         inOptimizer.zero_grad()

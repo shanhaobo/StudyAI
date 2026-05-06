@@ -60,19 +60,20 @@ class DDPMTrainer(MultiNNTrainer) :
 
     def DDPMEndBatchTrain(self, inArgs, inKVArgs) -> None:
         Loss, AvgLoss = self.NNModel.GetLossValue()
-        
-        print(
-            "{} | Epoch: {:0>4d} / {:0>4d} | Batch: {:0>4d} / {:0>4d} | Loss: {:.6f} / {:.6f}".
-            format(
-                datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]"),
-                self.CurrEpochIndex,
-                self.EndEpochIndex,
-                self.CurrBatchIndex + 1,
-                self.BatchNumPerEpoch,
-                Loss,
-                AvgLoss
+
+        if self.ShouldPrintBatch():
+            print(
+                "{} | Epoch: {:0>4d} / {:0>4d} | Batch: {:0>4d} / {:0>4d} | Loss: {:.6f} / {:.6f}".
+                format(
+                    datetime.now().strftime("[%Y/%m/%d %H:%M:%S.%f]"),
+                    self.CurrEpochIndex,
+                    self.EndEpochIndex,
+                    self.CurrBatchIndex + 1,
+                    self.BatchNumPerEpoch,
+                    Loss,
+                    AvgLoss
+                )
             )
-        )
         self.LossData["Epoch"].append(self.CurrEpochIndex)
         self.LossData["Batch"].append(self.CurrBatchIndex)
         self.LossData["Loss"].append(Loss)

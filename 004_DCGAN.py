@@ -17,7 +17,9 @@ OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
 os.makedirs(OutputPath, exist_ok=True)
 ###########
 from KongMing.Utils.DatasetPath import ResolveDatasetPath
+from KongMing.Utils.HardwareProfile import DetectHardwareProfile, FormatProfileLine
 DatasetPath = ResolveDatasetPath()
+HardwareProfile = DetectHardwareProfile()
 
 ###################################
 
@@ -40,6 +42,7 @@ else:
 ModelRootFolderPath     = "{}/{}".format(OutputPath, ModelFolderByDataset)
 
 if __name__ == "__main__" :
+    print("[HW] {}".format(FormatProfileLine(HardwareProfile)))
     GAN = DCGANModelFactory(ImageColorChan, EmbeddingDim, 3, inModelRootFolderPath=ModelRootFolderPath)
     Exec = Executor(GAN)
 
@@ -72,5 +75,11 @@ if __name__ == "__main__" :
         else:
             dataset = datasets.ImageFolder(root='{}/cartoon_faces'.format(DatasetPath), transform=transform)
         
-        dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
-        Exec.Train(dataloader, SaveInterval=13)
+        dataloader = DataLoader(
+            dataset,
+            batch_size=HardwareProfile["BatchSize"],
+            num_workers=HardwareProfile["NumWorkers"],
+            pin_memory=HardwareProfile["PinMemory"],
+            shuffle=True,
+        )
+        Exec.Train(dataloader, SaveInterval=13, PrintInterval=100)

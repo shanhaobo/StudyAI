@@ -20,6 +20,8 @@ class SingleNNTrainer(BaseTrainer) :
         self.EndEpochTrain.add(self.__SNNEndEpochTrain)
 
     def __SNNEndBatchTrain(self, inArgs, inKVArgs) -> None:
+        if not self.ShouldPrintBatch():
+            return
         Loss, AvgLoss = self.NNModel.GetLossValue()
 
         print(
