@@ -43,13 +43,12 @@ else:
 ModelRootFolderPath     = "{}/{}".format(OutputPath, ModelFolderByDataset)
 
 LearningRate            = 0.0002
+Betas                   = (0.9, 0.999)
 Timesteps               = 1000
-# Betas 在 KongMing/Trainer/DDPMTrainer.py:_CreateOptimizer 里硬编码，这里只用于打印
-BetasForLog             = (0.9, 0.999)
 
 if __name__ == "__main__" :
     print("[Run] Dataset={} | LR={} | Betas={} | Timesteps={} | EmbDim={} | ImgSize={}".format(
-        ModelFolderByDataset, LearningRate, BetasForLog, Timesteps, EmbeddingDim, ImageSize
+        ModelFolderByDataset, LearningRate, Betas, Timesteps, EmbeddingDim, ImageSize
     ))
     print("[HW] {}".format(FormatProfileLine(HardwareProfile)))
 
@@ -57,6 +56,7 @@ if __name__ == "__main__" :
         inEmbeddingDim=EmbeddingDim,
         inColorChanNum= ImageColorChan,
         inLearningRate=LearningRate,
+        inBetas=Betas,
         inTimesteps=Timesteps,
         inModelRootFolderPath=ModelRootFolderPath
     )

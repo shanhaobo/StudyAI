@@ -14,9 +14,11 @@ import pandas as pd
 
 class DDPMTrainer(MultiNNTrainer) :
     def __init__(self,
-            inLearningRate
+            inLearningRate,
+            inBetas = (0.9, 0.999)
         ) -> None:
         super().__init__(inLearningRate)
+        self.Betas = inBetas
         self.BeginTrain.add(self.DDPMBeginTrain)
 
         self.EndBatchTrain.add(self.DDPMEndBatchTrain)
@@ -36,7 +38,7 @@ class DDPMTrainer(MultiNNTrainer) :
 ###########################################################################################
 
     def _CreateOptimizer(self) -> None:
-        self.NNModel.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=(0.9, 0.999))
+        self.NNModel.ApplyOptimizer(torch.optim.Adam, self.LearningRate, betas=self.Betas)
 
     def _CreateLossFN(self) -> None:
         self.NNModel.ApplyLossFunc(F.smooth_l1_loss)

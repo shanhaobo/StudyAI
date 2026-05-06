@@ -15,6 +15,7 @@ class DDPMModelFactory(MultiNNModelFacotry) :
             inEmbeddingDim,
             inColorChanNum,
             inLearningRate = 0.00001,
+            inBetas = (0.9, 0.999),
             inTimesteps : int = 1000,
             inModelRootFolderPath = "."
         ) :
@@ -23,7 +24,8 @@ class DDPMModelFactory(MultiNNModelFacotry) :
         self.DiffusionModel = DiffusionModel(inTimesteps=inTimesteps, inNNModule=self.NNModel)
 
         NewTrainer          = DDPMTrainer(
-                                inLearningRate
+                                inLearningRate,
+                                inBetas
                             )
         super().__init__(
             {"NNModel" : self.NNModel, "DiffusionModel" : self.DiffusionModel},
