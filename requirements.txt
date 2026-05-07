@@ -12,3 +12,6 @@ gym
 # 可视化与数据 (零散试验脚本 003/904 等)
 graphviz          # 仅 Python 绑定; 渲染图形还需系统级 Graphviz 可执行文件
 pandas
+
+# 数据集下载辅助 (tools/download_cartoon_faces.py)
+kagglehub         # Kaggle 数据集拉取; 需要 ~/.kaggle/kaggle.json 或 KAGGLE_USERNAME/KEY 环境变量
