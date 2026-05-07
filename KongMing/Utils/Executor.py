@@ -29,7 +29,7 @@ class Executor :
 
 ###################################################################################################
 
-    def Train(self, inDataLoader:DataLoader, *inArgsForML, **inKVArgsForML) :
+    def Train(self, inDataLoader:DataLoader, *inArgsForML, inValidLoader : DataLoader = None, **inKVArgsForML) :
         ## Only for Train —— 全局热键依赖 keyboard 包；
         ## Linux 非 root / Mac / 容器里注册会抛权限错误，但训练本身不该被它阻塞。
         try:
@@ -39,9 +39,9 @@ class Executor :
             print("[Executor] Hotkey unavailable, training continues without Ctrl+S/Ctrl+X. Reason:", e)
         ##-----------------
         if self.bForceNewTrain or self.bIncTrain is False :
-            self.Model.NewTrain(inDataLoader, self.EpochIterCount, self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML))
+            self.Model.NewTrain(inDataLoader, self.EpochIterCount, self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML), inValidLoader=inValidLoader)
         else :
-            self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML))
+            self.Model.IncTrain(inDataLoader, self.StartEpochIndex, self.EpochIterCount, self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML), inValidLoader=inValidLoader)
     
     ##----------------------------------------##
     

@@ -64,19 +64,19 @@ class BaseModelFactory(object):
 
     ###########################################################################################
 
-    def NewTrain(self, inDataLoader : DataLoader, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
-        self.Trainer.Train(inDataLoader, 0, inEpochIterCount, inArgs, inKVArgs)
+    def NewTrain(self, inDataLoader : DataLoader, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None, inValidLoader : DataLoader = None) -> None:
+        self.Trainer.Train(inDataLoader, 0, inEpochIterCount, inArgs, inKVArgs, inValidLoader=inValidLoader)
 
-    def IncTrain(self, inDataLoader : DataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None) -> None:
+    def IncTrain(self, inDataLoader : DataLoader, inStartEpochNum : int, inEpochIterCount : int, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None, inValidLoader : DataLoader = None) -> None:
         if inStartEpochNum >= 0 and self.Archiver.Load(inStartEpochNum):
             pass
         else:
             inStartEpochNum = self.Archiver.LoadLastest()
 
         if inStartEpochNum is None:
-            self.Trainer.Train(inDataLoader, 0, inEpochIterCount, inArgs, inKVArgs)
+            self.Trainer.Train(inDataLoader, 0, inEpochIterCount, inArgs, inKVArgs, inValidLoader=inValidLoader)
         else:
-            self.Trainer.Train(inDataLoader, inStartEpochNum + 1, inEpochIterCount, inArgs, inKVArgs)
+            self.Trainer.Train(inDataLoader, inStartEpochNum + 1, inEpochIterCount, inArgs, inKVArgs, inValidLoader=inValidLoader)
 
     def LoadLastest(self, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
         EpochIndex = self.Archiver.LoadLastest()

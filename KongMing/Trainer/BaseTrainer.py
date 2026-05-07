@@ -46,10 +46,18 @@ class BaseTrainer(abc.ABC):
         self.BeginBatchTrain    = Delegate()
         self.EndBatchTrain      = Delegate()
 
+        # Validation 链：可选；BaseTrainer 默认 _BatchValid 是空操作。
+        # 子类按需重写 _BatchValid 并把 metric 累到自己的成员上，再在 EndEpochValid hook 里打印。
+        self.BeginEpochValid    = Delegate()
+        self.EndEpochValid      = Delegate(bIsolateFailure=True)
+        self.BeginBatchValid    = Delegate()
+        self.EndBatchValid      = Delegate()
+
         self.CurrEpochIndex     = 0
         self.CurrBatchIndex     = 0
 
         self.BatchNumPerEpoch   = 0
+        self.BatchNumPerValid   = 0
 
         self.EndEpochIndex      = 0
 
@@ -90,7 +98,27 @@ class BaseTrainer(abc.ABC):
     @abc.abstractmethod
     def _BatchTrain(self, inBatchData, inBatchLabel, inArgs, inKVArgs) :
         pass
-    
+
+    def _BatchValid(self, inBatchData, inBatchLabel, inArgs, inKVArgs) -> None:
+        """子类按需重写。默认空实现 = "传 inValidLoader 但子类没实现 valid"，等价于不验证。"""
+        pass
+
+    def __DontOverride__EpochValid(self, inValidLoader : DataLoader, inArgs, inKVArgs) -> None:
+        # Eval 模式 + no_grad：BatchNorm/Dropout 行为正确，不更新参数也不留梯度
+        self.BeginEpochValid(inArgs, inKVArgs)
+
+        DataLen = len(inValidLoader.dataset)
+        BatchSize = inValidLoader.batch_size
+        self.BatchNumPerValid = -(-DataLen // BatchSize)
+
+        with torch.no_grad():
+            for self.CurrBatchIndex, (CurrBatchData, CurrBatchLabel) in enumerate(inValidLoader):
+                self.BeginBatchValid(inArgs, inKVArgs)
+                self._BatchValid(CurrBatchData, CurrBatchLabel, inArgs, inKVArgs)
+                self.EndBatchValid(inArgs, inKVArgs)
+
+        self.EndEpochValid(inArgs, inKVArgs)
+
     def __DontOverride__EpochTrain(self, inDataLoader:DataLoader, inArgs, inKVArgs) -> None:
         # Begin Epoch Train 
         # call BeginEpochTrain
@@ -111,7 +139,7 @@ class BaseTrainer(abc.ABC):
         self.EndEpochTrain(inArgs, inKVArgs)
 
 
-    def __DontOverride__Train(self, inDataLoader:DataLoader, inStartEpochIndex : int, inEpochIterCount : int, inArgs, inKVArgs) -> None:
+    def __DontOverride__Train(self, inDataLoader:DataLoader, inStartEpochIndex : int, inEpochIterCount : int, inArgs, inKVArgs, inValidLoader : DataLoader = None) -> None:
         # Begin Train
         # Create Optimizer & Loss Function
         self._CreateOptimizer()
@@ -122,6 +150,10 @@ class BaseTrainer(abc.ABC):
         self.EndEpochIndex = (self.CurrEpochIndex + inEpochIterCount) if (inEpochIterCount > 0) else 0
         while self.__Continue_EpochIterCount():
             self.__DontOverride__EpochTrain(inDataLoader, inArgs, inKVArgs)
+            # 验证：只在 inValidLoader 存在时跑一遍。__DontOverride__EpochValid 内部
+            # 已经包了 no_grad，BN/Dropout 由 _BatchValid 子类自己 model.eval() 切换。
+            if inValidLoader is not None:
+                self.__DontOverride__EpochValid(inValidLoader, inArgs, inKVArgs)
             if self.SoftExit or self._CheckEndEpoch():
                 break
             self.CurrEpochIndex += 1
@@ -129,10 +161,10 @@ class BaseTrainer(abc.ABC):
         # End Train
         self.EndTrain(inArgs, inKVArgs)
 
-    def Train(self, inDataLoader : DataLoader, inStartEpochIndex : int, inEpochIterCount : int, inArgs, inKVArgs) -> None:
+    def Train(self, inDataLoader : DataLoader, inStartEpochIndex : int, inEpochIterCount : int, inArgs, inKVArgs, inValidLoader : DataLoader = None) -> None:
         if inStartEpochIndex < 0:
             inStartEpochIndex = 0
-        self.__DontOverride__Train(inDataLoader, inStartEpochIndex, inEpochIterCount, inArgs, inKVArgs)
+        self.__DontOverride__Train(inDataLoader, inStartEpochIndex, inEpochIterCount, inArgs, inKVArgs, inValidLoader=inValidLoader)
 
     def _CheckEndEpoch(self)->bool:
         return False
