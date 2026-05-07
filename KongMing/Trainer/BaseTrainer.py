@@ -36,10 +36,12 @@ class BaseTrainer(abc.ABC):
         self.LearningRate       = inLearningRate
 
         self.BeginTrain         = Delegate()
-        self.EndTrain           = Delegate()
+        # End* 链通常挂 IO（Save / log close）；用 isolate 模式收集异常但不中断后续 callback
+        # （比如某次 Save 抛了，后面的 log 关闭也要执行；scheduler.step 已在更前面跑过）
+        self.EndTrain           = Delegate(bIsolateFailure=True)
 
         self.BeginEpochTrain    = Delegate()
-        self.EndEpochTrain      = Delegate()
+        self.EndEpochTrain      = Delegate(bIsolateFailure=True)
 
         self.BeginBatchTrain    = Delegate()
         self.EndBatchTrain      = Delegate()
