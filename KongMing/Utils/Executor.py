@@ -30,9 +30,13 @@ class Executor :
 ###################################################################################################
 
     def Train(self, inDataLoader:DataLoader, *inArgsForML, **inKVArgsForML) :
-        ## Only for Train
-        keyboard.add_hotkey('ctrl + s', self.__HotKeySave)
-        keyboard.add_hotkey('ctrl + x', self.__HotKeyExit)
+        ## Only for Train —— 全局热键依赖 keyboard 包；
+        ## Linux 非 root / Mac / 容器里注册会抛权限错误，但训练本身不该被它阻塞。
+        try:
+            keyboard.add_hotkey('ctrl + s', self.__HotKeySave)
+            keyboard.add_hotkey('ctrl + x', self.__HotKeyExit)
+        except Exception as e:
+            print("[Executor] Hotkey unavailable, training continues without Ctrl+S/Ctrl+X. Reason:", e)
         ##-----------------
         if self.bForceNewTrain or self.bIncTrain is False :
             self.Model.NewTrain(inDataLoader, self.EpochIterCount, self.__CombineArgsForML(inArgsForML), self.__CombineKVArgsForML(inKVArgsForML))
@@ -74,25 +78,26 @@ class Executor :
 ###################################################################################################
 
     def __GetArgs(self):
-        for i in sys.argv :
-            tmpi = i.casefold()
-            if bool(re.match(r'^[-]{1,2}[\w]+=[\w]+', tmpi)):
-                key, value = tmpi.split("=")
+        for raw in sys.argv :
+            # 只对 key 部分 casefold；value 保留原文（路径/tag/字符串规格不能丢大小写）
+            if bool(re.match(r'^[-]{1,2}[\w]+=.+', raw)):
+                key, _, value = raw.partition("=")
                 if key.startswith("--"):
-                    key = key.replace("--", "")
+                    key = key[2:].casefold()
                     self.KVArgsForML[key]=value
                 else:
-                    key = key.replace("-", "")
+                    key = key.lstrip("-").casefold()
                     self.KVArgsForExec[key]=value
-            elif bool(re.match(r'^[-]{1,2}[\w]+', tmpi)):
+            elif bool(re.match(r'^[-]{1,2}[\w]+', raw)):
+                tmpi = raw.casefold()
                 if tmpi.startswith("--"):
-                    tmpi = tmpi.replace("--", "")
+                    tmpi = tmpi[2:]
                     self.ArgsForML.append(tmpi)
                 else:
-                    tmpi = tmpi.replace("-", "")
+                    tmpi = tmpi.lstrip("-")
                     self.ArgsForExec.append(tmpi)
-            else : 
-                self.ArgsForExec.append(tmpi)
+            else :
+                self.ArgsForExec.append(raw.casefold())
 
     def __AnalyzeArgs(self):
         for CurrArg in self.ArgsForExec:
