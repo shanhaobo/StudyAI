@@ -191,6 +191,12 @@ class BaseModelFactory(object):
             pass
 
     def __BMEndEpochTrain(self, inArgs, inKVArgs) -> None:
+        # 文件 sentinel：跨平台替代 keyboard 热键
+        # `touch <LogRootPath>/.save` 触发当前 epoch 末强制保存
+        # `touch <LogRootPath>/.exit` 触发当前 epoch 末软退出
+        # Linux/Mac/容器里没法挂全局热键时这是唯一办法；和 keyboard 共存，谁先到位谁触发
+        self.__CheckSentinelFiles()
+
         if self.ForceSave or ((self.Trainer.CurrEpochIndex + 1) % self.SaveInterval == 0):
             if self.ForceSave :
                 self.ForceSave = False
@@ -198,6 +204,31 @@ class BaseModelFactory(object):
             else:
                 print("Epoch:{} Save Models".format(self.Trainer.CurrEpochIndex))
             self.Archiver.Save(self.Trainer.CurrEpochIndex)
+
+    def __CheckSentinelFiles(self) -> None:
+        LogDir = self.Trainer.LogRootPath
+        if not LogDir:
+            return
+        # 删除信号文件后才触发：避免一个文件忘了删导致每 epoch 都重入
+        SaveSignal = os.path.join(LogDir, ".save")
+        if os.path.exists(SaveSignal):
+            try:
+                os.remove(SaveSignal)
+            except OSError as e:
+                print("[BaseModelFactory] Failed to remove .save sentinel:", e)
+            else:
+                print("[BaseModelFactory] .save sentinel detected → ForceSave")
+                self.ForceSaveAtEndEpoch()
+
+        ExitSignal = os.path.join(LogDir, ".exit")
+        if os.path.exists(ExitSignal):
+            try:
+                os.remove(ExitSignal)
+            except OSError as e:
+                print("[BaseModelFactory] Failed to remove .exit sentinel:", e)
+            else:
+                print("[BaseModelFactory] .exit sentinel detected → SoftExit")
+                self.ForceExitAtEndEpoch()
 
     def __BMEndTrain(self, inArgs, inKVArgs)->None:
         self.Archiver.Save(self.Trainer.CurrEpochIndex)
