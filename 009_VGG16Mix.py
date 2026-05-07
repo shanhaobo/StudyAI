@@ -15,8 +15,8 @@ from datetime import datetime
 from KongMing.Utils.Executor import Executor
 ###################################
 import os
-OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
-os.makedirs(OutputPath, exist_ok=True)
+from KongMing.Utils.OutputPath import BuildOutputPath
+OutputPath = BuildOutputPath(__file__)
 ###########
 from KongMing.Utils.DatasetPath import ResolveDatasetPath
 from KongMing.Utils.HardwareProfile import DetectHardwareProfile, FormatProfileLine
@@ -36,7 +36,7 @@ NumClasses          = 10
 
 if __name__ == "__main__" :
     print("[HW] {}".format(FormatProfileLine(HardwareProfile)))
-    VGG = VGGModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="{}/CIFAR10".format(OutputPath))
+    VGG = VGGModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath=BuildOutputPath(__file__, "CIFAR10"))
     Exec = Executor(VGG)
 
     # 当前是Eval 还是 Train
@@ -64,7 +64,8 @@ if __name__ == "__main__" :
         Exec.Eval(inDataLoader=dataloader)
     else :
         if Exec.IsNewTrain() :
-            VGGMNN = VGGMNNModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="output/008_VGGMNN16/CIFAR10")
+            # 注意：跨脚本加载——读 008_VGGMNN16 训练出的权重作为 backbone 初始化
+            VGGMNN = VGGMNNModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath=BuildOutputPath("008_VGGMNN16", "CIFAR10"))
             VGGMNN.StateDictCopyTo(VGG.VGG, Exec.StartEpochIndex)
 
         Exec.Train(dataloader, SaveInterval=1, PrintInterval=100)

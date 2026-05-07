@@ -13,8 +13,8 @@ from datetime import datetime
 from KongMing.Utils.Executor import Executor
 ###################################
 import os
-OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
-os.makedirs(OutputPath, exist_ok=True)
+from KongMing.Utils.OutputPath import BuildOutputPath
+OutputPath = BuildOutputPath(__file__)
 ###########
 from KongMing.Utils.DatasetPath import ResolveDatasetPath
 from KongMing.Utils.HardwareProfile import DetectHardwareProfile, FormatProfileLine
@@ -39,7 +39,7 @@ else:
     ImageSize               = 64
     ImageColorChan          = 3
 
-ModelRootFolderPath     = "{}/{}".format(OutputPath, ModelFolderByDataset)
+ModelRootFolderPath     = BuildOutputPath(__file__, ModelFolderByDataset)
 
 if __name__ == "__main__" :
     print("[HW] {}".format(FormatProfileLine(HardwareProfile)))
@@ -65,7 +65,7 @@ if __name__ == "__main__" :
             transforms.Normalize((-1.0,), (2.0,)), #(-1, 1) -> (0, 1),
             #transforms.ToPILImage(), # turn into shape HWC, (0, 1) -> (0, 255)
         ])
-        ImagetFolderPath = "{}/images".format(OutputPath)
+        ImagetFolderPath = os.path.join(OutputPath, "images")
         os.makedirs(ImagetFolderPath, exist_ok=True)
         save_image(transform(GenImage), "{}/{}.png".format(ImagetFolderPath, datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else :

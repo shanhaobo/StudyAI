@@ -13,8 +13,8 @@ from datetime import datetime
 from KongMing.Utils.Executor import Executor
 ###################################
 import os
-OutputPath = "output/{}".format(os.path.splitext(os.path.basename(__file__))[0])
-os.makedirs(OutputPath, exist_ok=True)
+from KongMing.Utils.OutputPath import BuildOutputPath
+OutputPath = BuildOutputPath(__file__)
 ###########
 from KongMing.Utils.DatasetPath import ResolveDatasetPath
 from KongMing.Utils.HardwareProfile import DetectHardwareProfile, FormatProfileLine
@@ -35,7 +35,7 @@ NumClasses          = 10
 if __name__ == "__main__" :
     print("[HW] {}".format(FormatProfileLine(HardwareProfile)))
 
-    VGG = VGGModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath="{}/CIFAR10".format(OutputPath))
+    VGG = VGGModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath=BuildOutputPath(__file__, "CIFAR10"))
     Exec = Executor(VGG)
 
     # 当前是Eval 还是 Train
