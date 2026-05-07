@@ -8,8 +8,15 @@ from typing import Dict as TypedDict
 from typing import List as TypedList
 
 class BaseArchiver(object):
-    def __init__(self, inModelRootFolderPath : str, inNNModuleNameOnlyForTrain : TypedList[str] = None) -> None:
-        self.ModelArchiveRootFolderPath = os.path.join(inModelRootFolderPath, "ArchivedModels")
+    def __init__(self, inModelRootFolderPath : str, inNNModuleNameOnlyForTrain : TypedList[str] = None, inModelTag : str = None) -> None:
+        # ModelTag 维度：用于在同一 (脚本, 数据集) 下区分多组实验。
+        # 路径形态：<ModelRoot>/ArchivedModels/<Tag>/<timestamp>/...
+        # 不传 tag 时退化为旧路径 <ModelRoot>/ArchivedModels/<timestamp>/...
+        ArchiveRoot = os.path.join(inModelRootFolderPath, "ArchivedModels")
+        if inModelTag:
+            ArchiveRoot = os.path.join(ArchiveRoot, str(inModelTag))
+        self.ModelArchiveRootFolderPath = ArchiveRoot
+        self.ModelTag                   = inModelTag
 
         self.FileNameManager            = FileManagerWithNum(self.ModelArchiveRootFolderPath, ".pkl", 100, True)
 

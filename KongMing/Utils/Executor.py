@@ -8,6 +8,22 @@ import keyboard
 
 ###################################################################################################
 
+def ResolveModelTag() -> str :
+    """轻量预解析：在 Factory 构造之前从 sys.argv 抓 --ModelTag= 的值。
+    Executor 的完整解析依赖 self，但 Archiver 的根路径要在构造时就拼好；
+    把这一小段抽出来，避免重复全 argv 扫描或循环依赖。"""
+    for raw in sys.argv:
+        if not raw.startswith("--"):
+            continue
+        if "=" not in raw:
+            continue
+        key, _, value = raw.partition("=")
+        if key[2:].casefold() == "modeltag" and value:
+            return value
+    return None
+
+###################################################################################################
+
 class Executor :
     def __init__(self, inModel) -> None:
         self.Model = inModel

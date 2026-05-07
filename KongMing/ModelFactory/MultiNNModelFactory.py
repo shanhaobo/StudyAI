@@ -4,6 +4,8 @@ from .BaseModelFactory import BaseModelFactory
 from KongMing.Archiver.MultiNNArchiver import MultiNNArchiver
 from KongMing.Trainer.MultiNNTrainer import MultiNNTrainer
 
+from KongMing.Utils.Executor import ResolveModelTag
+
 from typing import Dict as TypedDict
 from typing import List as TypedList
 
@@ -13,14 +15,19 @@ class MultiNNModelFacotry(BaseModelFactory):
             inMultiNNDict : TypedDict[str, torch.nn.Module],
             inTrainer : MultiNNTrainer,
             inModelRootFolderPath : str,
-            inNNModuleNameOnlyForTrain : TypedList[str] = None
+            inNNModuleNameOnlyForTrain : TypedList[str] = None,
+            inModelTag : str = None
         ):
         self.MultiNNDict : TypedDict[str, torch.nn.Module] = {}
+
+        # tag 优先级：构造参数 > CLI --ModelTag= > 无
+        Tag = inModelTag if inModelTag is not None else ResolveModelTag()
 
         # new Archiver
         NewArchiver = MultiNNArchiver(
             inModelRootFolderPath,
-            inNNModuleNameOnlyForTrain
+            inNNModuleNameOnlyForTrain,
+            inModelTag=Tag
         )
         # set Log Root Path
         inTrainer.LogRootPath = NewArchiver.GetCurrTrainRootPath()
