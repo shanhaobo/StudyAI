@@ -24,6 +24,7 @@
 ### 模型结构 / 表达能力
 
 - [BatchNorm 是双人格层](Blindspots/AI/BatchNorm的运行时状态.md) — 误以为 BN 训练/评估行为一致，实际两种模式用的统计量不同；`requires_grad=False` 不能冻结 BN 的 running stats，必须 `.eval()`。
+- [MLP 学不会算术](Blindspots/AI/MLP学不会算术.md) — 误以为通用近似定理保证 MLP 能学加减乘除，实际只对 add/sub 几乎完美；mul 永远是"训练分布内近似 + 完全不能外推"；div/power 学不会。要真会算术得用 log-空间或 NALU 系列。
 
 ### 训练工程实践
 
