@@ -58,7 +58,8 @@ class BaseArchiver(object):
         return self.FileNameManager.MakeFileFullPathAndFileName(FileName = inNeuralNetworkName, Num = inEpochIndex)
 
     def GetFileFromValidLatestTimestampDirPath(self, inNeuralNetworkName : str, inEpochIndex : int) -> str:
-        return self.FileNameManager.GetFilePathAndNameFromTimestampDirPathByEpoch(FileName = inNeuralNetworkName, Num = inEpochIndex)
+        # 注意：底层会跨所有时间戳目录查找该 epoch 的文件，不仅仅是"最近的"那个目录。
+        return self.FileNameManager.FindFileAcrossAllTimestampsByEpoch(FileName = inNeuralNetworkName, Num = inEpochIndex)
 
     def GetLatestModelFolder(self) -> str :
         _, LatestLeafFolderPath, _ = self.FileNameManager.GetValidLatestTimestampDirInfo()

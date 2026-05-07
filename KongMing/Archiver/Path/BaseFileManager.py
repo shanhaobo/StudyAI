@@ -156,7 +156,9 @@ class BaseFileManager() :
         return LeafDirFullPath, FileName
     
     
-    def GetFilePathAndNameFromTimestampDirPathByEpoch_Root(self, **inKWArgs) :
+    def FindFileAcrossAllTimestampsByEpoch_Root(self, **inKWArgs) :
+        """遍历所有时间戳目录找该 epoch 的文件——只要历史上某次跑到过这个 epoch 就返回。
+        注意：不限于"最近的"那个时间戳目录，调用方需理解这个语义。"""
         LeafDirName = self.MakeLeafDirName(**inKWArgs)
         if LeafDirName is None:
             return None, None, None
@@ -184,8 +186,12 @@ class BaseFileManager() :
 
         return None, None, None
 
-    def GetFilePathAndNameFromTimestampDirPathByEpoch(self, **inKWArgs) :
-        RootPath, FilePath, FileName, = self.GetFilePathAndNameFromTimestampDirPathByEpoch_Root(**inKWArgs)
+    def FindFileAcrossAllTimestampsByEpoch(self, **inKWArgs) :
+        RootPath, FilePath, FileName, = self.FindFileAcrossAllTimestampsByEpoch_Root(**inKWArgs)
         if self.__RootPath is None :
             self.__RootPath = RootPath
         return FilePath, FileName
+
+    # 旧名保留为 alias —— 名字暗示"最近时间戳"但实际跨所有时间戳查找，误导。
+    GetFilePathAndNameFromTimestampDirPathByEpoch_Root = FindFileAcrossAllTimestampsByEpoch_Root
+    GetFilePathAndNameFromTimestampDirPathByEpoch      = FindFileAcrossAllTimestampsByEpoch
