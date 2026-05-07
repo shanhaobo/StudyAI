@@ -2,6 +2,7 @@ import torch
 import torchvision
 
 from datetime import datetime
+from dataclasses import dataclass
 
 from torchvision.utils import save_image
 
@@ -19,6 +20,7 @@ OutputPath = BuildOutputPath(__file__)
 ###########
 from KongMing.Utils.DatasetPath import ResolveDatasetPath
 from KongMing.Utils.HardwareProfile import DetectHardwareProfile, FormatProfileLine
+from KongMing.Utils.ConfigUtils import ApplyConfigFromKV
 DatasetPath = ResolveDatasetPath()
 HardwareProfile = DetectHardwareProfile()
 
@@ -28,48 +30,59 @@ torch.set_printoptions(precision=10, sci_mode=False)
 
 ###################################
 
-bFashionMNIST       = True
-if bFashionMNIST:
-    ModelFolderByDataset    = "FashionMNIST"
-    EmbeddingDim            = 32
-    ImageSize               = 64
-    ImageColorChan          = 1
-else:
-    ModelFolderByDataset    = "CartoonFace"
-    EmbeddingDim            = 128
-    ImageSize               = 64
-    ImageColorChan          = 3
+@dataclass
+class TrainConfig:
+    # 数据集开关：True=FashionMNIST / False=CartoonFace
+    bFashionMNIST   : bool   = True
+    # FashionMNIST 默认 (32, 1)；CartoonFace 自动改成 (128, 3)，除非显式 --EmbeddingDim/--ImageColorChan 覆盖
+    EmbeddingDim    : int    = 32
+    ImageSize       : int    = 64
+    ImageColorChan  : int    = 1
+    # 训练超参
+    LearningRate    : float  = 0.0002
+    Betas           : tuple  = (0.9, 0.999)
+    Timesteps       : int    = 1000
+    SaveInterval    : int    = 13
+    PrintInterval   : int    = 100
 
+Config = TrainConfig()
+# CLI 覆盖：python 005_DDPM.py new --LearningRate=1e-4 --bFashionMNIST=false --Betas=0.5,0.999
+Overridden = set(ApplyConfigFromKV(Config))
+# bFashionMNIST=False 时套上 CartoonFace 默认（用户未显式覆盖才回填）
+if not Config.bFashionMNIST:
+    if "EmbeddingDim"   not in Overridden: Config.EmbeddingDim   = 128
+    if "ImageColorChan" not in Overridden: Config.ImageColorChan = 3
+
+ModelFolderByDataset    = "FashionMNIST" if Config.bFashionMNIST else "CartoonFace"
 ModelRootFolderPath     = BuildOutputPath(__file__, ModelFolderByDataset)
 
-LearningRate            = 0.0002
-Betas                   = (0.9, 0.999)
-Timesteps               = 1000
-
 if __name__ == "__main__" :
+    if Overridden:
+        print("[Config] CLI overrides:", sorted(Overridden))
     print("[Run] Dataset={} | LR={} | Betas={} | Timesteps={} | EmbDim={} | ImgSize={}".format(
-        ModelFolderByDataset, LearningRate, Betas, Timesteps, EmbeddingDim, ImageSize
+        ModelFolderByDataset, Config.LearningRate, Config.Betas, Config.Timesteps,
+        Config.EmbeddingDim, Config.ImageSize
     ))
     print("[HW] {}".format(FormatProfileLine(HardwareProfile)))
 
     DDPM = DDPMModelFactory(
-        inEmbeddingDim=EmbeddingDim,
-        inColorChanNum= ImageColorChan,
-        inLearningRate=LearningRate,
-        inBetas=Betas,
-        inTimesteps=Timesteps,
+        inEmbeddingDim=Config.EmbeddingDim,
+        inColorChanNum=Config.ImageColorChan,
+        inLearningRate=Config.LearningRate,
+        inBetas=Config.Betas,
+        inTimesteps=Config.Timesteps,
         inModelRootFolderPath=ModelRootFolderPath
     )
     Exec = Executor(DDPM)
 
     if (Exec.ForceTrain() == False) and Exec.IsExistModel():
         GenImage = Exec.Eval(
-            inImageSize=ImageSize,
-            inColorChanNum=ImageColorChan,
+            inImageSize=Config.ImageSize,
+            inColorChanNum=Config.ImageColorChan,
             inBatchSize=15
         )
         print(GenImage.size())
-        
+
         reverse_transform = transforms.Compose([
             transforms.Normalize((-1.0,), (2.0,)), #(-1, 1) -> (0, 1),
             #transforms.ToPILImage(), # turn into shape HWC, (0, 1) -> (0, 255)
@@ -79,11 +92,11 @@ if __name__ == "__main__" :
         save_image(reverse_transform(GenImage), "{}/{}.png".format(Path, datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
     else:
         transform = transforms.Compose([
-            transforms.Resize(ImageSize),
-            transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
+            transforms.Resize(Config.ImageSize),
+            transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1),
             transforms.Normalize((0.5,), (0.5,))  # (0, 1) -> (-1, 1),
         ])
-        if bFashionMNIST :
+        if Config.bFashionMNIST :
             dataset = torchvision.datasets.FashionMNIST(
                 root=DatasetPath, train=True, transform=transform, download=True
             )
@@ -97,4 +110,4 @@ if __name__ == "__main__" :
             pin_memory=HardwareProfile["PinMemory"],
             shuffle=True,
         )
-        Exec.Train(dataloader, SaveInterval=13, PrintInterval=100)
+        Exec.Train(dataloader, SaveInterval=Config.SaveInterval, PrintInterval=Config.PrintInterval)
