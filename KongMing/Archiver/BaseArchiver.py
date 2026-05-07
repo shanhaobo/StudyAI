@@ -8,14 +8,15 @@ from typing import Dict as TypedDict
 from typing import List as TypedList
 
 class BaseArchiver(object):
-    def __init__(self, inModelRootFolderPath : str, inNNModuleNameOnlyForTrain : TypedList[str] = []) -> None:
+    def __init__(self, inModelRootFolderPath : str, inNNModuleNameOnlyForTrain : TypedList[str] = None) -> None:
         self.ModelArchiveRootFolderPath = os.path.join(inModelRootFolderPath, "ArchivedModels")
 
         self.FileNameManager            = FileManagerWithNum(self.ModelArchiveRootFolderPath, ".pkl", 100, True)
 
         self.SaveEpochIndex             = -1
         self.NNModuleDict : TypedDict[str, torch.nn.Module] = {}
-        self.NNModuleNameOnlyForTrain   = inNNModuleNameOnlyForTrain
+        # 默认参数不能直接写 [] —— 那是 mutable default，所有实例共享同一个 list
+        self.NNModuleNameOnlyForTrain   = inNNModuleNameOnlyForTrain if inNNModuleNameOnlyForTrain is not None else []
 
 ############################################################################
     def GetCurrTrainRootPath(self):
@@ -24,6 +25,10 @@ class BaseArchiver(object):
 
     def IsExistModel(self) -> bool:
         for Name, _ in self.NNModuleDict.items():
+            # 训练专用模块（如 GAN 的 D）即使没存过也不该让 IsExistModel 返回 False
+            # ——它们没有持久化语义，只在训练循环内活着。
+            if Name in self.NNModuleNameOnlyForTrain:
+                continue
             Path, _ = self.FindLatestModelFile(Name)
             if Path is None:
                 return False
@@ -33,8 +38,19 @@ class BaseArchiver(object):
 ############################################################################
 
     def Eval(self):
+        # 旧实现 del NNModuleDict[Name] 会让"Eval 之后再 inc"丢掉训练模块，是单向操作。
+        # 改为切到 eval 模式 + 移到 cpu 释放显存；NNModuleDict 注册保持完整。
         for Name in self.NNModuleNameOnlyForTrain:
-            del self.NNModuleDict[Name]
+            Module = self.NNModuleDict.get(Name)
+            if Module is None:
+                continue
+            Module.eval()
+            try:
+                Module.cpu()
+            except Exception:
+                pass
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
 ############################################################################
 
@@ -70,17 +86,35 @@ class BaseArchiver(object):
             self.SaveEpochIndex = inEpochIndex
 
     def _Save(self, inEpochIndex : int) -> None:
-        for Name, Model in self.NNModuleDict.items():
-            ModelFolderPath, ModelFileName = self.MakeNeuralNetworkArchiveFullPath(Name, inEpochIndex)
-            os.makedirs(ModelFolderPath, exist_ok=True)
-            ModelFullPath = os.path.join(ModelFolderPath, ModelFileName)
-            # BaseNNModel 走 archive 协议（带 Optimizer / LRScheduler 状态）；
-            # 其它普通 nn.Module 退回旧的 state_dict。
-            if hasattr(Model, "StateDictForArchive"):
-                torch.save(Model.StateDictForArchive(), ModelFullPath)
-            else:
-                torch.save(Model.state_dict(), ModelFullPath)
-            print("Save Model:" + ModelFullPath)
+        # 原子保存：先把所有模块写到 .tmp，全部成功后再 rename。
+        # 避免中途断电/Ctrl+C 留下"半保存"epoch（GAN 存了 G 没存 D）。
+        WrittenTmpPaths : TypedList = []
+        try:
+            for Name, Model in self.NNModuleDict.items():
+                ModelFolderPath, ModelFileName = self.MakeNeuralNetworkArchiveFullPath(Name, inEpochIndex)
+                os.makedirs(ModelFolderPath, exist_ok=True)
+                ModelFullPath = os.path.join(ModelFolderPath, ModelFileName)
+                TmpPath = ModelFullPath + ".tmp"
+                # BaseNNModel 走 archive 协议（带 Optimizer / LRScheduler 状态）；
+                # 其它普通 nn.Module 退回旧的 state_dict。
+                if hasattr(Model, "StateDictForArchive"):
+                    torch.save(Model.StateDictForArchive(), TmpPath)
+                else:
+                    torch.save(Model.state_dict(), TmpPath)
+                WrittenTmpPaths.append((TmpPath, ModelFullPath))
+
+            for TmpPath, ModelFullPath in WrittenTmpPaths:
+                os.replace(TmpPath, ModelFullPath)
+                print("Save Model:" + ModelFullPath)
+        except Exception:
+            # 任一失败：清理已写的 .tmp，避免污染目录
+            for TmpPath, _ in WrittenTmpPaths:
+                if os.path.exists(TmpPath):
+                    try:
+                        os.remove(TmpPath)
+                    except OSError:
+                        pass
+            raise
 
     def Load(self, inEpochIndex : int):
         for Name, _ in self.NNModuleDict.items():

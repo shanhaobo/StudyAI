@@ -13,7 +13,7 @@ class MultiNNModelFacotry(BaseModelFactory):
             inMultiNNDict : TypedDict[str, torch.nn.Module],
             inTrainer : MultiNNTrainer,
             inModelRootFolderPath : str,
-            inNNModuleNameOnlyForTrain : TypedList[str] = []
+            inNNModuleNameOnlyForTrain : TypedList[str] = None
         ):
         self.MultiNNDict : TypedDict[str, torch.nn.Module] = {}
 
@@ -32,3 +32,7 @@ class MultiNNModelFacotry(BaseModelFactory):
 
         self.Trainer.RegisterMultiNNModule(self.MultiNNDict)
         self.Archiver.RegisterMultiNNModule(self.MultiNNDict)
+
+
+# 旧名 MultiNNModelFacotry 是历史拼写错误；保留 alias 让新代码用正确拼写
+MultiNNModelFactory = MultiNNModelFacotry

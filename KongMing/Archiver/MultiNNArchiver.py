@@ -8,7 +8,7 @@ class MultiNNArchiver(BaseArchiver):
     def __init__(
             self,
             inModelRootFolderPath : str,
-            inNNModuleNameOnlyForTrain : TypedList[str] = []
+            inNNModuleNameOnlyForTrain : TypedList[str] = None
         ) -> None:
         super().__init__(inModelRootFolderPath, inNNModuleNameOnlyForTrain)
 
