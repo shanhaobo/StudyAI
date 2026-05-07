@@ -2,15 +2,24 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions import Categorical
+from dataclasses import dataclass
 import gym
 
-# Hyperparameters
-learning_rate = 0.0005
-gamma = 0.98
-lmbda = 0.95
-eps_clip = 0.1
-K_epochs = 3
-T_horizon = 20
+from KongMing.Utils.ConfigUtils import ApplyConfigFromKV
+
+@dataclass
+class TrainConfig:
+    LearningRate  : float = 0.0005
+    Gamma         : float = 0.98
+    Lmbda         : float = 0.95
+    EpsClip       : float = 0.1
+    KEpochs       : int   = 3
+    THorizon      : int   = 20
+    EpisodeCount  : int   = 10000
+    PrintInterval : int   = 20
+
+Config = TrainConfig()
+Overridden = set(ApplyConfigFromKV(Config))
 
 class PPO(nn.Module):
     def __init__(self):
@@ -20,7 +29,7 @@ class PPO(nn.Module):
         self.fc1 = nn.Linear(4, 256)
         self.fc_pi = nn.Linear(256, 2)
         self.fc_v = nn.Linear(256, 1)
-        self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+        self.optimizer = optim.Adam(self.parameters(), lr=Config.LearningRate)
 
     def pi(self, x, softmax_dim=0):
         x = torch.relu(self.fc1(x))
@@ -63,15 +72,15 @@ class PPO(nn.Module):
     def train_net(self):
         s, a, r, s_prime, prob_a, done = self.make_batch()
 
-        for _ in range(K_epochs):
-            td_target = r + gamma * self.v(s_prime) * done
+        for _ in range(Config.KEpochs):
+            td_target = r + Config.Gamma * self.v(s_prime) * done
             delta = td_target - self.v(s)
             delta = delta.detach().numpy()
 
             advantage_lst = []
             advantage = 0.0
             for delta_t in delta[::-1]:
-                advantage = gamma * lmbda * advantage + delta_t[0]
+                advantage = Config.Gamma * Config.Lmbda * advantage + delta_t[0]
                 advantage_lst.append([advantage])
             advantage_lst.reverse()
             advantage = torch.tensor(advantage_lst, dtype=torch.float)
@@ -81,7 +90,7 @@ class PPO(nn.Module):
             ratio = torch.exp(torch.log(pi_a) - torch.log(prob_a))
 
             surr1 = ratio * advantage
-            surr2 = torch.clamp(ratio, 1 - eps_clip, 1 + eps_clip) * advantage
+            surr2 = torch.clamp(ratio, 1 - Config.EpsClip, 1 + Config.EpsClip) * advantage
             loss = -torch.min(surr1, surr2
                 + 0.5 * torch.nn.functional.mse_loss(self.v(s), td_target.detach())
                 - 0.01 * pi_a.mean()
@@ -93,16 +102,18 @@ class PPO(nn.Module):
 
 
 def main():
+    if Overridden:
+        print("[Config] CLI overrides:", sorted(Overridden))
+
     env = gym.make("CartPole-v0")
     model = PPO()
     score = 0.0
-    print_interval = 20
 
-    for n_epi in range(10000):
+    for n_epi in range(Config.EpisodeCount):
         s = env.reset()
         done = False
         while not done:
-            for t in range(T_horizon):
+            for t in range(Config.THorizon):
                 prob = model.pi(torch.from_numpy(s).float())
                 m = Categorical(prob)
                 a = m.sample().item()
@@ -117,8 +128,8 @@ def main():
 
             model.train_net()
 
-        if n_epi % print_interval == 0 and n_epi != 0:
-            print("# of episode: {}, avg score: {:.1f}".format(n_epi, score / print_interval))
+        if n_epi % Config.PrintInterval == 0 and n_epi != 0:
+            print("# of episode: {}, avg score: {:.1f}".format(n_epi, score / Config.PrintInterval))
             score = 0.0
 
     env.close()

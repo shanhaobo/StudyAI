@@ -11,6 +11,7 @@ from KongMing.ModelFactory.Classifier.VGGMNNModelFactory import VGGMNNModelFacto
 from KongMing.ModelFactory.Classifier.VGGModelFactory import VGGModelFactory
 
 from datetime import datetime
+from dataclasses import dataclass
 
 from KongMing.Utils.Executor import Executor
 ###################################
@@ -20,6 +21,7 @@ OutputPath = BuildOutputPath(__file__)
 ###########
 from KongMing.Utils.DatasetPath import ResolveDatasetPath
 from KongMing.Utils.HardwareProfile import DetectHardwareProfile, FormatProfileLine
+from KongMing.Utils.ConfigUtils import ApplyConfigFromKV
 DatasetPath = ResolveDatasetPath()
 # VGG16 + 224x224
 HardwareProfile = DetectHardwareProfile(inMemoryFactor=4.0)
@@ -30,13 +32,23 @@ torch.set_printoptions(precision=10, sci_mode=False)
 
 ###################################
 
-ImageSizeW          = 224
-ImageSizeH          = 224
-NumClasses          = 10
+@dataclass
+class TrainConfig:
+    ImageSizeW      : int    = 224
+    ImageSizeH      : int    = 224
+    NumClasses      : int    = 10
+    LearningRate    : float  = 0.0001
+    SaveInterval    : int    = 1
+    PrintInterval   : int    = 100
+
+Config = TrainConfig()
+Overridden = set(ApplyConfigFromKV(Config))
 
 if __name__ == "__main__" :
+    if Overridden:
+        print("[Config] CLI overrides:", sorted(Overridden))
     print("[HW] {}".format(FormatProfileLine(HardwareProfile)))
-    VGG = VGGModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath=BuildOutputPath(__file__, "CIFAR10"))
+    VGG = VGGModelFactory(Config.NumClasses, inLearningRate=Config.LearningRate, inModelRootFolderPath=BuildOutputPath(__file__, "CIFAR10"))
     Exec = Executor(VGG)
 
     # 当前是Eval 还是 Train
@@ -44,13 +56,13 @@ if __name__ == "__main__" :
 
     # 加载相应数据
     transform = transforms.Compose([
-        transforms.Resize((ImageSizeW, ImageSizeH)),
-        transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1), 
+        transforms.Resize((Config.ImageSizeW, Config.ImageSizeH)),
+        transforms.ToTensor(), # HWC -> CHW, (0, 255) -> (0, 1),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # (0, 1) -> (-1, 1),
     ])
 
     dataset = torchvision.datasets.CIFAR10(root=DatasetPath, train=(DoEval == False), download=True, transform=transform)
-    
+
     dataloader = DataLoader(
         dataset,
         batch_size=HardwareProfile["BatchSize"],
@@ -65,7 +77,7 @@ if __name__ == "__main__" :
     else :
         if Exec.IsNewTrain() :
             # 注意：跨脚本加载——读 008_VGGMNN16 训练出的权重作为 backbone 初始化
-            VGGMNN = VGGMNNModelFactory(NumClasses, inLearningRate=0.0001, inModelRootFolderPath=BuildOutputPath("008_VGGMNN16", "CIFAR10"))
+            VGGMNN = VGGMNNModelFactory(Config.NumClasses, inLearningRate=Config.LearningRate, inModelRootFolderPath=BuildOutputPath("008_VGGMNN16", "CIFAR10"))
             VGGMNN.StateDictCopyTo(VGG.VGG, Exec.StartEpochIndex)
 
-        Exec.Train(dataloader, SaveInterval=1, PrintInterval=100)
+        Exec.Train(dataloader, SaveInterval=Config.SaveInterval, PrintInterval=Config.PrintInterval)
