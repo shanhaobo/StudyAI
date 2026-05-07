@@ -1,118 +1,111 @@
 import torch
-from torch import nn
 from torch.utils.data import DataLoader, Dataset
-import random
+
 from dataclasses import dataclass
 
+from KongMing.Utils.Executor import Executor
+from KongMing.Utils.OutputPath import BuildOutputPath
 from KongMing.Utils.ConfigUtils import ApplyConfigFromKV
+
+from KongMing.ModelFactory.MathNet.MathNetModelFactory import MathNetModelFactory
+
+
+###################################################################################################
+
+# 三个 op：加 / 减 / 乘
+# 去掉 power（值域可达 10^200，回归头被它支配）和 divide（除零 / 大值溢出）。
+# 想让网络真的"学会算术"，必须保证目标值的尺度可控。
+OpNames = ["add", "sub", "mul"]
+NumOps  = len(OpNames)
+
+# 输入归一到 [-1, 1]：a/b 缩放到 [0, 1]，再线性映射；输出按 InputScale^2 反归一回原始尺度。
+InputScale = 100.0
+
 
 @dataclass
 class TrainConfig:
-    DatasetLen    : int   = 1000000
-    EpochCnt      : int   = 1
-    BatchSize     : int   = 320
-    HiddenSize    : int   = 128
-    LearningRate  : float = 0.1
-    PrintEvery    : int   = 10
+    DatasetLen      : int    = 200000
+    EvalLen         : int    = 2000
+    EpochCnt        : int    = 1
+    BatchSize       : int    = 320
+    HiddenSize      : int    = 128
+    LearningRate    : float  = 0.001
+    SaveInterval    : int    = 1
+    PrintInterval   : int    = 50
 
 Config = TrainConfig()
 Overridden = set(ApplyConfigFromKV(Config))
 
-class Calculator:
-    def __init__(self):
-        self.operation_dict = {
-            0: self.add,
-            1: self.subtract,
-            2: self.multiply,
-            3: self.divide,
-            4: self.power
-        }
 
-    def add(self, a, b):
-        return a + b
+###################################################################################################
 
-    def subtract(self, a, b):
-        return a - b
-
-    def multiply(self, a, b):
-        return a * b
-
-    def divide(self, a, b):
-        if b == 0:
-            return float('-inf')  # 返回一个特定的值
-        else:
-            return a / b
-
-    def power(self, a, b):
-        return (a ** b)
-
-    def calculate(self, a, b, idx):
-        return self.operation_dict[idx](a, b)
-
-# 定义神经网络架构
-class MathNet(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(MathNet, self).__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, hidden_size)
-        self.fc3 = nn.Linear(hidden_size, output_size)
-
-    def forward(self, x):
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        return self.fc3(x)
-
-# 定义数据集
 class MathDataset(Dataset):
-    def __init__(self):
-        self.data = torch.empty(10, 3)
-        self.labels = torch.empty(10, 1)
+    """合成算术数据集。
+    输入张量 5 维：[a_norm, b_norm, op_onehot(3)]；标签为标量（已按 InputScale^2 归一）。
+    """
 
-    def __len__(self):
-        return Config.DatasetLen
+    def __init__(self, inLength : int) -> None:
+        self.Length = inLength
 
-    def __getitem__(self, idx):
-        tensor = torch.empty(3)
-        # 生成范围在(0, 2^32)的随机浮点数并将其分配给张量的前两个元素
-        tensor[0] = torch.FloatTensor(1).uniform_(0, 100)
-        tensor[1] = torch.FloatTensor(1).uniform_(0, 100)
+    def __len__(self) -> int:
+        return self.Length
 
-        idx = random.randint(0, 2)
-        # 生成范围在(0, 6)的随机整数并将其分配给张量的第三个元素
-        tensor[2] = idx
+    def __getitem__(self, inIdx : int):
+        # 用 torch 自身随机数，避免依赖 Python random，方便 num_workers
+        AB = torch.rand(2) * InputScale            # [0, 100)
+        OpIdx = int(torch.randint(0, NumOps, ()).item())
 
-        label = Calculator().calculate(tensor[0], tensor[1], idx)
+        A, B = AB[0].item(), AB[1].item()
+        if OpIdx == 0:
+            Y = A + B
+        elif OpIdx == 1:
+            Y = A - B
+        else:
+            Y = A * B
 
-        return tensor, torch.Tensor(label)
+        OpOneHot = torch.zeros(NumOps)
+        OpOneHot[OpIdx] = 1.0
 
-############
+        Feature = torch.cat([AB / InputScale, OpOneHot], dim=0)
+        Label   = torch.tensor([Y / (InputScale * InputScale)], dtype=torch.float32)
+        return Feature, Label
 
-def main():
+
+###################################################################################################
+
+if __name__ == "__main__":
     if Overridden:
         print("[Config] CLI overrides:", sorted(Overridden))
 
-    dataset = MathDataset()
-    dataloader = DataLoader(dataset, batch_size=Config.BatchSize, shuffle=True)
+    Factory = MathNetModelFactory(
+        inNumOps=NumOps,
+        inHiddenSize=Config.HiddenSize,
+        inLearningRate=Config.LearningRate,
+        inModelRootFolderPath=BuildOutputPath(__file__, "Synthetic"),
+    )
+    Exec = Executor(Factory)
 
-    # 创建并训练网络
-    net = MathNet(3, Config.HiddenSize, 1)
-    criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(net.parameters(), lr=Config.LearningRate)
+    DoEval = (Exec.ForceTrain() == False) and Exec.IsExistModel()
 
-    for epoch in range(Config.EpochCnt):
-        for i, (inputs, labels) in enumerate(dataloader):
-            inputs = inputs.float() # 确保输入数据的数据类型为浮点型
-            labels = labels.view(-1, 1).float() # 调整标签的维度并确保其数据类型为浮点型
-            outputs = net(inputs)
-            loss = criterion(outputs, labels)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            if i % Config.PrintEvery == 0:
-                print(f'Epoch {epoch}, Iteration {i}, Loss {loss.item()}')
-
-
-if __name__ == '__main__':
-    main()
+    if DoEval:
+        EvalLoader = DataLoader(
+            MathDataset(Config.EvalLen),
+            batch_size=Config.BatchSize,
+            shuffle=False,
+        )
+        Exec.Eval(
+            inDataLoader=EvalLoader,
+            inOpNames=OpNames,
+            inInputScale=InputScale,
+        )
+    else:
+        TrainLoader = DataLoader(
+            MathDataset(Config.DatasetLen),
+            batch_size=Config.BatchSize,
+            shuffle=True,
+        )
+        Exec.Train(
+            TrainLoader,
+            SaveInterval=Config.SaveInterval,
+            PrintInterval=Config.PrintInterval,
+        )
