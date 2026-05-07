@@ -4,7 +4,23 @@
 
 > 与 `docs/KongMing-Architecture.md`（架构图 + 对比 + 总评）互补：那篇是"为什么"，本篇是"怎么做"。
 
-## 推荐执行顺序
+## 状态总览（2026-05-07 全部完成）
+
+| 项 | 状态 | 落地 commit |
+|---|---|---|
+| B Delegate 失败隔离          | ✅ | `9f7500a` |
+| A AMP / 梯度累积             | ✅ | `2ce6889` |
+| C 验证集钩子 (_BatchValid)   | ✅ | `fecb4d1` |
+| G jsonl 结构化指标日志       | ✅ | `71e4a50` |
+| F ModelTag 维度              | ✅ | `dc9725d` |
+| H 文件 sentinel fallback     | ✅ | `294f0e0` |
+| D Config dataclass + CLI 覆盖 | ✅ | `fbd8e0e` (helper + 005 示范)、`26c7caa` (扩展到 7 入口) |
+| E NNModuleDict 自动注册      | ✅ | `07d160e` |
+
+实际实施顺序：B → A → C → G → F → H → D → E。DDP 子项延后到真有多卡需求再做。
+所有改动零外部 API 破坏：旧入口脚本不改也能跑、旧 `.pkl` 仍可读、旧拼写错的类名 `MultiNNModelFacotry` 与旧方法名仍可调。
+
+## 推荐执行顺序（历史参考）
 
 ```
 B  Delegate 失败隔离          ── 30 分钟，零风险
@@ -20,7 +36,7 @@ H  文件 sentinel fallback     ── 30 分钟，零风险
 
 ---
 
-## 🔴 B. Delegate 失败隔离 ★ 最先做
+## ✅ 🔴 B. Delegate 失败隔离 ★ 最先做（已完成 · `9f7500a`）
 
 ### 诊断
 `KongMing/Utils/Delegate.py` 当前 11 行：
@@ -69,7 +85,7 @@ class Delegate:
 
 ---
 
-## 🔴 A. AMP / 梯度累积 / DDP
+## ✅ 🔴 A. AMP / 梯度累积（已完成 · `2ce6889`，DDP 延后）
 
 ### 诊断
 `BaseModelFactory.__init__` 只有 cuda/cpu 二分；`BackPropagater.EndBackPropagate` 直接 `loss.backward() + optimizer.step()`。后果：
@@ -133,7 +149,7 @@ DDP 单独至少 4 小时 / 高风险。**先只做 AMP+累积**。
 
 ---
 
-## 🟡 C. 验证集钩子（_BatchValid）
+## ✅ 🟡 C. 验证集钩子（_BatchValid）（已完成 · `fecb4d1`）
 
 ### 诊断
 `BaseTrainer` 只有 `_BatchTrain`，没有"训练中按 epoch 跑 val"的位置。VGG 系列在 CIFAR10 上现在只能看 train loss，分不清是过拟合还是没拟合。
@@ -174,7 +190,7 @@ def _BatchValid(self, inBatchData, inBatchLabel, inArgs, inKVArgs):
 
 ---
 
-## 🟢 G. jsonl 结构化指标日志
+## ✅ 🟢 G. jsonl 结构化指标日志（已完成 · `71e4a50`）
 
 ### 诊断
 当前 `train.log` 是 tee 的人类格式，提取数字要写正则。Loss 曲线无法直接画。
@@ -211,7 +227,7 @@ def __BMEndBatchTrain(self, inArgs, inKVArgs) -> None:
 
 ---
 
-## 🟢 F. ModelTag 维度
+## ✅ 🟢 F. ModelTag 维度（已完成 · `dc9725d`）
 
 ### 诊断
 每次 `new` 建新时间戳目录避免污染，但没有人类可读 tag。`ArchivedModels/2026-05-07_18-30-00/` vs `ArchivedModels/2026-05-08_09-15-22/`——分不出哪个是"试 lr=1e-3"哪个是"试 lr=3e-4"。
@@ -236,7 +252,7 @@ def __BMEndBatchTrain(self, inArgs, inKVArgs) -> None:
 
 ---
 
-## 🟢 D. Config dataclass
+## ✅ 🟢 D. Config dataclass（已完成 · `fbd8e0e` + `26c7caa`）
 
 ### 诊断
 入口脚本顶部一堆 `ImageSize = 224` `NumClasses = 10` `LearningRate = 0.0001` 大写常量，每次想换超参就要改源码（git 比对模糊、jupyter notebook 之间复制粘贴丢同步）。
@@ -276,7 +292,7 @@ def ApplyConfigFromKV(inConfig, inKVArgs):
 
 ---
 
-## 🟡 E. NNModuleDict 自动注册
+## ✅ 🟡 E. NNModuleDict 自动注册（已完成 · `07d160e`）
 
 ### 诊断
 新增网络要在 3 处同步登记：`Trainer.__init__` 的 `self.X = X.to(device)`、`Archiver.NNModuleDict["X"] = X`、`ModelFactory.__init__` 的 `RegisterMultiNNModule`。漏一处就静默丢权重。
@@ -299,7 +315,7 @@ def ApplyConfigFromKV(inConfig, inKVArgs):
 
 ---
 
-## 🟢 H. 文件 sentinel fallback（替代 keyboard）
+## ✅ 🟢 H. 文件 sentinel fallback（替代 keyboard）（已完成 · `294f0e0`）
 
 ### 诊断
 `Executor.Train` 已 try/except 包了 `keyboard.add_hotkey`，Linux/Mac/容器里挂不上时不崩了，但**也没办法 force save / soft exit**。
@@ -331,17 +347,31 @@ if os.path.exists(ExitSignal):
 
 ## 总结
 
-| 项 | 估时 | 风险 | 收益 |
-|---|---|---|---|
-| B Delegate 隔离 | 30 min | 零 | 防 callback 静默掉链 |
-| A AMP+累积 | 2-3 h | 中 | 显存×2，能跑大网络 |
-| C Val 钩子 | 1.5 h | 低 | 看得见过拟合 |
-| G jsonl 指标 | 30 min | 零 | 画曲线不用写正则 |
-| F ModelTag | 1 h | 低 | 实验对比有维度 |
-| D Config dataclass | 2 h | 低 | 超参可 git diff |
-| E 自动注册 | 1 h | 中 | 省 boilerplate |
-| H 文件 sentinel | 30 min | 零 | 跨平台热键 |
+| 项 | 估时 | 风险 | 收益 | 状态 |
+|---|---|---|---|---|
+| B Delegate 隔离 | 30 min | 零 | 防 callback 静默掉链 | ✅ `9f7500a` |
+| A AMP+累积 | 2-3 h | 中 | 显存×2，能跑大网络 | ✅ `2ce6889` |
+| C Val 钩子 | 1.5 h | 低 | 看得见过拟合 | ✅ `fecb4d1` |
+| G jsonl 指标 | 30 min | 零 | 画曲线不用写正则 | ✅ `71e4a50` |
+| F ModelTag | 1 h | 低 | 实验对比有维度 | ✅ `dc9725d` |
+| H 文件 sentinel | 30 min | 零 | 跨平台热键 | ✅ `294f0e0` |
+| D Config dataclass | 2 h | 低 | 超参可 git diff | ✅ `fbd8e0e` + `26c7caa` |
+| E 自动注册 | 1 h | 中 | 省 boilerplate | ✅ `07d160e` |
 
-**最小可行包**：B + A + C + G ≈ 半天，把"框架够用度"从 60 分推到 80 分。
+**全部完成**。原"最小可行包" B+A+C+G 实际花了一晚上做完，剩下 4 项又一晚上扫尾——回头看比预估的"半天 +" 略多但顺利，因为 KongMing 的层次本身够清晰。
 
-剩下的按心情。
+## 验证清单
+
+跑完 8 项后回头核对："框架够用度"从 60 分推到了什么位置：
+
+- ✅ checkpoint 包含 optimizer / scheduler / EMA 状态（之前修过）
+- ✅ Delegate 失败不再静默吞链（B）
+- ✅ AMP `--AMP=bf16` + 梯度累积 `--GradAccum=4` 能跑（A）
+- ✅ `inValidLoader` 钩子让训练中能看 val 指标（C）
+- ✅ `train.metrics.jsonl` 可直接 `json.loads` 画曲线（G）
+- ✅ `--ModelTag=Run_A` 让多组实验路径分离（F）
+- ✅ `touch <log>/.save` 跨平台触发保存，无需 root（H）
+- ✅ `TrainConfig` dataclass + `--K=V` 覆盖，超参可 git diff（D，9 入口全套）
+- ✅ Trainer 上 `self.MyNet = SomeBaseNNModel()` 自动登记到 Archiver（E）
+
+剩下原本想做但没做的：DDP 多卡（A 的子项）。等真有多卡场景再补。
