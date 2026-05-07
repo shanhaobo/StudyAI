@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import torch
 
 from datetime import datetime
@@ -61,6 +62,9 @@ class BaseModelFactory(object):
         # 日志：挂在 LogRootPath/train.log；BeginTrain 时打开，EndTrain 时关闭
         self._LogFile : object = None
         self._StdoutBackup     = None
+        # 结构化指标日志：每个 print 间隔写一行 jsonl 到 train.metrics.jsonl
+        # 后期画曲线直接读 jsonl 不用正则；和 train.log（人类可读）并存
+        self._MetricsFile : object = None
 
     ###########################################################################################
 
@@ -111,6 +115,9 @@ class BaseModelFactory(object):
     def __BMBeginTrain(self, inArgs, inKVArgs)->None:
         self.__OpenLogFile()
         print("Begin Training... [{}]".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        # 直接调 BaseModelFactory.NewTrain 不走 Executor 时 inKVArgs 可能为 None
+        if inKVArgs is None:
+            inKVArgs = CaseInsensitiveDict()
         SaveInterval = inKVArgs.get("SaveInterval")
         if SaveInterval is not None:
             self.SaveInterval = int(SaveInterval)
@@ -161,7 +168,27 @@ class BaseModelFactory(object):
     ############################################
 
     def __BMEndBatchTrain(self, inArgs, inKVArgs) -> None:
-        pass
+        if self._MetricsFile is None:
+            return
+        # 跟随 PrintInterval：和屏幕打印同节奏，避免每 batch 都写硬盘
+        if not self.Trainer.ShouldPrintBatch():
+            return
+        from KongMing.Models.BaseNNModel import BaseNNModel
+        Record = {
+            "Epoch" : self.Trainer.CurrEpochIndex,
+            "Batch" : self.Trainer.CurrBatchIndex + 1,
+            "BatchNum" : self.Trainer.BatchNumPerEpoch,
+            "Time"  : datetime.now().isoformat(timespec="seconds"),
+        }
+        for Name, Module in self.Archiver.NNModuleDict.items():
+            if isinstance(Module, BaseNNModel) and Module.BackPropagater._Loss is not None:
+                Loss, Avg = Module.GetLossValue()
+                Record["{}.Loss".format(Name)] = Loss
+                Record["{}.AvgLoss".format(Name)] = Avg
+        try:
+            self._MetricsFile.write(json.dumps(Record, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
 
     def __BMEndEpochTrain(self, inArgs, inKVArgs) -> None:
         if self.ForceSave or ((self.Trainer.CurrEpochIndex + 1) % self.SaveInterval == 0):
@@ -188,6 +215,15 @@ class BaseModelFactory(object):
         except Exception as e:
             print("[BaseModelFactory] Open log file failed, continue without tee:", e)
             self._LogFile = None
+        # 结构化指标文件：失败不影响训练
+        try:
+            LogDir = self.Trainer.LogRootPath if self.Trainer.LogRootPath else "."
+            os.makedirs(LogDir, exist_ok=True)
+            MetricsPath = os.path.join(LogDir, "train.metrics.jsonl")
+            self._MetricsFile = open(MetricsPath, "a", encoding="utf-8", buffering=1)
+        except Exception as e:
+            print("[BaseModelFactory] Open metrics file failed, continue without metrics:", e)
+            self._MetricsFile = None
 
     def __CloseLogFile(self) -> None:
         if self._StdoutBackup is not None:
@@ -199,6 +235,12 @@ class BaseModelFactory(object):
             except Exception:
                 pass
             self._LogFile = None
+        if self._MetricsFile is not None:
+            try:
+                self._MetricsFile.close()
+            except Exception:
+                pass
+            self._MetricsFile = None
 
     ###########################################################################################
 
