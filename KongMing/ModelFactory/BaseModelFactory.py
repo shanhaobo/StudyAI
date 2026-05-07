@@ -115,6 +115,10 @@ class BaseModelFactory(object):
     def __BMBeginTrain(self, inArgs, inKVArgs)->None:
         self.__OpenLogFile()
         print("Begin Training... [{}]".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        # 自动登记 Trainer 上的 BaseNNModel 属性——给"新写 Trainer 子类只放 self.X = SomeNet()
+        # 就想让 Archiver 自动持久化"的场景兜底。已登记的（按 id 去重）不会被重复登记，
+        # 所以对现有 Single/Multi 入口零影响。
+        self.__AutoRegisterNNModules()
         # 直接调 BaseModelFactory.NewTrain 不走 Executor 时 inKVArgs 可能为 None
         if inKVArgs is None:
             inKVArgs = CaseInsensitiveDict()
@@ -234,6 +238,40 @@ class BaseModelFactory(object):
         self.Archiver.Save(self.Trainer.CurrEpochIndex)
         print("End Train!!! [{}]".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         self.__CloseLogFile()
+
+    def __AutoRegisterNNModules(self) -> None:
+        """扫 self.Trainer 上的公开属性，把 BaseNNModel 实例补登记到 Archiver.NNModuleDict。
+
+        - 按 id() 去重：已显式登记过的不会被重复添加（即便它在 Trainer 上有不同的属性名）
+        - 名字冲突：若属性名已在 dict 里但指向不同实例，跳过（不覆盖既有登记）
+        - 跳过 _ 前缀属性：Trainer 内部缓存型 BaseNNModel 应当用 _ 前缀显式 opt-out
+        """
+        from KongMing.Models.BaseNNModel import BaseNNModel
+
+        Existing = {id(m) for m in self.Archiver.NNModuleDict.values() if m is not None}
+        NewlyAdded = []
+
+        for AttrName in dir(self.Trainer):
+            if AttrName.startswith("_"):
+                continue
+            try:
+                Value = getattr(self.Trainer, AttrName)
+            except AttributeError:
+                continue
+            if not isinstance(Value, BaseNNModel):
+                continue
+            if id(Value) in Existing:
+                continue
+            if AttrName in self.Archiver.NNModuleDict:
+                # 同名但指向不同实例——保守起见跳过，不覆盖
+                print("[BaseModelFactory] auto-register skipped '{}' (name already taken)".format(AttrName))
+                continue
+            self.Archiver.NNModuleDict[AttrName] = Value
+            Existing.add(id(Value))
+            NewlyAdded.append(AttrName)
+
+        if NewlyAdded:
+            print("[BaseModelFactory] auto-registered NN modules: {}".format(NewlyAdded))
 
     def __OpenLogFile(self) -> None:
         try:
