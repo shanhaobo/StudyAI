@@ -2,16 +2,26 @@
 
 完整深度走查后整理的可优化点清单，按严重程度分三档。每条标了"代价"与"状态"。**编码风格相关项（PascalCase / `in/b` 前缀 / `__DontOverride__` 命名）一律不动**，那是项目长期约定。
 
-## 进度总览（2026-05-07）
+## 进度总览（2026-05-07 全部完成 + Roadmap 全部完成）
 
 | | 总条目 | ✅ 已修 | 📝 文档化 | ⏳ 待办 |
 |---|---|---|---|---|
 | 🔴 第一档 | 4 | 4 (#1, #2, #3, #4) | 0 | 0 |
-| 🟡 第二档 | 7 | 5 (#5, #6, #9, #10, #11) | 2 (#7, #8) | 0 |
-| 🟢 第三档 | 6 | 4 (#12, #13, #16, #17) | 2 (#14, #15) | 0 |
-| **合计** | **17** | **13** | **4** | **0** |
+| 🟡 第二档 | 7 | 6 (#5, #6, **#8**, #9, #10, #11) | 1 (#7) | 0 |
+| 🟢 第三档 | 6 | 5 (#12, #13, #15, #16, #17) | 1 (#14) | 0 |
+| **合计** | **17** | **15** | **2** | **0** |
 
-**全部完成**。
+> 自首次 Review 以来 **#8** 从"📝 文档化"升级为"✅ 已修"——Roadmap B 项落地了 `Delegate.bIsolateFailure`（`9f7500a`），不再仅靠注册顺序约定保证。
+>
+> Review 之外另起的 Roadmap（A-H 8 项）也已全部完成，详见 [`KongMing-Roadmap.md`](./KongMing-Roadmap.md)。
+
+### 与 Roadmap 的对照速查
+
+| Review 条目 | Roadmap 条目 | 关系 |
+|---|---|---|
+| #8 Delegate 单回调失败 | B Delegate 失败隔离 | Roadmap 把 #8 从纯文档化升级为代码改动 |
+| #14 `__len__` 假设 | — | 仍仅文档化（IterableDataset 用例没出现） |
+| 其它 #1-#17 | — | Review 闭环；Roadmap 是新一轮针对架构异味的扩展（AMP / Val / jsonl / ModelTag / sentinel / Config / 自动注册） |
 
 ---
 
@@ -61,11 +71,12 @@ Linux 非 root / Mac / 容器里 `keyboard.add_hotkey` 抛权限错误，整个�
 
 - **状态**：📝 文档化到 `CLAUDE.md` 第 6 条。未引入 `typing.Protocol`（按"框架不膨胀"原则）。
 
-### 8. 📝 `Delegate` 单一回调失败会中断整条事件链
+### 8. ✅ `Delegate` 单一回调失败会中断整条事件链
 担忧：`EndEpochTrain` 链上 Save 抛了，scheduler.step 不会被调用。
 
-- **核查结论**：实际注册顺序是 **scheduler.step 先（SingleNNTrainer.__init__），Save 后（BaseModelFactory.__init__）**——因为入口脚本先 new Trainer 再 new Factory。Save 失败时 scheduler 已更新过，安全。
-- **状态**：📝 已在 `CLAUDE.md` 第 7 条写明此契约："新增回调时把会失败的 IO 放最后"。无需改 Delegate 代码。
+- **首轮核查**：实际注册顺序是 **scheduler.step 先（SingleNNTrainer.__init__），Save 后（BaseModelFactory.__init__）**——因为入口脚本先 new Trainer 再 new Factory。Save 失败时 scheduler 已更新过，所以 Review 阶段评估为"靠注册顺序保证、无需改 Delegate"。
+- **后续升级（Roadmap B / `9f7500a`）**：把"靠注册顺序"这条隐契约升级为代码层面强制——`Delegate(bIsolateFailure=True)` 在 `EndEpochTrain` / `EndTrain` 上启用，遍历所有 callback 收集异常并末尾聚合 raise；新增 callback 不再依赖记忆"会失败的 IO 放最后"。
+- **状态**：✅ 已实施。`CLAUDE.md` 第 7 条"注册顺序"契约依然有参考价值（描述 scheduler 与 Save 的实际顺序），但不再是唯一依靠。
 
 ### 9. ✅ `BaseFileManager.GetFilePathAndNameFromTimestampDirPathByEpoch` 名字误导
 名字暗示"最近的有效时间戳目录"，实际是**遍历所有时间戳目录**找该 epoch。
@@ -118,12 +129,22 @@ Linux 非 root / Mac / 容器里 `keyboard.add_hotkey` 抛权限错误，整个�
 
 ---
 
-## 实施总结
+## 实施总结（含 Roadmap 后续）
 
-13 条代码改动 + 4 条文档化全部完成。整体约 280 行变动，零外部 API 破坏：
+**Review 17 项**：15 条代码改动 + 2 条文档化全部完成。整体约 280 行变动，零外部 API 破坏：
 
 - 旧 `.pkl` 仍可读（legacy 分支）；
 - 旧拼写错的类名 `MultiNNModelFacotry` 仍可 import；
 - 旧方法名 `GetFilePathAndNameFromTimestampDirPathByEpoch` 仍可调（alias）；
 - 旧入口脚本如不改也能跑（手写路径没移除支持）；
 - 命令行参数仍接受老用法（`--PrintInterval=5` 之类）。
+
+**Roadmap 8 项后续**：B/A/C/G/F/H/D/E 全部完成，详见 [`KongMing-Roadmap.md`](./KongMing-Roadmap.md)。增量约 350 行代码 + 9 个入口脚本套 dataclass，仍保持零 API 破坏（不传任何新 CLI 参数行为完全一致）。
+
+| 阶段 | 条目数 | 关键 commit 起点 → 终点 |
+|---|---|---|
+| Review (17 项) | 15 ✅ + 2 📝 | `1cfd132` → `4d497d1` |
+| Roadmap (8 项) | 8 ✅ | `9f7500a` → `26c7caa` |
+| Roadmap 自身文档 | 1 | `21322d6` (初版) → `ff98614` (标记完成) |
+
+合计有效改动 ≈ 630 行，覆盖 11 个核心模块 + 9 个入口脚本，无任何下游被破坏。
