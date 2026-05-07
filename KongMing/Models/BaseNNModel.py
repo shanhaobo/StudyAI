@@ -28,6 +28,33 @@ class BaseNNModel(torch.nn.Module):
             # applied lazily once ApplyOptimizer/ApplyLRScheduler creates them.
             self._PendingState                      = None
 
+            # ── AMP / 梯度累积 ───────────────────────────────────────
+            # _AMPDtype = None    → 关闭 AMP（裸 fp32 走旧路径）
+            # _AMPDtype = float16 → 走 GradScaler；bfloat16 → 走 autocast 不需要 scaler
+            # _AccumSteps = 1     → 每个 batch 都 step；>1 时累 N 个 batch 才 step 一次
+            self._AMPDtype       = None
+            self._GradScaler     = None
+            self._AccumSteps     = 1
+            self._AccumCounter   = 0
+
+        def ApplyAMP(self, inDtype) -> None:
+            """开启混合精度。inDtype: torch.float16 / torch.bfloat16 / None"""
+            self._AMPDtype = inDtype
+            if inDtype is torch.float16:
+                # fp16 容易下溢，需要 GradScaler 把 loss 放大再 backward
+                self._GradScaler = torch.cuda.amp.GradScaler()
+            else:
+                # bf16 动态范围与 fp32 相当，不需要 scaler
+                self._GradScaler = None
+
+        def ApplyGradAccum(self, inSteps : int) -> None:
+            self._AccumSteps = max(1, int(inSteps))
+            self._AccumCounter = 0
+
+        def IsAccumBoundary(self) -> bool:
+            """当前是否到达累积步数边界（即真的 step 当前批次）"""
+            return (self._AccumCounter % self._AccumSteps) == 0
+
         def ApplyOptimizer(self, inModule:torch.nn.Module, inOptimizerType, inLearningRate, **inKVArgs):
             if inspect.isclass(inOptimizerType):
                 self._Optimizer = inOptimizerType(inModule.parameters(), inLearningRate, **inKVArgs)
@@ -78,18 +105,38 @@ class BaseNNModel(torch.nn.Module):
             return self._Loss.item(), self._AvgLoss.item()
 
         def BeginBackPropagate(self):
-            self._Optimizer.zero_grad()
+            # 累积模式下只在边界 zero_grad（保留中间累积的梯度）
+            if self.IsAccumBoundary():
+                self._Optimizer.zero_grad()
 
         def EndBackPropagate(self):
-            if self._Loss is not None:
-                self._Loss.backward()
-            else:
-                # 如果这里错误, 先屏蔽,看看哪里报错了
-                # 因为这里不应该为None
-                # raise RuntimeError
-                pass
+            if self._Loss is None:
+                # 之前的逻辑就是静默 pass；保留行为，只是不再 step（避免空 step 撞坏 scheduler）
+                return
 
-            self._Optimizer.step()
+            # accumulation：把每个累积步的 loss 均摊，等价于"大 batch"的平均梯度
+            if self._AccumSteps > 1:
+                LossForBackward = self._Loss / self._AccumSteps
+            else:
+                LossForBackward = self._Loss
+
+            if self._GradScaler is not None:
+                # fp16 路径
+                self._GradScaler.scale(LossForBackward).backward()
+            else:
+                # fp32 / bf16 路径
+                LossForBackward.backward()
+
+            self._AccumCounter += 1
+            if not self.IsAccumBoundary():
+                # 累积中：只 backward 不 step，下一个 batch 继续累
+                return
+
+            if self._GradScaler is not None:
+                self._GradScaler.step(self._Optimizer)
+                self._GradScaler.update()
+            else:
+                self._Optimizer.step()
 
         def BackPropagate(self):
             self.BeginBackPropagate()
@@ -169,6 +216,12 @@ class BaseNNModel(torch.nn.Module):
     def UpdateLRScheduler(self):
         self.BackPropagater.UpdateLRScheduler()
 
+    def ApplyAMP(self, inDtype):
+        self.BackPropagater.ApplyAMP(inDtype)
+
+    def ApplyGradAccum(self, inSteps : int):
+        self.BackPropagater.ApplyGradAccum(inSteps)
+
     ##---------------------------------------##
     def BackPropagate(self):
         self.BackPropagater.BackPropagate()
@@ -179,9 +232,21 @@ class BaseNNModel(torch.nn.Module):
     ##---------------------------------------##
     def __enter__(self):
         self.BackPropagater.BeginBackPropagate()
+        # AMP：forward + loss 计算都包在 autocast 里；离开 with 块前手动退出
+        AMPDtype = self.BackPropagater._AMPDtype
+        if AMPDtype is not None and torch.cuda.is_available():
+            self._AutocastCtx = torch.autocast(device_type="cuda", dtype=AMPDtype)
+            self._AutocastCtx.__enter__()
+        else:
+            self._AutocastCtx = None
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
+        # 先关 autocast，再 backward（backward 必须在 fp32 域里跑）
+        if getattr(self, "_AutocastCtx", None) is not None:
+            self._AutocastCtx.__exit__(exc_type, exc_value, traceback)
+            self._AutocastCtx = None
+
         self.BackPropagater.EndBackPropagate()
 
         self.__UpdateEMA()

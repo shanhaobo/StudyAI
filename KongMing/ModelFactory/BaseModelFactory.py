@@ -126,6 +126,38 @@ class BaseModelFactory(object):
                 if isinstance(Module, BaseNNModel):
                     Module.BackPropagater._AvgLoss.Decay = Decay
 
+        # ── AMP / 梯度累积 ──
+        # --AMP=bf16 / fp16 / off ；--GradAccum=N
+        from KongMing.Models.BaseNNModel import BaseNNModel as _BaseNN
+        AMPArg = inKVArgs.get("AMP")
+        AMPDtype = None
+        if AMPArg is not None:
+            AMPNorm = str(AMPArg).strip().lower()
+            if AMPNorm in ("bf16", "bfloat16"):
+                AMPDtype = torch.bfloat16
+            elif AMPNorm in ("fp16", "float16", "half"):
+                AMPDtype = torch.float16
+            elif AMPNorm in ("off", "none", "fp32", "float32", ""):
+                AMPDtype = None
+            else:
+                print("[BaseModelFactory] Unknown AMP value '{}', ignored".format(AMPArg))
+        if AMPDtype is not None and not torch.cuda.is_available():
+            print("[BaseModelFactory] AMP requested but CUDA unavailable, falling back to fp32")
+            AMPDtype = None
+
+        AccumArg = inKVArgs.get("GradAccum")
+        AccumSteps = int(AccumArg) if AccumArg is not None else 1
+
+        if AMPDtype is not None or AccumSteps > 1:
+            print("[BaseModelFactory] AMP={} GradAccum={}".format(AMPDtype, AccumSteps))
+
+        for Module in self.Archiver.NNModuleDict.values():
+            if isinstance(Module, _BaseNN):
+                if AMPDtype is not None:
+                    Module.ApplyAMP(AMPDtype)
+                if AccumSteps > 1:
+                    Module.ApplyGradAccum(AccumSteps)
+
     ############################################
 
     def __BMEndBatchTrain(self, inArgs, inKVArgs) -> None:
