@@ -20,6 +20,8 @@ class BaseNNModel(torch.nn.Module):
 
             self._LossFunction                      = None
             self._Loss                              = None
+            # EMA decay 从 0.99 起步；BaseModelFactory 在 BeginTrain 时若发现
+            # inKVArgs["LossEMADecay"] 会覆盖（avoid hardcoding for short-epoch runs）。
             self._AvgLoss : EMAValue                = EMAValue(0.99)
 
             # Pending optimizer/scheduler state restored from a checkpoint;

@@ -1,11 +1,39 @@
+import os
+import sys
 import torch
 
+from datetime import datetime
 from torch.utils.data import DataLoader
 
 from KongMing.Utils.CaseInsensitiveContainer import CaseInsensitiveList, CaseInsensitiveDict
 
 from KongMing.Trainer.BaseTrainer import BaseTrainer
 from KongMing.Archiver.BaseArchiver import BaseArchiver
+
+
+class _StdoutTee:
+    """把 print 输出同步写到日志文件；不替换 stdout 全局，仅在 Begin/End Train 之间挂载。"""
+    def __init__(self, inFile, inOriginal):
+        self.File     = inFile
+        self.Original = inOriginal
+
+    def write(self, inText):
+        self.Original.write(inText)
+        try:
+            self.File.write(inText)
+            self.File.flush()
+        except Exception:
+            pass
+
+    def flush(self):
+        self.Original.flush()
+        try:
+            self.File.flush()
+        except Exception:
+            pass
+
+    def __getattr__(self, inName):
+        return getattr(self.Original, inName)
 
 class BaseModelFactory(object):
     def __init__(self, inTrainer : BaseTrainer, inArchiver : BaseArchiver):
@@ -29,6 +57,10 @@ class BaseModelFactory(object):
         self.ForceSave      = False
 
         self.SaveInterval   = 10
+
+        # 日志：挂在 LogRootPath/train.log；BeginTrain 时打开，EndTrain 时关闭
+        self._LogFile : object = None
+        self._StdoutBackup     = None
 
     ###########################################################################################
 
@@ -58,6 +90,9 @@ class BaseModelFactory(object):
         
     def IsExistModels(self) -> bool:
         return self.Archiver.IsExistModel()
+
+    # alias: Executor 一直叫 IsExistModel（无 s），两边随便用
+    IsExistModel = IsExistModels
     
     def Eval(self, inEpoch, inArgs : CaseInsensitiveList = None, inKVArgs : CaseInsensitiveDict = None):
         self.Archiver.Eval()
@@ -74,13 +109,22 @@ class BaseModelFactory(object):
     ###########################################################################################
 
     def __BMBeginTrain(self, inArgs, inKVArgs)->None:
-        print("Begin Training...")
+        self.__OpenLogFile()
+        print("Begin Training... [{}]".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         SaveInterval = inKVArgs.get("SaveInterval")
         if SaveInterval is not None:
             self.SaveInterval = int(SaveInterval)
         PrintInterval = inKVArgs.get("PrintInterval")
         if PrintInterval is not None:
             self.Trainer.PrintInterval = int(PrintInterval)
+        LossEMADecay = inKVArgs.get("LossEMADecay")
+        if LossEMADecay is not None:
+            # 把 loss 平均的 decay 推到所有 BaseNNModel 子模块，避免硬编码 0.99 在短 epoch 不合适
+            from KongMing.Models.BaseNNModel import BaseNNModel
+            Decay = float(LossEMADecay)
+            for Module in self.Archiver.NNModuleDict.values():
+                if isinstance(Module, BaseNNModel):
+                    Module.BackPropagater._AvgLoss.Decay = Decay
 
     ############################################
 
@@ -98,7 +142,31 @@ class BaseModelFactory(object):
 
     def __BMEndTrain(self, inArgs, inKVArgs)->None:
         self.Archiver.Save(self.Trainer.CurrEpochIndex)
-        print("End Train!!!")
+        print("End Train!!! [{}]".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        self.__CloseLogFile()
+
+    def __OpenLogFile(self) -> None:
+        try:
+            LogDir = self.Trainer.LogRootPath if self.Trainer.LogRootPath else "."
+            os.makedirs(LogDir, exist_ok=True)
+            LogPath = os.path.join(LogDir, "train.log")
+            self._LogFile = open(LogPath, "a", encoding="utf-8", buffering=1)
+            self._StdoutBackup = sys.stdout
+            sys.stdout = _StdoutTee(self._LogFile, self._StdoutBackup)
+        except Exception as e:
+            print("[BaseModelFactory] Open log file failed, continue without tee:", e)
+            self._LogFile = None
+
+    def __CloseLogFile(self) -> None:
+        if self._StdoutBackup is not None:
+            sys.stdout = self._StdoutBackup
+            self._StdoutBackup = None
+        if self._LogFile is not None:
+            try:
+                self._LogFile.close()
+            except Exception:
+                pass
+            self._LogFile = None
 
     ###########################################################################################
 
