@@ -81,15 +81,18 @@ if __name__ == "__main__" :
             inColorChanNum=Config.ImageColorChan,
             inBatchSize=15
         )
-        print(GenImage.size())
 
-        reverse_transform = transforms.Compose([
-            transforms.Normalize((-1.0,), (2.0,)), #(-1, 1) -> (0, 1),
-            #transforms.ToPILImage(), # turn into shape HWC, (0, 1) -> (0, 255)
-        ])
-        Path = os.path.join(OutputPath, "images")
+        # 图片落到与 checkpoint 同根的子目录，避免 FashionMNIST/CartoonFace 互相混淆
+        Path = os.path.join(ModelRootFolderPath, "images")
         os.makedirs(Path, exist_ok=True)
-        save_image(reverse_transform(GenImage), "{}/{}.png".format(Path, datetime.now().strftime("%Y%m%d%H%M%S")), nrow=5, normalize=True)
+        # save_image 自带反归一化：value_range=(-1, 1) + normalize=True 把 (-1, 1) 直接映射到 (0, 1)
+        save_image(
+            GenImage,
+            "{}/{}.png".format(Path, datetime.now().strftime("%Y%m%d%H%M%S")),
+            nrow=5,
+            normalize=True,
+            value_range=(-1, 1),
+        )
     else:
         transform = transforms.Compose([
             transforms.Resize(Config.ImageSize),

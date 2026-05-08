@@ -1,26 +1,20 @@
-r"""一次性下载 Anime Face Dataset (splcher/animefacedataset) 到 DatasetPath/cartoon_faces/。
+r"""一次性下载公开 Anime Face 数据集到 DatasetPath/cartoon_faces/。
+
+数据来源：HuggingFace `huggan/anime-faces`（~21k 张 64×64 动漫头像，公开数据集，零凭据）。
+使用 `datasets` 库直接 HTTP 拉取，无需 Kaggle / 任何 token。
 
 用法（在仓库根下执行）：
     python tools/download_cartoon_faces.py
 
-前置条件（脚本会逐项检查并给出修复指引）：
-1. 安装 kagglehub：     pip install kagglehub
-2. 配置 Kaggle 凭据：    在 https://www.kaggle.com → Account → "Create New API Token"
-                        下载 kaggle.json，放到：
-                            Windows: %USERPROFILE%\.kaggle\kaggle.json
-                            Linux/Mac: ~/.kaggle/kaggle.json
-                        或通过环境变量：
-                            $env:KAGGLE_USERNAME / $env:KAGGLE_KEY (PowerShell)
-                            export KAGGLE_USERNAME=... / KAGGLE_KEY=... (bash)
-
 成功后目录结构：
-    <DatasetPath>/cartoon_faces/images/*.png    （≈ 63k 张 64×64 头像）
+    <DatasetPath>/cartoon_faces/images/000000.png
+    <DatasetPath>/cartoon_faces/images/000001.png
+    ...
 torchvision.datasets.ImageFolder 会把 "images" 当作单一 class 使用，
 正好满足 002/004/005 入口脚本的要求。
 """
 
 import os
-import shutil
 import sys
 
 # 允许从仓库任意位置直接 `python tools/download_cartoon_faces.py`
@@ -31,14 +25,14 @@ from KongMing.Utils.DatasetPath import ResolveDatasetPath
 
 ###################################################################################################
 
-KaggleDatasetSlug = "splcher/animefacedataset"
-TargetSubdir      = "cartoon_faces"
+HFDatasetName = "huggan/anime-faces"
+TargetSubdir  = "cartoon_faces"
+ImagesSubdir  = "images"
 
 
 ###################################################################################################
 
 def CountImages(inDir : str) -> int:
-    """递归统计 .png/.jpg 数量；用来判断目录是否已经被填充过。"""
     if not os.path.isdir(inDir):
         return 0
     Cnt = 0
@@ -49,44 +43,14 @@ def CountImages(inDir : str) -> int:
     return Cnt
 
 
-def CheckKaggleHub() -> bool:
+def CheckDatasets() -> bool:
     try:
-        import kagglehub  # noqa: F401
+        import datasets  # noqa: F401
         return True
     except ImportError:
-        print("[ERROR] kagglehub 未安装。请先：")
-        print("    pip install kagglehub")
+        print("[ERROR] HuggingFace `datasets` 未安装。请先：")
+        print("    pip install datasets pillow")
         return False
-
-
-def CheckKaggleCredentials() -> bool:
-    """kagglehub 与 kaggle CLI 共用同一份凭据：~/.kaggle/kaggle.json 或 KAGGLE_USERNAME/KAGGLE_KEY 环境变量。"""
-    if os.environ.get("KAGGLE_USERNAME") and os.environ.get("KAGGLE_KEY"):
-        return True
-    KaggleJsonPath = os.path.join(os.path.expanduser("~"), ".kaggle", "kaggle.json")
-    if os.path.exists(KaggleJsonPath):
-        return True
-    print("[ERROR] 未找到 Kaggle 凭据。请二选一：")
-    print("  A) 在 https://www.kaggle.com → Account → Create New API Token，")
-    print("     把下载的 kaggle.json 放到：{}".format(KaggleJsonPath))
-    print("  B) 设环境变量 KAGGLE_USERNAME 和 KAGGLE_KEY")
-    return False
-
-
-def MergeIntoTarget(inSrcDir : str, inTargetDir : str) -> None:
-    """把 kagglehub 下载到 cache 里的内容搬到 inTargetDir。
-    保留原 zip 内的子目录结构（这个数据集的根下有 images/ 子目录）。
-    已存在的同名文件会被覆盖。
-    """
-    os.makedirs(inTargetDir, exist_ok=True)
-    for Entry in os.listdir(inSrcDir):
-        SrcPath = os.path.join(inSrcDir, Entry)
-        DstPath = os.path.join(inTargetDir, Entry)
-        if os.path.isdir(SrcPath):
-            # 用 copytree + dirs_exist_ok（Py3.8+），避免删除目标里已有的别的子目录
-            shutil.copytree(SrcPath, DstPath, dirs_exist_ok=True)
-        else:
-            shutil.copy2(SrcPath, DstPath)
 
 
 ###################################################################################################
@@ -94,6 +58,7 @@ def MergeIntoTarget(inSrcDir : str, inTargetDir : str) -> None:
 def Main() -> int:
     DatasetPath = ResolveDatasetPath()
     TargetDir   = os.path.join(DatasetPath, TargetSubdir)
+    ImagesDir   = os.path.join(TargetDir, ImagesSubdir)
 
     print("[Resolve] DatasetPath = {}".format(DatasetPath))
     print("[Resolve] Target dir  = {}".format(TargetDir))
@@ -104,27 +69,44 @@ def Main() -> int:
         print("       想强制重下：先删掉 {} 再跑本脚本。".format(TargetDir))
         return 0
 
-    if not CheckKaggleHub():
-        return 1
-    if not CheckKaggleCredentials():
+    if not CheckDatasets():
         return 1
 
-    print("[Download] kagglehub.dataset_download('{}')...".format(KaggleDatasetSlug))
-    import kagglehub
-    CachePath = kagglehub.dataset_download(KaggleDatasetSlug)
-    print("[Download] cached at: {}".format(CachePath))
+    print("[Download] HuggingFace dataset '{}' (split=train)...".format(HFDatasetName))
+    from datasets import load_dataset
+    DS = load_dataset(HFDatasetName, split="train")
+    print("[Download] {} 条样本就位".format(len(DS)))
 
-    print("[Move] -> {}".format(TargetDir))
-    MergeIntoTarget(CachePath, TargetDir)
+    os.makedirs(ImagesDir, exist_ok=True)
+    print("[Save] -> {}".format(ImagesDir))
+
+    Saved = 0
+    for I, Item in enumerate(DS):
+        # 数据集字段一般是 'image'，类型 PIL.Image
+        Img = Item.get("image") or Item.get("img") or Item.get("picture")
+        if Img is None:
+            # 兜底：取第一个 PIL.Image 字段
+            from PIL import Image
+            for V in Item.values():
+                if isinstance(V, Image.Image):
+                    Img = V
+                    break
+        if Img is None:
+            continue
+
+        OutPath = os.path.join(ImagesDir, "{:06d}.png".format(I))
+        Img.save(OutPath, "PNG")
+        Saved += 1
+        if Saved % 1000 == 0:
+            print("  ... saved {} / {}".format(Saved, len(DS)))
 
     Final = CountImages(TargetDir)
     print("[Done] 共 {} 张图片就位。".format(Final))
 
     if Final == 0:
-        print("[WARN] 目标目录里没找到图片，可能数据集结构变了。手动检查 {} 的内容。".format(TargetDir))
+        print("[WARN] 目标目录里没找到图片，HF 数据集字段可能变了。手动检查 {}。".format(TargetDir))
         return 1
 
-    # 列出顶层结构方便用户确认 ImageFolder 能识别
     print("[Layout] {} 下顶层条目：".format(TargetDir))
     for Entry in sorted(os.listdir(TargetDir))[:10]:
         FullPath = os.path.join(TargetDir, Entry)
